@@ -1,0 +1,1855 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gold Futures Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#ECEFF2; --surface:#FFFFFF; --surface-2:#F4F6F8; --ink:#16202A; --muted:#566370; --line:#D3D9DF;
+  --gold:#946500; --gold-strong:#C38D1B; --gold-soft:#F5E8C8; --on-gold:#FFFFFF;
+  --bull:#1A7A50; --bull-soft:#DCF0E4; --bear:#B3362E; --bear-soft:#F6DFDB;
+  --info:#285C9E; --info-soft:#DEE8F5; --bar:#C9D1D9;
+  --g-mm:#C38D1B; --g-sw:#2F6DB5; --g-pr:#8A5BB8; --g-ot:#7D8B99; --g-sm:#1B998B;
+  --serif:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E141A; --surface:#161E27; --surface-2:#1C2631; --ink:#E3E8ED; --muted:#96A3B0; --line:#2B3745;
+    --gold:#E4B34E; --gold-strong:#E4B34E; --gold-soft:#3A2D12; --on-gold:#16110A;
+    --bull:#4EC48C; --bull-soft:#143429; --bear:#EF7068; --bear-soft:#3D1F1D;
+    --info:#74A6E2; --info-soft:#172A40; --bar:#33414F;
+    --g-mm:#E4B34E; --g-sw:#6FA3E6; --g-pr:#B48BE0; --g-ot:#9AA8B6; --g-sm:#3CC4B4;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E141A; --surface:#161E27; --surface-2:#1C2631; --ink:#E3E8ED; --muted:#96A3B0; --line:#2B3745;
+  --gold:#E4B34E; --gold-strong:#E4B34E; --gold-soft:#3A2D12; --on-gold:#16110A;
+  --bull:#4EC48C; --bull-soft:#143429; --bear:#EF7068; --bear-soft:#3D1F1D;
+  --info:#74A6E2; --info-soft:#172A40; --bar:#33414F;
+    --g-mm:#E4B34E; --g-sw:#6FA3E6; --g-pr:#B48BE0; --g-ot:#9AA8B6; --g-sm:#3CC4B4;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--info)}
+:focus-visible{outline:2px solid var(--gold-strong);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--serif);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--ground);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand h1{font-size:22px;font-weight:700;letter-spacing:.01em}
+.ticker{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:1px 6px}
+.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-width:220px}
+.prog .track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;min-width:120px}
+.prog .fill{height:100%;background:var(--gold-strong);width:0;transition:width .4s}
+
+/* shell */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);gap:32px;padding-top:24px}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start}
+.rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.navbtn{width:100%;display:grid;grid-template-columns:28px 1fr 16px;align-items:center;gap:8px;text-align:left;background:none;border:0;border-radius:7px;padding:7px 8px;color:var(--ink);font:500 14px/1.3 var(--sans);cursor:pointer}
+.navbtn:hover{background:var(--surface-2)}
+.navbtn .n{font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line)}
+.navbtn[aria-current="step"]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.navbtn[aria-current="step"] .n{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.navbtn .ok{color:var(--bull);font-weight:700;visibility:hidden}
+.navbtn.done .ok{visibility:visible}
+.navbtn .new{font-family:var(--mono);font-size:10px;color:var(--gold);margin-left:4px}
+@media (max-width:880px){
+  .shell{grid-template-columns:1fr;gap:16px;padding-top:12px}
+  .rail{position:static;overflow-x:auto;margin-inline:-16px;padding-inline:16px;padding-bottom:4px}
+  .rail ol{display:flex;gap:6px;width:max-content}
+  .navbtn{grid-template-columns:auto auto auto;white-space:nowrap;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+}
+
+/* step */
+.step{max-width:880px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.step > header h2{font-size:clamp(28px,4vw,38px);font-weight:700;margin-top:6px}
+.goal{margin-top:10px;font-size:17px;color:var(--muted);max-width:66ch}
+.block{margin-top:30px}
+.bhead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.bhead h3{font-size:21px;font-weight:600}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.tag.learn{background:var(--info-soft);color:var(--info)}
+.tag.try{background:var(--gold-soft);color:var(--gold)}
+.tag.check{background:var(--bull-soft);color:var(--bull)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.panel + .panel{margin-top:14px}
+.prose{display:grid;gap:10px;max-width:68ch}
+.prose ul,.prose ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.rule{margin-top:26px;background:var(--gold-soft);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline}
+.rule b{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--gold)}
+.rule p{font-weight:500}
+.stepnav{display:flex;justify-content:space-between;gap:12px;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+.btn{font:600 14px var(--sans);padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn[disabled]{opacity:.35;cursor:default}
+
+/* form bits */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.field{display:grid;gap:5px;align-content:start}
+.field label,.lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.field output{font-family:var(--mono);font-size:13px;color:var(--ink)}
+input[type=number],select,textarea,input[type=text]{width:100%;font:14px var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)}
+textarea{font-family:var(--sans);resize:vertical}
+input[type=range]{width:100%;accent-color:var(--gold-strong)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{font:500 13px var(--sans);border:0;background:none;color:var(--ink);padding:7px 11px;cursor:pointer;min-width:40px}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg button[aria-pressed="true"].up{background:var(--bull);color:#fff}
+.seg button[aria-pressed="true"].down{background:var(--bear);color:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .name{font-weight:600}
+.row .hint{font-size:13px;color:var(--muted)}
+.readout{border-radius:10px;padding:14px 16px;background:var(--surface-2);display:grid;gap:6px}
+.readout.bull{background:var(--bull-soft)}
+.readout.bear{background:var(--bear-soft)}
+.readout.warn{background:var(--gold-soft)}
+.readout h4{font-size:19px}
+.big{font-family:var(--serif);font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.stat{display:grid;gap:4px}
+.pos{color:var(--bull)} .neg{color:var(--bear)} .gold{color:var(--gold)}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;max-width:100%;height:auto}
+svg text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+svg .t-ink{fill:var(--ink)} svg .t-gold{fill:var(--gold)} svg .t-bull{fill:var(--bull)} svg .t-bear{fill:var(--bear)} svg .t-surface{fill:var(--surface)}
+.caption{font-size:12px;color:var(--muted);margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.tablebox{overflow-x:auto}
+
+/* quiz */
+.quiz + .quiz{margin-top:14px}
+.quiz .q{font-weight:600;margin-bottom:10px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:14px/1.45 var(--sans);cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt.right{border-color:var(--bull);background:var(--bull-soft)}
+.opt.wrong{border-color:var(--bear);background:var(--bear-soft)}
+.explain{margin-top:10px;font-size:14px;padding:10px 12px;border-radius:8px;background:var(--surface-2)}
+
+/* specific */
+.funnel{display:grid;gap:6px}
+.fbar{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:center}
+.fbar .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.fbar .body{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.fbar .body:hover{border-color:var(--gold-strong)}
+.fbar .body b{font-family:var(--serif);font-size:17px}
+.fbar .body span{color:var(--muted);font-size:14px}
+.fbar .body em{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--gold)}
+
+.contrib{display:grid;gap:8px}
+.crow{display:grid;grid-template-columns:130px 1fr 48px;gap:10px;align-items:center;font-size:13px}
+.ctrack{position:relative;height:12px;background:var(--surface-2);border-radius:3px}
+.ctrack::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.cbar{position:absolute;top:0;height:100%;border-radius:2px}
+.crow .v{font-family:var(--mono);text-align:right}
+
+.matrix{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;font-size:14px}
+.matrix .ax{font-family:var(--mono);font-size:11px;color:var(--muted);display:grid;place-items:center;text-transform:uppercase;letter-spacing:.06em}
+.cell{border-radius:8px;padding:12px;border:2px solid transparent;display:grid;gap:3px}
+.cell b{font-family:var(--serif);font-size:17px}
+.cell small{font-size:12px}
+.cell.sb{background:var(--bull-soft)} .cell.wb{background:var(--surface-2)} .cell.sr{background:var(--bear-soft)} .cell.wr{background:var(--surface-2)}
+.cell.sb small,.cell.wb small{color:var(--bull)} .cell.sr small,.cell.wr small{color:var(--bear)}
+.cell.on{border-color:var(--ink)}
+
+.ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ledger .btn{text-align:left;font-weight:500;line-height:1.35}
+.log{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;gap:2px;min-height:60px}
+
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media (max-width:560px){.months{grid-template-columns:repeat(4,1fr)}}
+.mon{border:2px solid transparent;border-radius:8px;padding:8px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);display:grid;gap:2px}
+.mon b{font-family:var(--serif);font-size:18px}
+.mon small{font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.mon.strong{background:var(--bull-soft)} .mon.strong small{color:var(--bull)}
+.mon.weak{background:var(--bear-soft)} .mon.weak small{color:var(--bear)}
+.mon.mixed{background:var(--surface-2)} .mon.mixed small{color:var(--muted)}
+.mon.sel{border-color:var(--ink)}
+.mon .now{font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:600}
+
+.eras{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.eras button{font:500 13px var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:6px 12px;cursor:pointer}
+.eras button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+dl.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 16px;margin:0}
+dl.kv dt{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:2px}
+dl.kv dd{margin:0}
+@media (max-width:560px){dl.kv{grid-template-columns:1fr} dl.kv dd{margin-bottom:6px}}
+
+.meter{position:relative;height:16px;border-radius:8px;background:linear-gradient(90deg,var(--bear) 0%,var(--bear-soft) 40%,var(--surface-2) 50%,var(--bull-soft) 60%,var(--bull) 100%)}
+.meter .pin{position:absolute;top:-5px;width:4px;height:26px;background:var(--ink);border-radius:2px;transform:translateX(-50%);transition:left .3s}
+.meter-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+
+.units{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.units span{width:22px;height:14px;border-radius:2px;background:var(--gold-strong)}
+.units span.rest{background:var(--line)}
+
+.checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.checklist h4{font-size:16px;margin-bottom:6px}
+.checklist label{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:14px;cursor:pointer}
+.checklist input{margin-top:4px;accent-color:var(--bull)}
+.fallback{margin-top:8px;font-family:var(--mono);font-size:12px;height:120px}
+.tag.tv{background:var(--ink);color:var(--surface)}
+.tvg + .tvg{margin-top:14px}
+.tvg h4{font-size:15px;font-weight:600;margin-bottom:2px}
+.tvrow{display:grid;grid-template-columns:minmax(140px,200px) auto minmax(0,1fr);gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.tvg .tvrow:last-child{border-bottom:0}
+.tvrow .note{font-size:13px;color:var(--muted)}
+@media (max-width:620px){.tvrow{grid-template-columns:minmax(0,1fr) auto}.tvrow .note{grid-column:1/-1;margin-top:-4px}}
+.tk{font:500 13px var(--mono);padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);cursor:pointer;white-space:nowrap;justify-self:start}
+.tk:hover{border-color:var(--gold-strong)}
+.tk.ind{font-family:var(--sans);white-space:normal;text-align:left}
+.tk.none{cursor:default;border-style:dashed;color:var(--muted);font-family:var(--sans)}
+.tk.none:hover{border-color:var(--line)}
+.tk.copied{border-color:var(--bull);color:var(--bull)}
+.tk.sm{font-size:12px;padding:2px 7px}
+.tvhint{font-size:12px;color:var(--muted);margin-top:10px}
+.layout6{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.layout6 div{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--surface-2);font-size:13px;display:grid;gap:2px}
+.layout6 b{font-family:var(--mono);font-size:12px}
+@media (max-width:560px){.layout6{grid-template-columns:repeat(2,1fr)}}
+.slidetop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.when{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.dots{display:flex;gap:6px;align-items:center}
+.dots button{width:10px;height:10px;border-radius:5px;border:0;background:var(--line);padding:0;cursor:pointer;transition:width .2s}
+.dots button[aria-current="true"]{background:var(--gold-strong);width:26px}
+.slide{display:grid;gap:16px}
+.slide[hidden],[hidden]{display:none!important}
+.slide .st{font-size:26px;font-weight:700}
+.slide .lead{font-size:16px;max-width:68ch}
+.slidenav{display:flex;justify-content:space-between;gap:12px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.dolist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.do,.skip{border-radius:8px;padding:12px 14px}
+.do{background:var(--bull-soft)} .skip{background:var(--surface-2)}
+.do > b,.skip > b{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.do > b{color:var(--bull)} .skip > b{color:var(--muted)}
+.do ul,.skip ul,ul.tight{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.weekwrap{overflow-x:auto}
+.week{display:grid;grid-template-columns:repeat(7,minmax(80px,1fr));gap:6px;min-width:600px}
+.day{display:grid;gap:5px;align-content:start}
+.dname{font:600 12px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.blk{border-radius:6px;padding:7px 8px;font-size:12px;line-height:1.35}
+.blk.plan{background:var(--gold-strong);color:var(--on-gold);min-height:190px}
+.blk.chk{background:var(--info-soft);color:var(--info);font-weight:500}
+.blk.trade{background:var(--surface-2);color:var(--muted);min-height:64px}
+.blk.news{background:var(--bear-soft);color:var(--bear);font-weight:600}
+.blk.off{border:1px dashed var(--line);color:var(--muted);min-height:190px}
+.bigline{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:12px 16px}
+.bigline span:last-child{flex:1;min-width:220px}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.flow{grid-template-columns:1fr}}
+.fstep{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:6px;align-content:start;font-size:14px}
+.fstep svg{max-width:100%;height:auto}
+.fn{font:600 12px var(--mono);width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center}
+.sticky{background:var(--gold-soft);border-radius:4px;padding:10px;font-size:13px;line-height:1.45;transform:rotate(-1deg)}
+.mini-rows{display:grid;gap:4px;font-size:13px}
+.mini-rows span{display:flex;align-items:center;gap:8px}
+.light{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;margin-top:3px}
+.light.g{background:var(--bull)} .light.a{background:var(--gold-strong)} .light.r{background:var(--bear)} .light.n{background:var(--muted)}
+.lightcard{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;border-radius:10px;padding:12px 14px;background:var(--surface-2)}
+.lightcard .bulb{width:30px;height:30px;border-radius:50%}
+.lightcard small{display:block;color:var(--muted);font-size:12px}
+.newsbar{display:grid;grid-template-columns:1fr 1.1fr 1.6fr 1.3fr;border-radius:10px;overflow:hidden}
+@media (max-width:640px){.newsbar{grid-template-columns:1fr}}
+.nb{padding:12px;display:grid;gap:4px;font-size:13px}
+.nb b{font:600 13px var(--mono)}
+.nb.g1{background:var(--surface-2)} .nb.g2{background:var(--bear-soft);color:var(--bear)} .nb.g3{background:var(--info-soft)} .nb.g4{background:var(--bull-soft)}
+.minical{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px 0}
+.minical span{aspect-ratio:1;border-radius:3px;background:var(--surface);font:10px var(--mono);color:var(--muted);display:grid;place-items:center;max-width:100%}
+.minical span.hl{background:var(--gold-strong);color:var(--on-gold);font-weight:600}
+.minical span.sun{background:var(--gold-soft)}
+.trades50{display:grid;grid-template-columns:repeat(25,1fr);gap:2px;margin-top:12px}
+.trades50 span{height:14px;border-radius:2px;background:var(--line)}
+.trades50 span.w{background:var(--bull)} .trades50 span.l{background:var(--bear)}
+.sam{display:grid;gap:8px}
+.samrow{display:grid;grid-template-columns:44px 18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;background:var(--surface-2);border-radius:8px;font-size:14px}
+.samrow .res{font:600 13px var(--mono);white-space:nowrap}
+.why{border:1.5px solid var(--gold-strong);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+.why > b{font:600 11px var(--mono);letter-spacing:.1em;color:var(--on-gold);background:var(--gold-strong);padding:2px 7px;border-radius:4px}
+.why ul{margin:0;padding-left:18px;display:grid;gap:6px}
+@media (max-width:520px){.why{grid-template-columns:1fr}.why > b{justify-self:start}}
+.rule p.whyt{font-weight:400}
+.chain{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.chain{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:420px){.chain{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.link{border:2px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);display:grid;gap:3px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;opacity:.5;transition:opacity .2s,border-color .2s}
+.link.seen{opacity:1}
+.link.cur{border-color:var(--ink);opacity:1}
+.link .ln{font:600 11px var(--mono);color:var(--muted)}
+.link b{font-size:13px;line-height:1.25}
+.link .arr{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1}
+.cottime{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.cottime{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cottime div{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:4px;font-size:13px}
+.cottime b{font-family:var(--serif);font-size:17px}
+.cottime .late{background:var(--gold-soft)}
+.glegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
+.glegend span{display:inline-flex;align-items:center;gap:6px}
+.gdot{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none;margin-top:5px}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.player{display:grid;grid-template-columns:auto 1fr;gap:10px;background:var(--surface-2);border-radius:10px;padding:12px;border:2px solid transparent;font-size:14px}
+.player p{margin-top:4px} .player .pl{font-size:13px;color:var(--muted)}
+.player.you{border-color:var(--g-sm);background:var(--surface)}
+.youtag{display:inline-block;font:600 10px var(--mono);letter-spacing:.1em;color:#fff;background:var(--g-sm);padding:2px 6px;border-radius:4px;margin-bottom:4px}
+.formula{font-family:var(--mono);font-size:14px;background:var(--surface-2);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap}
+.cottable td:nth-child(n+2),.cottable th:nth-child(n+2){text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cottable tr.hl td{background:var(--gold-soft);font-weight:600}
+.standmap{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:6px}
+.standmap .ax{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:center;display:grid;place-items:center}
+.standmap .ax small{text-transform:none;letter-spacing:0}
+.standmap .side{writing-mode:vertical-rl;transform:rotate(180deg)}
+.zone{border-radius:8px;padding:10px;display:grid;gap:3px;border:2px solid transparent;font-size:13px;align-content:start}
+.zone b{font-family:var(--serif);font-size:15px;line-height:1.2}
+.zone small{color:var(--muted);font-size:12px}
+.zone[data-z="MB"],.zone[data-z="LB"]{background:var(--bull-soft)}
+.zone[data-z="MS"],.zone[data-z="HS"]{background:var(--bear-soft)}
+.zone[data-z="HB"],.zone[data-z="LS"]{background:var(--gold-soft)}
+.zone.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.startcta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--gold-soft);border-radius:10px;padding:14px 18px}
+footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px;max-width:880px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M6 4h18l5 16H1z" style="fill:var(--gold-strong)"/><path d="M8 7h14" style="stroke:var(--on-gold);stroke-width:1.5;opacity:.5"/></svg>
+      <h1>Gold Futures Lab</h1>
+      <span class="ticker">GC · MGC</span>
+    </div>
+    <div class="prog" aria-live="polite">
+      <span id="progText">0 of 12 steps done</span>
+      <div class="track"><div class="fill" id="progFill"></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="shell">
+  <nav class="rail" aria-label="Course steps"><ol id="railList"></ol></nav>
+  <main id="main">
+
+<!-- ============ STEP 0: MAP ============ -->
+<section class="step" data-title="The map" data-num="0">
+  <header>
+    <div class="eyebrow">Start here · The top-down map</div>
+    <h2>One instrument, seven questions, every week</h2>
+    <p class="goal">Professionals don't guess direction. They work top-down: big-picture drivers set the bias, other markets confirm it, volume shows whether money is behind it, and the calendar says when to stand aside. Only then does a chart pattern decide the entry.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The funnel you'll run through before every trade</h3></div>
+    <div class="funnel" id="funnel"></div>
+    <p class="caption">Tap any layer to jump to its step. The wide layers change slowly (weeks). The narrow layers change fast (minutes).</p>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">How each step works</span></div>
+    <div class="grid3">
+      <div class="panel"><div class="tag learn" style="display:inline-block">Learn</div><p style="margin-top:8px">A picture of the idea, with only the words you need.</p></div>
+      <div class="panel"><div class="tag try" style="display:inline-block">Try it</div><p style="margin-top:8px">A hands-on tool. Move the sliders and watch the answer change.</p></div>
+      <div class="panel"><div class="tag check" style="display:inline-block">Check yourself</div><p style="margin-top:8px">A real trading situation. Get it right to tick the step off.</p></div>
+    </div>
+    <p class="caption">Your progress, scorecard, checklist and journal draft stay in this browser, so you can come back to them.</p>
+  </div>
+  <div class="block"><div class="startcta"><div><b style="font-family:var(--serif);font-size:19px">New to trading?</b><p class="muted" style="margin-top:2px">See your whole trading week in 10 pictures first: when to check what, and what to ignore.</p></div><button class="btn primary" data-go="11">Show me my week →</button></div></div>
+  <div class="block"><div class="startcta" style="background:var(--surface);border:1px solid var(--line)"><div><b style="font-family:var(--serif);font-size:19px">Where should a retail trader stand?</b><p class="muted" style="margin-top:2px">Learn to read the Commitment of Traders report and decide which side of the big money to be on.</p></div><button class="btn" data-go="12">Open the COT lesson →</button></div></div>
+  <div class="stepnav"><span></span><button class="btn primary" data-go="1">Start step 1 →</button></div>
+</section>
+
+<!-- ============ STEP 1: INSTRUMENT ============ -->
+<section class="step" data-title="Know the contract" data-num="1" hidden>
+  <header>
+    <div class="eyebrow">Step 1 of 12 · The instrument</div>
+    <h2>Know exactly what one dollar of gold costs you</h2>
+    <p class="goal">Before any analysis, know what a move is worth and when gold actually moves. Most prop accounts are lost by sizing, not by being wrong.</p>
+  </header>
+
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The contracts</h3></div>
+    <div class="panel tablebox">
+      <table>
+        <thead><tr><th>Contract</th><th>Size</th><th>Tick</th><th>Tick value</th><th>$1 move</th></tr></thead>
+        <tbody>
+          <tr><td><b>GC</b> (Gold)</td><td class="mono">100 oz</td><td class="mono">$0.10</td><td class="mono">$10</td><td class="mono">$100</td></tr>
+          <tr><td><b>MGC</b> (Micro Gold)</td><td class="mono">10 oz</td><td class="mono">$0.10</td><td class="mono">$1</td><td class="mono">$10</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Active months: Feb (G), Apr (J), Jun (M), Aug (Q), Oct (V), Dec (Z). Volume moves to the next active month near the end of the month before delivery. In late summer most traders roll straight to December, so in late September GCZ is normally the busiest contract. Check your prop firm's roll rules.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The gold trading day (Eastern Time)</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="sessionSvg" viewBox="0 0 820 140" width="820" role="img" aria-label="Gold futures session timeline from 18:00 to 17:00 Eastern Time"></svg></div>
+      <p id="nowText" class="caption" style="font-size:14px;color:var(--ink)"></p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>What does a move cost you?</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="c1Type">Contract</label>
+          <select id="c1Type"><option value="10">MGC — $10 per $1</option><option value="100">GC — $100 per $1</option></select></div>
+        <div class="field"><label for="c1Qty">Contracts</label><input id="c1Qty" type="number" min="1" max="50" value="2"></div>
+        <div class="field"><label for="c1Limit">Daily loss limit ($)</label><input id="c1Limit" type="number" min="100" step="100" value="1000"></div>
+      </div>
+      <div class="field" style="margin-top:16px"><label for="c1Move">Gold moves against you by <output id="c1MoveOut">$15</output></label>
+        <input id="c1Move" type="range" min="1" max="100" value="15"></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="readout"><span class="lbl">Your loss</span><span class="big neg" id="c1Loss">$300</span><span class="muted" id="c1Pct"></span></div>
+        <div class="readout" id="c1Box"><span class="lbl">Daily limit is hit after a move of</span><span class="big" id="c1Break">$50</span><span id="c1Feel"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Gold charts to open</h3></div>
+    <div class="panel" data-tv="gold"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">You hold 1 GC contract and gold drops $12 against you. What's your loss?</p>
+      <div class="opts"><button class="opt" data-k="a">$120</button><button class="opt" data-k="b">$1,200</button><button class="opt" data-k="c">$12</button><button class="opt" data-k="d">$12,000</button></div>
+      <p class="explain" hidden>GC pays $100 for every $1 move, so $12 × $100 = $1,200. The same move on one MGC is $120. That's why MGC is the sizing tool for prop accounts.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Know how many dollars of gold movement your daily limit can absorb before you place a trade. If it's less than a normal hour's range, you're too big.</p><b>WHY</b><p class="whyt">A prop account usually dies on the daily loss limit, not on a wrong idea. Gold can move $10–20 in minutes around news. If your limit only survives a $10 move, normal noise can end your day before your idea has a chance to work.</p></div>
+  <div class="stepnav"><button class="btn" data-go="0">← Map</button><button class="btn primary" data-go="2">Next: Macro drivers →</button></div>
+</section>
+
+<!-- ============ STEP 2: MACRO ============ -->
+<section class="step" data-title="Macro drivers" data-num="2" hidden>
+  <header>
+    <div class="eyebrow">Step 2 of 12 · Fundamentals &amp; macro</div>
+    <h2>Gold is priced against what it costs to hold it</h2>
+    <p class="goal">Gold pays no interest. When safe assets like Treasuries pay a high real return, holding gold is expensive. When that return falls, or fear rises, gold gets bid.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The drivers, in rough order of importance</h3></div>
+    <div class="panel tablebox">
+      <table>
+        <thead><tr><th>#</th><th>Driver</th><th>Bullish for gold when…</th><th>TradingView</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">1</td><td><b>US real yields</b></td><td>10-yr TIPS yield falls</td><td class="mono">FRED:DFII10</td></tr>
+          <tr><td class="mono">2</td><td><b>US dollar</b></td><td>DXY falls</td><td class="mono">TVC:DXY</td></tr>
+          <tr><td class="mono">3</td><td><b>Fed expectations</b></td><td>More rate cuts get priced in</td><td class="mono">TVC:US02Y</td></tr>
+          <tr><td class="mono">4</td><td><b>Central-bank buying</b></td><td>Reserve buying stays strong</td><td class="mono">No ticker: WGC Goldhub</td></tr>
+          <tr><td class="mono">5</td><td><b>Safe-haven demand</b></td><td>War, banking stress, debt fears</td><td class="mono">TVC:VIX</td></tr>
+          <tr><td class="mono">6</td><td><b>Positioning &amp; flows</b></td><td>Speculators not yet crowded long</td><td class="mono">COT indicator, AMEX:GLD</td></tr>
+          <tr><td class="mono">7</td><td><b>Physical demand</b></td><td>Strong China/India buying</td><td class="mono">No ticker</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Since 2022, heavy central-bank buying let gold rally even while real yields were high. The ranking shifts over time. Your weekly job is to ask which driver is in charge right now.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>The seesaw: set this week's macro and watch gold's side move</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="seesaw" viewBox="0 0 640 190" width="640" role="img" aria-label="Seesaw showing macro pressure on gold"></svg></div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="field"><label for="mRy">Real yield change: <output id="mRyO"></output></label><input id="mRy" type="range" min="-50" max="50" step="5" value="-15"></div>
+        <div class="field"><label for="mDxy">Dollar (DXY) change: <output id="mDxyO"></output></label><input id="mDxy" type="range" min="-3" max="3" step="0.25" value="-0.5"></div>
+        <div class="field"><label for="mFed">Change in rate-cut odds: <output id="mFedO"></output></label><input id="mFed" type="range" min="-40" max="40" step="5" value="10"></div>
+        <div class="field"><label for="mStress">Safe-haven stress: <output id="mStressO"></output></label><input id="mStress" type="range" min="0" max="3" step="1" value="1"></div>
+        <div class="field"><label>Central-bank buying</label><div class="seg" id="mCb"></div></div>
+        <div class="field"><label>Market regime</label><div class="seg" id="mRegime"></div></div>
+      </div>
+      <div class="grid2" style="margin-top:18px;align-items:start">
+        <div class="readout" id="mBox"><span class="lbl">Net macro pressure on gold</span><span class="big" id="mScore">0</span><span id="mText"></span></div>
+        <div><span class="lbl">What's pushing hardest</span><div class="contrib" id="mContrib" style="margin-top:8px"></div></div>
+      </div>
+      <p class="caption">A teaching model with fixed weights, not a forecast. Switch the regime and see how the same data can matter less or more.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Macro driver tickers</h3></div>
+    <div class="panel" data-tv="macro"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Real yields jump 25bp and the dollar rallies, but gold still closes higher. What's the best read?</p>
+      <div class="opts"><button class="opt" data-k="a">The macro model is broken, so ignore macro</button><button class="opt" data-k="b">Strong underlying demand is absorbing the pressure. That's a bullish tell</button><button class="opt" data-k="c">Gold is certain to fall tomorrow to catch up</button><button class="opt" data-k="d">It's seasonal noise</button></div>
+      <p class="explain" hidden>When gold rises against its two main headwinds, someone big is buying anyway (often central banks or haven flows). Professionals treat that as a sign of strength, not an error.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Every Sunday, write one sentence: "This month gold is mainly trading ____." Trade in line with that driver.</p><b>WHY</b><p class="whyt">Gold's drivers take turns being in charge. If the market is trading central-bank buying and you're watching real yields, your signals will point the wrong way. Naming the driver tells you which chart to trust this month.</p></div>
+  <div class="stepnav"><button class="btn" data-go="1">← Back</button><button class="btn primary" data-go="3">Next: Intermarket →</button></div>
+</section>
+
+<!-- ============ STEP 3: INTERMARKET ============ -->
+<section class="step" data-title="Intermarket" data-num="3" hidden>
+  <header>
+    <div class="eyebrow">Step 3 of 12 · Intermarket analysis</div>
+    <h2>Ask other markets whether they agree</h2>
+    <p class="goal">A gold move backed by the dollar, yields, silver and miners is high quality. A move that other markets don't confirm is suspect. And a move against its usual headwinds is the loudest signal of all.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Gold's relationship map</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="relMap" viewBox="0 0 640 300" width="640" role="img" aria-label="Map of markets related to gold"></svg></div>
+      <p class="caption">Solid green: usually moves with gold. Dashed red: usually moves against gold. Dotted: depends on the situation.</p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Divergence reader: set today's moves</h3></div>
+    <div class="panel">
+      <div id="imRows"></div>
+      <div class="readout" id="imBox" style="margin-top:14px"><h4 id="imTitle"></h4><p id="imText"></p><p class="mono muted" id="imCount" style="font-size:13px"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Intermarket tickers</h3></div>
+    <div class="panel" data-tv="inter"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">Gold breaks to a new weekly high, but silver and gold miners (GDX) are both red on the day. What do you do?</p>
+      <div class="opts"><button class="opt" data-k="a">Buy full size, since a breakout is a breakout</button><button class="opt" data-k="b">Short it immediately</button><button class="opt" data-k="c">Treat the breakout as unconfirmed: wait for a retest or trade smaller</button><button class="opt" data-k="d">Ignore silver and miners, they're different markets</button></div>
+      <p class="explain" hidden>Silver and miners usually join a real gold breakout, and miners often lead at turning points. When they refuse, the breakout has a higher failure rate. You don't have to short it, just lower your trust.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Watch divergences more than correlations. Gold up against a strong dollar = strength. Gold flat on a weak-dollar day = weakness.</p><b>WHY</b><p class="whyt">When gold rises against something that normally pushes it down, a buyer is strong enough to absorb that pressure. That's information you can't see on gold's chart alone, and it often shows up before the price move does.</p></div>
+  <div class="stepnav"><button class="btn" data-go="2">← Back</button><button class="btn primary" data-go="4">Next: Volume &amp; OI →</button></div>
+</section>
+
+<!-- ============ STEP 4: VOLUME & OI ============ -->
+<section class="step" data-title="Volume & open interest" data-num="4" hidden>
+  <header>
+    <div class="eyebrow">Step 4 of 12 · Volume, open interest &amp; positioning</div>
+    <h2>Is real money behind the move?</h2>
+    <p class="goal">Price tells you what happened. Volume tells you how hard people pushed. Open interest tells you whether new money came in or old money left. Together they separate trends you can ride from moves that fade.</p>
+  </header>
+
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Two numbers that aren't the same</h3></div>
+    <div class="grid2">
+      <div class="panel"><span class="lbl">Volume</span><p style="margin-top:6px">How many contracts <b>changed hands</b> today. It measures activity and urgency. It resets every session.</p></div>
+      <div class="panel"><span class="lbl">Open interest (OI)</span><p style="margin-top:6px">How many contracts are <b>still open</b> at the end of the day. It rises when new positions open and falls when positions close. It carries over from day to day.</p></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>OI ledger: make trades and watch the counters</h3></div>
+    <div class="panel">
+      <div class="ledger">
+        <button class="btn" data-led="1">New buyer meets new seller<br><span class="muted" style="font-size:12px">Both open fresh positions</span></button>
+        <button class="btn" data-led="0">Old long sells to a new buyer<br><span class="muted" style="font-size:12px">The position just changes hands</span></button>
+        <button class="btn" data-led="-1">Old long sells to an old short<br><span class="muted" style="font-size:12px">Both close out</span></button>
+      </div>
+      <div class="grid3" style="margin-top:14px">
+        <div class="readout"><span class="lbl">Volume</span><span class="big" id="ledVol">0</span></div>
+        <div class="readout"><span class="lbl">Open interest</span><span class="big" id="ledOi">0</span></div>
+        <div class="readout"><span class="lbl">Recent trades</span><div class="log" id="ledLog"><span>Tap a trade to start.</span></div></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn small" id="ledReset">Reset</button></div>
+      <p class="caption">Every trade adds to volume. Only the first adds to OI, and only the last removes it. That's why a big-volume day can leave OI unchanged.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The price × open-interest matrix</h3></div>
+    <div class="panel">
+      <div class="matrix" id="oiMatrix">
+        <span></span><span class="ax">OI rising ↑</span><span class="ax">OI falling ↓</span>
+        <span class="ax" style="writing-mode:vertical-rl;transform:rotate(180deg)">Price ↑</span>
+        <div class="cell sb" data-cell="uu"><b>New buying</b><small>Strong bullish</small><span class="muted" style="font-size:13px">Fresh longs entering</span></div>
+        <div class="cell wb" data-cell="ud"><b>Short covering</b><small>Weak bullish</small><span class="muted" style="font-size:13px">Shorts buying back</span></div>
+        <span class="ax" style="writing-mode:vertical-rl;transform:rotate(180deg)">Price ↓</span>
+        <div class="cell sr" data-cell="du"><b>New selling</b><small>Strong bearish</small><span class="muted" style="font-size:13px">Fresh shorts entering</span></div>
+        <div class="cell wr" data-cell="dd"><b>Long liquidation</b><small>Weak bearish</small><span class="muted" style="font-size:13px">Longs dumping</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Decode a trading day</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label>Price</label><div class="seg" id="oiP"></div></div>
+        <div class="field"><label>Volume vs. average</label><div class="seg" id="oiV"></div></div>
+        <div class="field"><label>Open interest</label><div class="seg" id="oiO"></div></div>
+      </div>
+      <div class="readout" id="oiBox" style="margin-top:14px"><h4 id="oiTitle"></h4><p id="oiText"></p><p><b>What to do: </b><span id="oiAct"></span></p></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Volume profile: where the market agreed on price</h3></div>
+    <div class="prose">
+      <p>A volume profile turns volume sideways: how many contracts traded at each price. It shows where the market did business (fair value) and where it rushed through (unfair prices).</p>
+      <ul>
+        <li><b>POC</b> (point of control): the price with the most volume. It pulls price back like a magnet.</li>
+        <li><b>Value area</b> (VAH to VAL): where 70% of volume traded. Its edges often act as support and resistance.</li>
+        <li><b>HVN / LVN</b>: high-volume nodes slow price down. Low-volume nodes are "air pockets" that price crosses fast.</li>
+        <li><b>VWAP</b>: the average price paid today, weighted by volume. Longs are winning above it, shorts below it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Move price through a sample session's profile</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="vpSvg" viewBox="0 0 640 470" width="640" role="img" aria-label="Sample volume profile"></svg></div>
+      <div class="field" style="margin-top:10px"><label for="vpPrice">Current price: <output id="vpPriceO"></output></label><input id="vpPrice" type="range" min="4006" max="4074" step="1" value="4046"></div>
+      <div class="readout" id="vpBox" style="margin-top:12px"><h4 id="vpTitle"></h4><p id="vpText"></p></div>
+      <p class="caption">Sample data for practice, not a live market. Your futures platform can draw this for any session.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Relative volume and COT positioning</h3></div>
+    <div class="grid2">
+      <div class="panel">
+        <span class="lbl">Relative volume (RVOL)</span>
+        <p class="muted" style="font-size:13px;margin:4px 0 10px">Compare volume so far today with the 20-day average at the same time of day.</p>
+        <div class="grid2">
+          <div class="field"><label for="rvNow">Volume so far</label><input id="rvNow" type="number" min="0" value="185000"></div>
+          <div class="field"><label for="rvAvg">20-day average by now</label><input id="rvAvg" type="number" min="1" value="120000"></div>
+        </div>
+        <div class="readout" id="rvBox" style="margin-top:12px"><span class="big" id="rvVal"></span><span id="rvText"></span></div>
+      </div>
+      <div class="panel">
+        <span class="lbl">COT: managed-money net long</span>
+        <p class="muted" style="font-size:13px;margin:4px 0 10px">Hedge funds' net position, as a percentile of the last 3 years. Published Fridays 3:30 pm ET, using Tuesday's data.</p>
+        <div class="field"><label for="cot">Percentile: <output id="cotO"></output></label><input id="cot" type="range" min="0" max="100" value="82"></div>
+        <div class="readout" id="cotBox" style="margin-top:12px"><h4 id="cotTitle"></h4><span id="cotText"></span></div>
+        <button class="btn small" data-go="12" style="margin-top:10px;justify-self:start">Full COT lesson: where to stand (step 12) →</button>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <span class="lbl">Practical notes</span>
+      <ul style="margin:8px 0 0;padding-left:20px;display:grid;gap:6px">
+        <li>CME posts daily volume and OI after the session, and final OI the next business day. Use OI for your daily and weekly bias, not for minute-by-minute entries.</li>
+        <li>During roll weeks, volume and OI move from the old contract to the new one. Read the total across months, or only the most active contract.</li>
+        <li>GC/MGC futures volume is real exchange volume. CFD and spot-forex "tick volume" isn't, so don't mix them.</li>
+        <li>A huge volume spike after a long trend, with a long wick, often marks exhaustion (a climax), not a new trend.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Indicators to add to your GC chart</h3></div>
+    <div class="panel" data-tv="flows"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">Gold rallies $45 on heavy volume, but open interest falls by 9,000 contracts. What's most likely happening?</p>
+      <div class="opts"><button class="opt" data-k="a">Aggressive new buying: a strong trend is starting</button><button class="opt" data-k="b">New shorts are entering</button><button class="opt" data-k="c">Short covering: fast, but it may fade once shorts are done</button><button class="opt" data-k="d">Nothing, since OI doesn't matter intraday</button></div>
+      <p class="explain" hidden>Price up + OI down = positions closing on the buy side, which means shorts are covering. Heavy volume makes it sharp, but no new money arrived. Take profits faster and wait for OI to rise before trusting it as a trend.</p>
+    </div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">Price pushes above yesterday's value-area high, then two 30-minute bars close back inside value. What's the most likely next move?</p>
+      <div class="opts"><button class="opt" data-k="a">A rotation back toward the POC</button><button class="opt" data-k="b">A trend day up</button><button class="opt" data-k="c">Nothing, since value areas only work on stocks</button></div>
+      <p class="explain" hidden>The market tested higher prices and rejected them (a failed breakout). Rejected auctions often travel back through value toward the POC. That gives you a trade idea with a clear stop above the high.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Trust trends where price and open interest rise together on above-average volume. Fade or avoid moves driven only by short covering or liquidation.</p><b>WHY</b><p class="whyt">Rising open interest means new money has committed to the move and has a reason to defend it. Falling open interest means the move is just people closing old positions, and it runs out of fuel once they've finished.</p></div>
+  <div class="stepnav"><button class="btn" data-go="3">← Back</button><button class="btn primary" data-go="5">Next: News events →</button></div>
+</section>
+
+<!-- ============ STEP 5: NEWS ============ -->
+<section class="step" data-title="News events" data-num="5" hidden>
+  <header>
+    <div class="eyebrow">Step 5 of 12 · News events</div>
+    <h2>Trade the surprise, not the headline</h2>
+    <p class="goal">Markets price in the consensus forecast ahead of time. Gold reacts to the gap between actual and expected, and to what that gap does to rate expectations.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>What a Tier 1 release usually looks like</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="newsSvg" viewBox="0 0 640 220" width="640" role="img" aria-label="Illustration of price reaction phases around a news release"></svg></div>
+      <p class="caption">Illustration. The first spike is often traders being stopped out. The move that holds 15–30 minutes later, while the 2-yr yield and dollar also hold theirs, shows the real direction.</p>
+    </div>
+    <div class="panel tablebox">
+      <table>
+        <thead><tr><th>Tier</th><th>Events</th><th>Time (ET)</th></tr></thead>
+        <tbody>
+          <tr><td><b class="neg">Tier 1</b></td><td>CPI, Nonfarm Payrolls, FOMC decision and press conference, core PCE</td><td class="mono">8:30 · FOMC 2:00 / 2:30</td></tr>
+          <tr><td><b class="gold">Tier 2</b></td><td>PPI, retail sales, ISM, JOLTS, GDP, jobless claims (Thu), Fed speakers</td><td class="mono">8:30 / 10:00</td></tr>
+          <tr><td><b>Weekly</b></td><td>CFTC COT (positioning)</td><td class="mono">Fri 3:30 pm</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Surprise decoder</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="nEv">Event</label><select id="nEv"></select></div>
+        <div class="field" id="nNumWrap1"><label for="nCons">Consensus</label><input id="nCons" type="number" step="any"></div>
+        <div class="field" id="nNumWrap2"><label for="nAct">Actual</label><input id="nAct" type="number" step="any"></div>
+        <div class="field" id="nToneWrap" hidden><label>Fed tone vs. expectations</label><div class="seg" id="nTone"></div></div>
+        <div class="field"><label for="nReg">Market is most worried about</label><select id="nReg"><option value="inf">Inflation / fewer rate cuts</option><option value="growth">Recession / growth scare</option></select></div>
+      </div>
+      <div class="grid3" style="margin-top:14px" id="nTiles"></div>
+      <div class="readout" id="nBox" style="margin-top:12px"><h4 id="nTitle"></h4><p id="nText"></p></div>
+      <div class="panel" style="margin-top:12px;background:var(--surface-2)">
+        <span class="lbl">Before you press buy or sell</span>
+        <ul style="margin:6px 0 0;padding-left:20px;display:grid;gap:4px;font-size:14px">
+          <li>Check your prop firm's news rule. Many ban trading within a few minutes of Tier 1 releases on funded accounts.</li>
+          <li>Flatten or tighten before the release unless your written plan covers it. Slippage can be several dollars.</li>
+          <li>Wait 2+ minutes. Enter only in the direction the 2-yr yield and DXY are holding.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Watch these during a release</h3></div>
+    <div class="panel" data-tv="news"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Core CPI prints 0.4% vs. 0.3% expected. Gold spikes up $15 in the first minute, then the 2-yr yield and the dollar climb steadily for 20 minutes. What's the professional read?</p>
+      <div class="opts"><button class="opt" data-k="a">Gold is bullish, so buy the spike</button><button class="opt" data-k="b">The spike was noise. A hot print is hawkish, so look for gold to fade lower</button><button class="opt" data-k="c">CPI doesn't matter for gold</button></div>
+      <p class="explain" hidden>Hot inflation means fewer cuts, which pushes yields and the dollar up and weighs on gold. The yield and dollar move that holds is your confirmation. The first-minute spike was stop orders getting hit.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>No trades in the first 2 minutes. Let the 2-yr yield and the dollar tell you which way the surprise really cut.</p><b>WHY</b><p class="whyt">In the first seconds after a release, orders disappear and computer programs trade the headline number, so price whips both ways and stops fill at bad prices. The direction that survives shows what big money decided after reading the details.</p></div>
+  <div class="stepnav"><button class="btn" data-go="4">← Back</button><button class="btn primary" data-go="6">Next: History →</button></div>
+</section>
+
+<!-- ============ STEP 6: HISTORY ============ -->
+<section class="step" data-title="History" data-num="6" hidden>
+  <header>
+    <div class="eyebrow">Step 6 of 12 · Historical events</div>
+    <h2>History doesn't repeat, but the regimes do</h2>
+    <p class="goal">Each era of gold was ruled by one or two drivers. When today starts to look like one of them, you already know how gold behaved last time.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Gold since 1971: tap an era</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="histSvg" viewBox="0 0 700 280" width="700" role="img" aria-label="Gold price milestones since 1971 on a log scale"></svg></div>
+      <p class="caption">Log scale. Dots are approximate spot-price milestones, and the line only connects them. It isn't a full price history.</p>
+      <div class="eras" id="eraBtns"></div>
+      <div class="readout" id="eraBox" style="margin-top:14px"></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Try it · Match the analog</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Stocks crash 10% in a week, margin calls spread, and gold falls 5% alongside stocks. Which era does this echo?</p>
+      <div class="opts"><button class="opt" data-k="a">1979: inflation mania</button><button class="opt" data-k="b">Late 2008 / March 2020: "dash for cash"</button><button class="opt" data-k="c">2013: the taper tantrum</button></div>
+      <p class="explain" hidden>In a liquidity panic, gold gets sold to raise cash first. In both 2008 and 2020 it then recovered to new highs once central banks flooded the system. Wait for the selling to exhaust before you buy.</p>
+    </div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">The Fed signals it will slow its support, real yields jump fast from negative toward positive, and gold's rally stalls. Which era?</p>
+      <div class="opts"><button class="opt" data-k="a">1971–1980</button><button class="opt" data-k="b">2020</button><button class="opt" data-k="c">2013: the taper tantrum</button></div>
+      <p class="explain" hidden>In 2013 rising real-yield expectations ended gold's decade-long bull, with a crash in April. A fast real-yield rise is the classic trend killer.</p>
+    </div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">Inflation stays high, the Fed hikes hard, yet gold makes new highs as central banks buy record amounts. Which era?</p>
+      <div class="opts"><button class="opt" data-k="a">2022 onward: the central-bank era</button><button class="opt" data-k="b">1980–2001</button><button class="opt" data-k="c">2011</button></div>
+      <p class="explain" hidden>From 2022 the usual "high real yields = weak gold" link loosened because official-sector buying became the main driver. That's why the weekly question "which driver is in charge?" matters.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Keep an "analog file". When today's setup resembles a past era, reread how gold behaved and what ended that move.</p><b>WHY</b><p class="whyt">Markets are people reacting to fear, forced selling and central-bank policy, and people react to similar situations in similar ways. Past eras show how far moves can go and, just as useful, what usually ended them.</p></div>
+  <div class="stepnav"><button class="btn" data-go="5">← Back</button><button class="btn primary" data-go="7">Next: Seasonality →</button></div>
+</section>
+
+<!-- ============ STEP 7: SEASONALITY ============ -->
+<section class="step" data-title="Seasonal cycles" data-num="7" hidden>
+  <header>
+    <div class="eyebrow">Step 7 of 12 · Seasonal cycles</div>
+    <h2>Seasonality is a tailwind, never the engine</h2>
+    <p class="goal">Some months have historically been firmer for gold, often because physical buying follows the calendar. Use it to add conviction when macro already agrees.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The year at a glance: tap a month</h3></div>
+    <div class="panel">
+      <div class="months" id="months"></div>
+      <div class="readout" id="monBox" style="margin-top:14px"></div>
+      <p class="caption">Qualitative tendencies from long-run studies. Results vary a lot by period, and any single year can do the opposite.</p>
+    </div>
+    <div class="panel tablebox">
+      <span class="lbl">Physical-demand calendar</span>
+      <table style="margin-top:6px">
+        <tbody>
+          <tr><td><b>Chinese New Year</b></td><td>Late Jan – Feb</td><td class="muted">Pre-holiday buying in China</td></tr>
+          <tr><td><b>Akshaya Tritiya</b></td><td>Apr – May</td><td class="muted">Auspicious gold-buying day in India</td></tr>
+          <tr><td><b>Dhanteras &amp; Diwali</b></td><td>Oct – Nov</td><td class="muted">Peak Indian festival buying</td></tr>
+          <tr><td><b>Indian wedding season</b></td><td>Oct – Dec, Jan – Feb</td><td class="muted">Jewellery demand</td></tr>
+          <tr><td><b>Central-bank data</b></td><td>Monthly</td><td class="muted">PBoC reserves (~7th), WGC quarterly Gold Demand Trends</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">It's January, historically a firm month. But the Fed just turned hawkish, real yields are surging and the dollar is breaking out. How much weight does seasonality get?</p>
+      <div class="opts"><button class="opt" data-k="a">A lot, since January is bullish</button><button class="opt" data-k="b">Enough to go long at half size</button><button class="opt" data-k="c">Almost none. It's a tie-breaker, and macro is clearly against</button></div>
+      <p class="explain" hidden>Seasonality only adds weight when the bigger drivers are neutral or agree. Against a clear macro headwind it's noise. In the scorecard (step 8) it carries the smallest weight.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Use seasonality only to break a tie or to add size when macro, intermarket and volume already agree.</p><b>WHY</b><p class="whyt">Seasonal patterns come from physical buying, like jewellery and festivals, which is small next to the money moved by interest rates and central banks. They're also averages over many years, so any single year can do the opposite.</p></div>
+  <div class="stepnav"><button class="btn" data-go="6">← Back</button><button class="btn primary" data-go="8">Next: Build your bias →</button></div>
+</section>
+
+<!-- ============ STEP 8: SCORECARD ============ -->
+<section class="step" data-title="Weekly bias scorecard" data-num="8" hidden>
+  <header>
+    <div class="eyebrow">Step 8 of 12 · Put it together</div>
+    <h2>Score the drivers, get your bias</h2>
+    <p class="goal">This is the Sunday routine. Rate each driver bearish, neutral or bullish. The weights reflect how much each one usually matters. The result tells you which direction to trade this week, and how big.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>This week's scorecard</h3><button class="btn small" id="scReset" style="margin-left:auto">Clear</button></div>
+    <div class="panel" id="scRows"></div>
+    <div class="panel">
+      <div class="meter"><div class="pin" id="scPin"></div></div>
+      <div class="meter-scale"><span>−100 short</span><span>0</span><span>+100 long</span></div>
+      <div class="readout" id="scBox" style="margin-top:14px"><span class="lbl">Weekly bias</span><span class="big" id="scScore">0</span><h4 id="scTitle"></h4><p id="scText"></p><p id="scConflict" class="neg" hidden></p></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="scCopy">Copy summary for my journal</button></div>
+      <textarea class="fallback" id="scFallback" hidden readonly></textarea>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Your full Gold Macro watchlist</h3></div>
+    <div class="panel" data-tv="watch"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Your scorecard reads +12, and the drivers are split: yields bullish, dollar bearish, OI falling. What's the plan?</p>
+      <div class="opts"><button class="opt" data-k="a">Go long at full size, since the score is positive</button><button class="opt" data-k="b">No real edge: trade smaller, only A+ setups, or sit out</button><button class="opt" data-k="c">Go short to fade the crowd</button></div>
+      <p class="explain" hidden>A small score with conflicting drivers means the market has no clear direction. Sitting out protects your drawdown for the weeks when the score is strong.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Only trade against your weekly bias if price breaks a major weekly level and volume and OI confirm the break. Otherwise, standing aside is a position.</p><b>WHY</b><p class="whyt">Most counter-trend trades fight the big money that's driving the trend. A weekly level breaking while open interest rises is evidence that big money has actually changed sides, and that's the only time it's worth fighting your bias.</p></div>
+  <div class="stepnav"><button class="btn" data-go="7">← Back</button><button class="btn primary" data-go="9">Next: Risk &amp; routine →</button></div>
+</section>
+
+<!-- ============ STEP 9: RISK ============ -->
+<section class="step" data-title="Risk & routine" data-num="9" hidden>
+  <header>
+    <div class="eyebrow">Step 9 of 12 · Execution for a prop account</div>
+    <h2>Size so you survive long enough to get paid</h2>
+    <p class="goal">Payouts come from staying inside the drawdown while your edge plays out. Size every trade from your stop distance, never from how confident you feel.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Position-size calculator</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="rDd">Drawdown buffer left ($)</label><input id="rDd" type="number" min="100" step="100" value="2000"></div>
+        <div class="field"><label for="rPct">Risk per trade (% of buffer)</label><input id="rPct" type="number" min="1" max="50" step="1" value="10"></div>
+        <div class="field"><label for="rType">Contract</label><select id="rType"><option value="10">MGC — $10 per $1</option><option value="100">GC — $100 per $1</option></select></div>
+        <div class="field"><label for="rAtr">ATR of your chart ($)</label><input id="rAtr" type="number" min="0.5" step="0.5" value="8"></div>
+        <div class="field"><label for="rMult">Stop = ATR ×</label><input id="rMult" type="number" min="0.5" step="0.25" value="1.5"></div>
+      </div>
+      <div class="grid3" style="margin-top:16px">
+        <div class="readout"><span class="lbl">Max risk per trade</span><span class="big" id="rRisk"></span></div>
+        <div class="readout"><span class="lbl">Stop distance</span><span class="big" id="rStop"></span><span class="muted" id="rStopCost"></span></div>
+        <div class="readout" id="rBox"><span class="lbl">Contracts</span><span class="big" id="rQty"></span><span id="rNote"></span></div>
+      </div>
+      <div style="margin-top:14px"><span class="lbl">Your buffer in losing trades at this size</span><div class="units" id="rUnits"></div><p class="caption" id="rUnitsText"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Your routine checklist</h3><button class="btn small" id="clReset" style="margin-left:auto">Uncheck all</button></div>
+    <div class="panel checklist" id="checklist"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Your buffer is $2,000 and you risk 10% ($200). The 15-minute ATR is $8 and you use a 1.5 × ATR stop on MGC. How many contracts?</p>
+      <div class="opts"><button class="opt" data-k="a">2 contracts</button><button class="opt" data-k="b">1 contract</button><button class="opt" data-k="c">3 contracts</button></div>
+      <p class="explain" hidden>Stop = 1.5 × $8 = $12. On MGC that's $120 per contract. Two contracts would risk $240, which is over $200, so the answer is 1. Round down, never up.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Stop trading for the day after 2 full losses or 3× your per-trade risk. The next session is where the payout comes from.</p><b>WHY</b><p class="whyt">Position size, not being right, decides whether you survive a losing streak. After two losses people tend to trade bigger and faster to win it back (revenge trading). That's how daily limits get hit.</p></div>
+  <div class="stepnav"><button class="btn" data-go="8">← Back</button><button class="btn primary" data-go="10">Next: Journal &amp; review →</button></div>
+</section>
+
+<!-- ============ STEP 10: JOURNAL ============ -->
+<section class="step" data-title="Journal & review" data-num="10" hidden>
+  <header>
+    <div class="eyebrow">Step 10 of 12 · The feedback loop</div>
+    <h2>Your journal turns trades into an edge</h2>
+    <p class="goal">Record the macro context with every trade. After 50–100 trades you'll see which regimes, setups and times of day actually pay you, and you can cut everything else.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Journal entry</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="j_date">Date</label><input id="j_date" type="text"></div>
+        <div class="field"><label for="j_bias">Weekly bias score</label><input id="j_bias" type="text" placeholder="+38 lean long"></div>
+        <div class="field"><label for="j_driver">Driver in charge</label><input id="j_driver" type="text" placeholder="Falling real yields"></div>
+        <div class="field"><label for="j_setup">Setup</label><input id="j_setup" type="text" placeholder="Pullback to VWAP in London"></div>
+        <div class="field"><label for="j_levels">Entry / stop / target</label><input id="j_levels" type="text" placeholder="4031.5 / 4019.5 / 4055"></div>
+        <div class="field"><label for="j_vol">Volume &amp; OI read</label><input id="j_vol" type="text" placeholder="RVOL 1.6, OI rising"></div>
+        <div class="field"><label for="j_news">News within 30 min?</label><input id="j_news" type="text" placeholder="No"></div>
+        <div class="field"><label for="j_r">Result (R multiple)</label><input id="j_r" type="text" placeholder="+1.8R"></div>
+        <div class="field"><label for="j_plan">Followed the plan?</label><select id="j_plan"><option>Yes</option><option>Partly</option><option>No</option></select></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label for="j_lesson">One lesson</label><textarea id="j_lesson" rows="2" placeholder="Entered before London confirmed. Wait for the first 15-min close next time."></textarea></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="jCopy">Copy entry</button><button class="btn small" id="jClear">Clear</button></div>
+      <textarea class="fallback" id="jFallback" hidden readonly></textarea>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>What to look for after 50+ trades</h3></div>
+    <div class="grid2">
+      <div class="panel"><b>By regime</b><p class="muted" style="margin-top:4px">Do you make money when the bias score is above +40 and lose when it's near zero? Then stop trading near zero.</p></div>
+      <div class="panel"><b>By session</b><p class="muted" style="margin-top:4px">London open, 8:30 data, or the afternoon: which session pays you? Trade that one.</p></div>
+      <div class="panel"><b>By volume/OI read</b><p class="muted" style="margin-top:4px">Compare trades with rising OI to trades in short-covering moves. That comparison tells you how much weight to put on step 4.</p></div>
+      <div class="panel"><b>By plan-following</b><p class="muted" style="margin-top:4px">Compare "Yes" trades with "No" trades. The gap is the money your discipline makes.</p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">After 60 journaled trades, what's the most valuable thing to do with the data?</p>
+      <div class="opts"><button class="opt" data-k="a">Find a new indicator to add</button><button class="opt" data-k="b">Double size on the next trade to recover losses</button><button class="opt" data-k="c">Find which regimes and setups have positive expectancy and drop the rest</button></div>
+      <p class="explain" hidden>Your edge is usually a small subset of what you trade. Cutting the losing contexts raises your win rate and smooths your equity curve, which is exactly what prop consistency rules reward.</p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Your one-page playbook</span></div>
+    <div class="panel">
+      <ol style="margin:0;padding-left:22px;display:grid;gap:7px">
+        <li>Size in MGC. Know how many dollars of movement your daily limit absorbs.</li>
+        <li>Name the driver in charge every Sunday.</li>
+        <li>Demand confirmation from the dollar, yields, silver and miners. Treat divergences as signals.</li>
+        <li>Ride moves where price and OI rise together on above-average volume. Distrust short covering.</li>
+        <li>Respect the calendar. No trades in the first 2 minutes of a Tier 1 release.</li>
+        <li>Match today to a historical regime and remember how that one ended.</li>
+        <li>Use seasonality as a tie-breaker only.</li>
+        <li>Score the drivers. A weak score means smaller size or no trade.</li>
+        <li>Size from an ATR-based stop. Stop for the day after 2 losses.</li>
+        <li>Journal everything, review every 50 trades, and cut what doesn't pay.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Journal every trade. Every 50 trades, keep the setups that pay and drop the ones that don't.</p><b>WHY</b><p class="whyt">Memory lies: you remember big wins and forget the small losses you keep repeating. A written record shows which situations actually pay you, so you can do more of those and cut the rest.</p></div>
+  <div class="stepnav"><button class="btn" data-go="9">← Back</button><button class="btn primary" data-go="11">Next: Your weekly rhythm →</button></div>
+</section>
+
+<!-- ============ STEP 11: WEEKLY RHYTHM ============ -->
+<section class="step" data-title="Your weekly rhythm" data-num="11" hidden>
+  <header>
+    <div class="eyebrow">Step 11 of 12 · How to keep up without drowning</div>
+    <h2>Your trading week, one picture at a time</h2>
+    <p class="goal">New to trading? This lesson answers two questions: how often you check the macro drivers, and how you decide without reading everything. Go through the 10 slides in order. Each one tells you what to do and why.</p>
+  </header>
+
+  <div class="block">
+    <div class="panel deck" data-deck="rhythm">
+      <div class="slidetop"><span class="when slcount">Slide 1 of 10</span><div class="dots"></div></div>
+
+      <!-- SLIDE 0: WHY GOLD MOVES -->
+      <div class="slide" data-slide>
+        <h4 class="st">First, why gold moves at all</h4>
+        <p class="lead">Every rule in this course comes from one chain reaction. Once you understand it, you'll know why you check the dollar and the 2-yr yield and ignore most headlines. Pick what the market starts to expect, then step through each link.</p>
+        <div class="field"><label>The market starts to expect the Fed to…</label><div class="seg" id="chDir"></div></div>
+        <div class="chain" id="chain"></div>
+        <div class="readout" id="chBox"><span class="lbl" id="chStep"></span><h4 id="chTitle"></h4><p id="chWhy"></p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="chPrev">← Previous link</button><button class="btn small primary" id="chNext">Next link →</button></div>
+        <div class="grid2" style="align-items:start">
+          <div class="panel" style="background:var(--surface-2)">
+            <span class="lbl">Try it: what does holding gold cost you?</span>
+            <div class="field" style="margin-top:10px"><label for="cgAmt">Money in gold ($)</label><input id="cgAmt" type="number" min="1000" step="1000" value="100000"></div>
+            <div class="field" style="margin-top:10px"><label for="cgRy">Real yield on safe bonds: <output id="cgRyO"></output></label><input id="cgRy" type="range" min="-2" max="3" step="0.25" value="2"></div>
+            <div class="readout" id="cgBox" style="margin-top:10px;background:var(--surface)"><span class="big" id="cgVal"></span><span id="cgText"></span></div>
+          </div>
+          <div class="panel" style="background:var(--surface-2)">
+            <span class="lbl">When the chain breaks</span>
+            <p style="margin-top:8px">Some buyers don't care about bond yields. Central banks buy gold for safety, for example to hold reserves that can't be frozen by sanctions. From 2022, their buying was big enough that gold rose even while real yields were high.</p>
+            <p style="margin-top:8px"><b>That's why</b> you check every week which driver is in charge. The chain still pulls on gold, but sometimes a bigger buyer pulls harder.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 1 -->
+      <div class="slide" data-slide>
+        <h4 class="st">Think of it like a road trip</h4>
+        <p class="lead">You don't re-plan a road trip every minute. You choose the route once, check traffic before you leave, then keep your eyes on the road. Trading gold works the same way.</p>
+        <div class="svgbox"><svg viewBox="0 0 640 200" width="640" role="img" aria-label="Four stages: map, traffic report, driving, roadworks">
+          <g>
+            <polygon points="50,42 72,34 94,42 116,34 116,104 94,112 72,104 50,112" style="fill:var(--gold-soft);stroke:var(--gold);stroke-width:2"/>
+            <line x1="72" y1="34" x2="72" y2="104" style="stroke:var(--gold);stroke-width:1"/><line x1="94" y1="42" x2="94" y2="112" style="stroke:var(--gold);stroke-width:1"/>
+            <path d="M58 96 C70 80, 84 90, 92 70 S106 52, 108 50" style="fill:none;stroke:var(--bear);stroke-width:2.5;stroke-dasharray:4 3"/>
+            <circle cx="108" cy="50" r="4" style="fill:var(--bear)"/>
+          </g>
+          <g>
+            <rect x="222" y="28" width="36" height="88" rx="8" style="fill:var(--ink)"/>
+            <circle cx="240" cy="48" r="9" style="fill:var(--bear)"/><circle cx="240" cy="72" r="9" style="fill:var(--gold-strong)"/><circle cx="240" cy="96" r="9" style="fill:var(--bull)"/>
+          </g>
+          <g>
+            <circle cx="400" cy="72" r="38" style="fill:none;stroke:var(--ink);stroke-width:8"/>
+            <circle cx="400" cy="72" r="9" style="fill:var(--ink)"/>
+            <line x1="400" y1="72" x2="364" y2="72" style="stroke:var(--ink);stroke-width:6"/><line x1="400" y1="72" x2="436" y2="72" style="stroke:var(--ink);stroke-width:6"/><line x1="400" y1="72" x2="400" y2="108" style="stroke:var(--ink);stroke-width:6"/>
+          </g>
+          <g>
+            <polygon points="560,30 606,112 514,112" style="fill:var(--gold-strong)"/>
+            <rect x="557" y="58" width="6" height="30" rx="2" style="fill:var(--on-gold)"/><circle cx="560" cy="99" r="4" style="fill:var(--on-gold)"/>
+          </g>
+          <g style="stroke:var(--muted);stroke-width:2;fill:none"><path d="M134 72 H200 M192 66 L200 72 L192 78"/><path d="M276 72 H344 M336 66 L344 72 L336 78"/><path d="M456 72 H504 M496 66 L504 72 L496 78"/></g>
+          <text x="83" y="146" text-anchor="middle" class="t-ink" style="font-size:13px;font-weight:600">1 · The map</text>
+          <text x="83" y="164" text-anchor="middle">Pick a direction</text><text x="83" y="182" text-anchor="middle" class="t-gold">Sunday · 30–45 min</text>
+          <text x="240" y="146" text-anchor="middle" class="t-ink" style="font-size:13px;font-weight:600">2 · Traffic report</text>
+          <text x="240" y="164" text-anchor="middle">Anything changed?</text><text x="240" y="182" text-anchor="middle" class="t-gold">Each morning · 10 min</text>
+          <text x="400" y="146" text-anchor="middle" class="t-ink" style="font-size:13px;font-weight:600">3 · Driving</text>
+          <text x="400" y="164" text-anchor="middle">Eyes on the chart</text><text x="400" y="182" text-anchor="middle" class="t-gold">While you trade</text>
+          <text x="560" y="146" text-anchor="middle" class="t-ink" style="font-size:13px;font-weight:600">4 · Roadworks</text>
+          <text x="560" y="164" text-anchor="middle">Slow down</text><text x="560" y="182" text-anchor="middle" class="t-gold">News days only</text>
+        </svg></div>
+        <div class="dolist">
+          <div class="do"><b>Do</b><ul><li>Plan your direction once a week</li><li>Do a quick check each morning</li><li>Watch only the chart while trading</li></ul></div>
+          <div class="skip"><b>Skip</b><ul><li>Reading every headline</li><li>Checking the dollar every 5 minutes</li><li>Changing your mind because of one tweet</li></ul></div>
+        </div>
+        <div class="why"><b>WHY</b><div><ul><li>Macro tells you the <b>direction</b> big money is likely pushing gold. The chart tells you the <b>timing</b>: where to get in and out.</li><li>Macro drivers change slowly. The Fed meets 8 times a year and most economic data comes out once a month. Price changes every second.</li><li>If you check slow things every few minutes, normal wiggles look like news. You start changing your mind and over-trading, and that's how prop accounts get blown. So check each thing at the speed it actually changes.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 2 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Your week in one picture</h4>
+        <p class="lead">The gold block is your big planning session. The blue blocks are 10-minute morning checks. The red blocks are news times, when you slow down. The rest of the time you only watch your chart.</p>
+        <div class="weekwrap"><div class="week">
+          <div class="day"><span class="dname">SUN</span><div class="blk plan"><b>PLAN</b><br>30–45 min<br><br>Score the drivers<br>Pick your bias<br>Mark levels<br>List the week's news</div></div>
+          <div class="day"><span class="dname">MON</span><div class="blk chk">Check · 10 min</div><div class="blk trade">Trade the chart</div></div>
+          <div class="day"><span class="dname">TUE</span><div class="blk chk">Check · 10 min</div><div class="blk trade">Trade the chart</div></div>
+          <div class="day"><span class="dname">WED</span><div class="blk chk">Check · 10 min</div><div class="blk news">CPI 8:30<br>hands off</div><div class="blk trade">Trade the chart</div></div>
+          <div class="day"><span class="dname">THU</span><div class="blk chk">Check · 10 min</div><div class="blk trade">Trade the chart</div></div>
+          <div class="day"><span class="dname">FRI</span><div class="blk chk">Check · 10 min</div><div class="blk news">Jobs 8:30<br>hands off</div><div class="blk trade">Trade, then flat before the weekend</div><div class="blk chk">COT 3:30 pm</div></div>
+          <div class="day"><span class="dname">SAT</span><div class="blk off">Market closed<br><br>Rest</div></div>
+        </div></div>
+        <div class="bigline"><span class="big gold">≈ 1½ hours</span><span>of macro homework per week. That's all it takes. The news days shown are an example: check the real calendar every Sunday.</span></div>
+        <div class="why"><b>WHY</b><div><ul><li><b>Sunday:</b> the market is closed, so price can't scare or excite you while you decide. Calm decisions are better decisions.</li><li><b>Every morning:</b> Asia and London trade while you sleep. The dollar or yields may already have moved, and you want to know before you risk money.</li><li><b>News times:</b> these are the only scheduled moments when new information arrives, so they're the only times macro can change fast.</li><li><b>Only 1½ hours:</b> there just isn't more new information than that in a normal week.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 3 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Sunday: pick your direction</h4>
+        <p class="lead">Once a week, with the market closed, you decide which way you'll trade. Four small steps:</p>
+        <div class="flow">
+          <div class="fstep"><span class="fn">1</span><b>Look at 3 charts</b>
+            <svg viewBox="0 0 150 60" width="150" aria-hidden="true"><g style="fill:none;stroke-width:2.5"><path d="M8 14 L28 22 L40 30 L50 44" style="stroke:var(--bull)"/><path d="M58 16 L76 24 L86 34 L98 44" style="stroke:var(--bull)"/><path d="M106 40 L120 34 L130 26 L142 14" style="stroke:var(--bear)"/></g><text x="28" y="58" text-anchor="middle" style="font-size:9px">real yield</text><text x="78" y="58" text-anchor="middle" style="font-size:9px">dollar</text><text x="124" y="58" text-anchor="middle" style="font-size:9px">2-yr</text></svg>
+            <span class="muted">Real yield, dollar, 2-yr yield. Going <b class="pos">down</b> is good for gold. Going <b class="neg">up</b> is bad.</span></div>
+          <div class="fstep"><span class="fn">2</span><b>Fill in the scorecard</b>
+            <div class="mini-rows"><span><i class="light r"></i>Bearish</span><span><i class="light n"></i>Neutral</span><span><i class="light g"></i>Bullish</span></div>
+            <span class="muted">Rate each of the 10 drivers in step 8. About 20 minutes.</span></div>
+          <div class="fstep"><span class="fn">3</span><b>Read the meter</b>
+            <div class="meter" style="margin:8px 0"><div class="pin" style="left:72%"></div></div>
+            <span class="muted">It says Long, Short, or No edge. No edge means trade small or not at all.</span></div>
+          <div class="fstep"><span class="fn">4</span><b>Write one sentence</b>
+            <div class="sticky">"Gold is trading <u>falling real yields</u>. Bias: <u>long</u>. I change my mind if <u>the 2-yr closes above last week's high</u>."</div>
+            <span class="muted">Keep it next to your screen. This is what you check during the week.</span></div>
+        </div>
+        <div><button class="btn small" data-go="8">Open the scorecard (step 8) →</button></div>
+        <div class="why"><b>WHY</b><div><ul><li><b>Why these 3 charts:</b> they measure what it costs to hold gold (see slide 1). When they fall, holding gold gets cheaper and big money tends to buy.</li><li><b>Why a written sentence:</b> you decide while calm, so you don't decide while scared in the middle of a trade.</li><li><b>Why "I change my mind if…":</b> it stops two mistakes. You won't cling to a dead idea, and you won't flip on every wiggle. You only change when your own condition is hit.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 4 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Every morning: three numbers, three lights</h4>
+        <p class="lead">Before you trade, look at how far these three moved since yesterday's close. You only worry if they moved <b>against</b> your bias. Try it: type in this morning's moves.</p>
+        <div class="grid3">
+          <div class="field"><label>My bias this week</label><div class="seg" id="mcBias"></div></div>
+          <div class="field"><label for="mcDxy">Dollar TVC:DXY (%)</label><input id="mcDxy" type="number" step="0.1" value="0.2"></div>
+          <div class="field"><label for="mc2y">2-yr TVC:US02Y (bp)</label><input id="mc2y" type="number" step="1" value="3"></div>
+          <div class="field"><label for="mcRy">Real yield proxy (bp)</label><input id="mcRy" type="number" step="1" value="8"></div>
+        </div>
+        <p class="caption" style="margin-top:-4px">1 bp (basis point) = 0.01%. If the 2-yr yield goes from 3.50% to 3.58%, that's +8 bp.</p>
+        <div class="grid3" id="mcLights"></div>
+        <div class="readout" id="mcBox"><h4 id="mcTitle"></h4><p id="mcText"></p></div>
+        <div class="why"><b>WHY</b><div><ul><li><b>Why only moves against you:</b> a move in your favour doesn't threaten your plan. Only a move against it could mean your reason for the trade is gone.</li><li><b>Why these limits:</b> on a normal day the dollar moves a few tenths of a percent and the 2-yr yield a few basis points. A move far bigger than normal usually means real new information, not noise.</li><li><b>Why half size on amber:</b> when you're less sure, you risk less. It's the same logic as driving slower in fog.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 5 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">While trading: only the chart</h4>
+        <p class="lead">Once the session starts, the macro work is done. Your screen should show gold, your levels, VWAP and volume. Hide or ignore the macro charts until a news release or an alert.</p>
+        <div class="svgbox"><svg id="s5chart" viewBox="0 0 640 250" width="640" role="img" aria-label="Example trading screen: gold chart with VWAP, levels and volume, macro charts greyed out"></svg></div>
+        <div class="dolist">
+          <div class="do"><b>Watch</b><ul><li>Price at your marked levels</li><li>Above or below VWAP</li><li>Is volume bigger than usual?</li><li>Your stop and your daily loss limit</li></ul></div>
+          <div class="skip"><b>Ignore</b><ul><li>News feeds and social media</li><li>Other people's opinions</li><li>The macro charts, unless an alert fires</li></ul></div>
+        </div>
+        <div class="why"><b>WHY</b><div><ul><li>Macro barely changes during a normal day, but price does. Watching both splits your attention.</li><li>By the time a headline is written, big traders have usually acted already, and your chart shows their buying or selling first.</li><li>Missing your stop or your level because you were reading news costs real money. The chart is where your money is.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 6 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">News days: hands off, then follow</h4>
+        <p class="lead">On days with a big release (CPI, jobs, Fed), you know the time in advance from your Sunday list. Here's the whole routine for an 8:30 release:</p>
+        <div class="newsbar">
+          <div class="nb g1"><b>8:25</b><span>Close or tighten your trade</span></div>
+          <div class="nb g2"><b>8:30–8:32</b><span>Hands off. Price whips both ways</span></div>
+          <div class="nb g3"><b>8:32–9:00</b><span>Watch the 2-yr yield and the dollar. Which way do they hold?</span></div>
+          <div class="nb g4"><b>After</b><span>Trade gold in the direction they point</span></div>
+        </div>
+        <div class="grid2">
+          <div class="readout bear"><span class="lbl">If the 2-yr yield and dollar go up and stay up</span><h4>Gold likely goes down</h4><span>Look for shorts, or skip longs.</span></div>
+          <div class="readout bull"><span class="lbl">If the 2-yr yield and dollar go down and stay down</span><h4>Gold likely goes up</h4><span>Look for longs, or skip shorts.</span></div>
+        </div>
+        <p class="caption">Check your prop firm's news rule first. Some don't allow trades a few minutes before and after these releases.</p>
+        <div class="why"><b>WHY</b><div><ul><li><b>Why hands off for 2 minutes:</b> in the first seconds many buyers and sellers pull their orders and computer programs trade the headline number before anyone reads the details. Price jumps both ways and stops fill at bad prices (slippage).</li><li><b>Why watch the 2-yr yield and the dollar:</b> news reaches gold <i>through</i> rates and the dollar. The 2-yr is the market's live vote on what the Fed will do. If it holds its move for 15–30 minutes, big money believes the news.</li><li><b>Why follow their direction:</b> you're trading with the chain reaction from slide 1, not guessing.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 7 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Does this change my bias?</h4>
+        <p class="lead">Your bias holds all week unless one of these five things happens. Answer each question. If all five are "No", everything else was noise.</p>
+        <div id="dcRows"></div>
+        <div class="readout" id="dcBox"><h4 id="dcTitle"></h4><p id="dcText"></p></div>
+        <p class="caption">Set TradingView price alerts on TVC:DXY, TVC:US02Y and your gold weekly levels. Then the alerts tell you when to ask these questions, and you don't have to keep checking.</p>
+        <div class="why"><b>WHY</b><div><ul><li>Each trigger changes one of two things: what it costs to hold gold (questions 1–3) or how scared the world is (question 4). Question 5 is different: it shows real money has already changed sides.</li><li>The limits (15 bp, 1.5%) are bigger than a normal week's wobble, so they filter out noise.</li><li>If you re-scored on every headline, you'd flip direction all the time. You'd buy after rises and sell after drops, which is exactly backwards.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 8 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Once a month, and every 50 trades</h4>
+        <p class="lead">Two bigger check-ups keep you on track. You don't need to do them more often.</p>
+        <div class="grid2">
+          <div class="panel" style="background:var(--surface-2)">
+            <span class="when">Once a month · 30 min</span>
+            <div class="minical" id="miniCal"></div>
+            <ul class="tight"><li>Which driver is gold really following this month?</li><li>Are central banks still buying? (World Gold Council)</li><li>What does next month's seasonality say? (step 7)</li></ul>
+          </div>
+          <div class="panel" style="background:var(--surface-2)">
+            <span class="when">Every 50 trades · 1 hour</span>
+            <div class="trades50" id="t50"></div>
+            <div class="meter-scale"><span>trade 1</span><span>25</span><span>50 → review</span></div>
+            <ul class="tight"><li>Which setups made money? Keep them.</li><li>Which lost? Stop trading them.</li><li>Did you follow your plan? (step 10)</li></ul>
+          </div>
+        </div>
+        <div class="why"><b>WHY</b><div><ul><li><b>Monthly:</b> the driver in charge changes slowly, over months. Central banks becoming the main buyer in 2022 is an example. Checking monthly catches that without chasing noise.</li><li><b>50 trades:</b> a few trades prove nothing. Flip a coin 10 times and you can easily get 7 heads by luck. With about 50 trades, real patterns start to show over luck, so you can trust what the numbers say.</li></ul></div></div>
+      </div>
+
+      <!-- SLIDE 9 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Follow Sam through one week</h4>
+        <p class="lead">Sam is a new prop trader using this routine. Watch how little macro reading Sam does, and how the checks decide the size of each trade.</p>
+        <div class="sam">
+          <div class="samrow"><span class="dname">SUN</span><i class="light g"></i><div><b>Scorecard +44: long bias.</b><span class="muted"> Writes: "Gold is trading falling real yields. Long. I change my mind if the 2-yr closes above last week's high."</span></div><span class="res">plan</span></div>
+          <div class="samrow"><span class="dname">MON</span><i class="light g"></i><div><b>All three lights green.</b><span class="muted"> Buys a pullback to VWAP in the London session. Normal size.</span></div><span class="res pos">+1.2R</span></div>
+          <div class="samrow"><span class="dname">TUE</span><i class="light a"></i><div><b>Dollar up 0.4% overnight: amber.</b><span class="muted"> Half size, one trade only. Stopped out and done for the day.</span></div><span class="res neg">−0.5R</span></div>
+          <div class="samrow"><span class="dname">WED</span><i class="light g"></i><div><b>CPI day.</b><span class="muted"> Flat at 8:25. CPI comes in cooler than expected; the 2-yr yield and dollar fall and stay down. Buys at 9:05.</span></div><span class="res pos">+2.0R</span></div>
+          <div class="samrow"><span class="dname">THU</span><i class="light g"></i><div><b>All green, but no clean setup.</b><span class="muted"> No trade. Not trading is a decision too.</span></div><span class="res">0R</span></div>
+          <div class="samrow"><span class="dname">FRI</span><i class="light r"></i><div><b>Jobs report much stronger than expected. The 2-yr jumps 14 bp.</b><span class="muted"> That's a "Yes" on slide 7, so no new trades. Flat before the weekend. Re-scores on Sunday.</span></div><span class="res">0R</span></div>
+        </div>
+        <div class="bigline"><span class="big pos">+2.7R</span><span>for the week (R = one unit of risk). Macro homework: about 1½ hours. Example week with made-up numbers, for learning only.</span></div>
+        <div class="why"><b>WHY</b><div><ul><li>Sam didn't need to predict anything. The routine decided the size of every trade.</li><li><b>Tuesday:</b> less sure, so smaller size, which kept the loss small.</li><li><b>Wednesday:</b> waited for the rate and dollar vote, so traded with the big money.</li><li><b>Thursday:</b> no clean setup, no trade. Protecting the drawdown is part of the job.</li><li><b>Friday:</b> big news came, so Sam stopped and re-scored with a calm head on Sunday instead of reacting live.</li></ul></div></div>
+      </div>
+
+      <div class="slidenav"><button class="btn slprev">← Previous</button><button class="btn primary slnext">Next slide →</button></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Your bias is long. Monday morning the dollar is up 0.9% overnight and the 2-yr yield is up 12 bp. What do you do?</p>
+      <div class="opts"><button class="opt" data-k="a">Buy at the open like normal. The bias says long</button><button class="opt" data-k="b">Red light: don't trade the open. Watch the first session, and re-score if the moves hold</button><button class="opt" data-k="c">Go short right away with double size</button></div>
+      <p class="explain" hidden>Both numbers moved a lot against a long bias. That's a red light. You don't have to flip short, but you shouldn't buy until you know whether the story changed.</p>
+    </div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">It's Tuesday at 10:45 and you're in a trade. A headline says a Fed official sounds worried about inflation. No alert has fired on the dollar or the 2-yr yield. What do you do?</p>
+      <div class="opts"><button class="opt" data-k="a">Close the trade right away</button><button class="opt" data-k="b">Spend 30 minutes reading articles about it</button><button class="opt" data-k="c">Keep managing the trade with your stop. No alert means the market didn't care much</button></div>
+      <p class="explain" hidden>Your alerts are your filter. If the dollar and the 2-yr yield didn't break their levels, the headline didn't change the picture. Stick to the chart and your stop.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Plan on Sunday. Check three numbers each morning. Watch only the chart while trading. Re-score only when one of the five triggers fires.</p><b>WHY</b><p class="whyt">Most of what you could read in a day doesn't change what it costs to hold gold. A fixed rhythm keeps your attention on the few things that do, and stops you from reacting to noise.</p></div>
+  <div class="stepnav"><button class="btn" data-go="10">← Back</button><button class="btn primary" data-go="12">Next: COT, where to stand →</button></div>
+</section>
+
+<!-- ============ STEP 12: COT ============ -->
+<section class="step" data-title="COT: where to stand" data-num="12" data-new="1" hidden>
+  <header>
+    <div class="eyebrow">Step 12 of 12 · Commitment of Traders</div>
+    <h2>Where should a retail trader stand?</h2>
+    <p class="goal">Every week the regulator shows who holds gold futures: hedge funds, banks, miners, and small traders like you. This lesson shows you how to read that report and use it to decide which side of the market to be on. Go through the 8 slides in order.</p>
+  </header>
+
+  <div class="block">
+    <div class="panel deck" data-deck="cot">
+      <div class="slidetop"><span class="when slcount">Slide 1 of 8</span><div class="dots"></div></div>
+
+      <!-- COT 1 -->
+      <div class="slide" data-slide>
+        <h4 class="st">What the COT report is</h4>
+        <p class="lead">The CFTC (the US futures regulator) publishes the Commitment of Traders report every week. It's the only official look at how the big players are positioned in gold.</p>
+        <div class="cottime">
+          <div><b>Tuesday</b><span>Positions are counted at the end of the day</span></div>
+          <div><b>Friday 3:30 pm ET</b><span>The CFTC publishes the report</span></div>
+          <div><b>Weekend</b><span>You read it and update your bias</span></div>
+          <div class="late"><b>Next week</b><span>By the time you trade on it, it's 3+ days old</span></div>
+        </div>
+        <p class="caption">Gold is in the <b>Disaggregated</b> report, under "Gold – Commodity Exchange Inc.", CFTC code 088691. It's free at cftc.gov. On TradingView, add the indicator "Commitment of Traders: Disaggregated Metrics" to COMEX:GC1!. Holiday weeks can delay the release.</p>
+        <div class="why"><b>WHY</b><div><ul><li>Price shows you <i>what</i> happened. The COT shows you <i>who</i> did it. A rally driven by hedge funds buying is very different from one driven by traders closing shorts.</li><li>Because the data is 3 days old when you see it, it's a <b>weekly bias tool</b>. It tells you which side to favour, not when to enter.</li></ul></div></div>
+      </div>
+
+      <!-- COT 2 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Every contract has two sides</h4>
+        <p class="lead">A futures contract is a deal between a buyer (long) and a seller (short). So all the longs in the market always add up to exactly all the shorts. If one group is heavily long, other groups must be short the same amount.</p>
+        <div class="svgbox"><svg id="cotStack" viewBox="0 0 640 130" width="640" role="img" aria-label="All longs equal all shorts, split by trader group"></svg></div>
+        <div class="glegend" id="cotLegend"></div>
+        <p class="caption">Example numbers in the shape of a real report, simplified (spread positions left out).</p>
+        <div class="why"><b>WHY</b><div><ul><li>This is why the groups usually sit on opposite sides. When hedge funds pile into longs, those contracts are being sold to them by miners and banks.</li><li>So the question is never "who's right?" It's <b>"who has room to keep buying or selling, and who might be forced to change?"</b> That's what tells you where to stand.</li></ul></div></div>
+      </div>
+
+      <!-- COT 3 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Meet the players</h4>
+        <p class="lead">The report splits traders into five groups. Each trades gold for a different reason, so each one's position means something different.</p>
+        <div class="players">
+          <div class="player"><span class="gdot" style="background:var(--g-mm)"></span><div><b>Managed money</b><p>Hedge funds and trend-following funds (CTAs). They trade to profit from price direction.</p><p class="pl">Usually: <b>net long</b>, and it swings a lot.</p><p class="pl">Tells you: <b>which way the trend-drivers are leaning.</b> This is the group to watch.</p></div></div>
+          <div class="player"><span class="gdot" style="background:var(--g-sw)"></span><div><b>Swap dealers</b><p>Big banks. They sell gold exposure to clients and hedge it with futures.</p><p class="pl">Usually: <b>net short</b>, a large amount.</p><p class="pl">Tells you: the mirror of client demand. Their short is business, not a bet against gold.</p></div></div>
+          <div class="player"><span class="gdot" style="background:var(--g-pr)"></span><div><b>Producers &amp; merchants</b><p>Miners, refiners and jewellers. Miners sell future production to lock in a price.</p><p class="pl">Usually: <b>net short</b>, more so when prices are high.</p><p class="pl">Tells you: when they're <i>least</i> short, gold has often been near a low.</p></div></div>
+          <div class="player"><span class="gdot" style="background:var(--g-ot)"></span><div><b>Other reportables</b><p>Large traders who don't fit the other groups, such as trading firms and family offices.</p><p class="pl">Usually: mixed.</p><p class="pl">Tells you: less useful on its own.</p></div></div>
+          <div class="player you"><span class="gdot" style="background:var(--g-sm)"></span><div><span class="youtag">YOU ARE HERE</span><b>Small traders (nonreportable)</b><p>Everyone below the CFTC's reporting size (200 contracts in gold). Individual traders and small funds.</p><p class="pl">Usually: a small net long.</p><p class="pl">Tells you: crowd mood at best. Small traders have tended to be most bullish near tops.</p></div></div>
+        </div>
+        <p class="caption">If your prop account is simulated (many evaluation and some funded accounts are), your trades never reach the exchange and don't appear in the report. Either way, you trade at small-trader size. In the older "Legacy" report, commercials ≈ producers + swap dealers, and non-commercials ≈ managed money + other reportables.</p>
+        <div class="why"><b>WHY</b><div><ul><li>Only managed money trades gold mainly to profit from direction, and it moves in and out fast. Miners and banks mostly hedge. So <b>you follow the funds</b>, and you read the hedgers' shorts as business, not as a forecast.</li></ul></div></div>
+      </div>
+
+      <!-- COT 4 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Your size next to theirs</h4>
+        <p class="lead">Enter the size you trade and see how you compare with the funds.</p>
+        <div class="grid3">
+          <div class="field"><label for="szMgc">My size (MGC contracts)</label><input id="szMgc" type="number" min="1" value="2"></div>
+          <div class="field"><label for="szMm">Funds' net position (GC contracts)</label><input id="szMm" type="number" min="1000" step="1000" value="155000"></div>
+        </div>
+        <div class="grid3">
+          <div class="readout"><span class="lbl">You</span><span class="big" id="szYou"></span><span class="muted" id="szYouOz"></span></div>
+          <div class="readout"><span class="lbl">Managed money (example)</span><span class="big" id="szThem"></span><span class="muted" id="szThemOz"></span></div>
+          <div class="readout warn"><span class="lbl">They are bigger by</span><span class="big" id="szRatio"></span><span id="szPic"></span></div>
+        </div>
+        <div class="dolist">
+          <div class="skip"><b>What they have that you don't</b><ul><li>Enough money to move the price</li><li>Research teams and faster news</li><li>Time to wait out a losing position</li></ul></div>
+          <div class="do"><b>What you have that they don't</b><ul><li>Speed: in and out in seconds</li><li>Your orders never move the price</li><li>Nobody sees your position</li><li>You can sit out whenever you like</li></ul></div>
+        </div>
+        <div class="why"><b>WHY</b><div><ul><li>You can't move gold. The funds can. So you don't win by out-guessing them. You win by <b>standing on the same side as the money that's still pushing</b>, and stepping away before that money runs out.</li><li>Your speed is your edge: funds need days or weeks to exit a big position, and you need seconds.</li></ul></div></div>
+      </div>
+
+      <!-- COT 5 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Read a report in 3 steps</h4>
+        <p class="lead">Here's a sample week. Follow the three steps on the managed money row.</p>
+        <div class="tablebox"><table class="cottable">
+          <thead><tr><th>Group</th><th>Long</th><th>Short</th><th>Net = long − short</th><th>Change vs last week</th></tr></thead>
+          <tbody id="cotRows"></tbody>
+        </table></div>
+        <div class="svgbox"><svg id="cotNet" viewBox="0 0 640 200" width="640" role="img" aria-label="Net position by group"></svg></div>
+        <div class="flow">
+          <div class="fstep"><span class="fn">1</span><b>Find managed money</b><span class="muted">That's the hedge funds, the trend-drivers.</span></div>
+          <div class="fstep"><span class="fn">2</span><b>Work out the net</b><span class="muted">190,000 long − 35,000 short = <b>+155,000</b>. They lean long.</span></div>
+          <div class="fstep"><span class="fn">3</span><b>Look at the change</b><span class="muted">+12,400 this week, so they're still <b>adding</b> longs.</span></div>
+          <div class="fstep"><span class="fn">✓</span><b>Check the sum</b><span class="muted">All the net positions add up to 0. Every long has a short.</span></div>
+        </div>
+        <p class="caption">Example numbers for learning.</p>
+        <div class="why"><b>WHY</b><div><ul><li>The <b>net</b> is one number that shows which way a group leans and how hard.</li><li>The <b>weekly change</b> shows what they actually did in the last week. It's often more useful than the level, because it tells you whether they're still pushing.</li></ul></div></div>
+      </div>
+
+      <!-- COT 6 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Is the room crowded? The COT index</h4>
+        <p class="lead">A net long of 155,000 means nothing on its own. Is that a lot? The COT index compares it with the last 3 years on a 0–100 scale.</p>
+        <div class="formula">COT index = (this week − 3-yr lowest) ÷ (3-yr highest − 3-yr lowest) × 100</div>
+        <div class="grid3">
+          <div class="field"><label for="ciNow">Managed money net this week</label><input id="ciNow" type="number" step="1000" value="155000"></div>
+          <div class="field"><label for="ciMin">Lowest in 3 years</label><input id="ciMin" type="number" step="1000" value="20000"></div>
+          <div class="field"><label for="ciMax">Highest in 3 years</label><input id="ciMax" type="number" step="1000" value="200000"></div>
+        </div>
+        <div class="meter" style="margin-top:6px;background:linear-gradient(90deg,var(--bull-soft) 0%,var(--surface-2) 30%,var(--surface-2) 70%,var(--bear-soft) 100%)"><div class="pin" id="ciPin"></div></div>
+        <div class="meter-scale"><span>0 · nobody long</span><span>50</span><span>100 · room is full</span></div>
+        <div class="readout" id="ciBox"><span class="lbl">COT index</span><span class="big" id="ciVal"></span><h4 id="ciTitle"></h4><p id="ciText"></p></div>
+        <div class="why"><b>WHY</b><div><ul><li>Think of a room. When it's <b>full</b> (index near 100), everyone who wanted to buy already has. There's nobody left to push price higher, and if bad news hits, they all rush for the door at once. That's when the sharpest drops happen.</li><li>When the room is <b>empty</b> (near 0), there's lots of buying power waiting on the sidelines. Even small good news can bring them back in.</li></ul></div></div>
+      </div>
+
+      <!-- COT 7 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Where should you stand?</h4>
+        <p class="lead">This is the whole lesson in one map. Find where the funds are (how full the room is, and whether they're buying or selling) and it tells you where a retail trader should stand. Set this week's numbers:</p>
+        <div class="grid3">
+          <div class="field"><label for="wsIdx">COT index: <output id="wsIdxO"></output></label><input id="wsIdx" type="range" min="0" max="100" value="75"></div>
+          <div class="field"><label>Funds this week</label><div class="seg" id="wsFlow"></div></div>
+          <div class="field"><label>Gold price this week</label><div class="seg" id="wsPx"></div></div>
+        </div>
+        <div class="standmap">
+          <span></span><span class="ax">Room empty<br><small>index 0–20</small></span><span class="ax">Room filling<br><small>20–80</small></span><span class="ax">Room full<br><small>80–100</small></span>
+          <span class="ax side">Funds<br>buying</span>
+          <div class="zone" data-z="LB"><b>Get ready for longs</b><small>Early: funds returning</small></div>
+          <div class="zone" data-z="MB"><b>Stand with the funds: long</b><small>Trend has fuel and room</small></div>
+          <div class="zone" data-z="HB"><b>Stay, but lighten up</b><small>Late: few buyers left</small></div>
+          <span class="ax side">Funds<br>selling</span>
+          <div class="zone" data-z="LS"><b>Stand aside</b><small>Washed out, still falling</small></div>
+          <div class="zone" data-z="MS"><b>Stand with the funds: no longs</b><small>Selling has room to run</small></div>
+          <div class="zone" data-z="HS"><b>Step away from longs</b><small>Crowded exit: sharp drops</small></div>
+        </div>
+        <div class="readout" id="wsBox"><span class="lbl">Where you should stand this week</span><h4 id="wsTitle"></h4><p><b>What to do: </b><span id="wsAct"></span></p><p id="wsPxNote" class="muted"></p><p><b>Scorecard (step 8): </b><span id="wsScore"></span></p></div>
+        <div class="why"><b>WHY</b><div><ul><li><b>In the middle of a move, stand with the funds.</b> They have the money to push price and room to add more, and you can't beat them.</li><li><b>At the extremes, never be the last one in.</b> When the room is full, the funds become future sellers. When it's empty, they become future buyers.</li><li><b>At a full room, don't join the small-trader crowd.</b> Small traders have tended to be most bullish near tops, so that's the one crowd not to follow.</li><li><b>Always wait for price to agree.</b> The COT tells you what could happen. Price tells you it's actually happening.</li></ul></div></div>
+      </div>
+
+      <!-- COT 8 -->
+      <div class="slide" data-slide hidden>
+        <h4 class="st">Put it in your weekly routine</h4>
+        <p class="lead">Five minutes, once a week, on Friday evening or Sunday.</p>
+        <div class="flow">
+          <div class="fstep"><span class="fn">1</span><b>Open the COT indicator</b><span class="muted">On TradingView, COMEX:GC1! with "Commitment of Traders: Disaggregated Metrics", set to Managed Money.</span></div>
+          <div class="fstep"><span class="fn">2</span><b>Note 3 numbers</b><span class="muted">Managed money net, the change since last week, and the COT index.</span></div>
+          <div class="fstep"><span class="fn">3</span><b>Find your spot on the map</b><span class="muted">Slide 7 tells you where to stand.</span></div>
+          <div class="fstep"><span class="fn">4</span><b>Set the scorecard</b><span class="muted">Mark the "Positioning (COT)" driver in step 8.</span></div>
+        </div>
+        <div class="panel" style="background:var(--surface-2)">
+          <span class="lbl">Your COT log (saved in this browser)</span>
+          <div class="grid3" style="margin-top:10px">
+            <div class="field"><label for="lgDate">Report date</label><input id="lgDate" type="text" placeholder="2026-09-22"></div>
+            <div class="field"><label for="lgNet">MM net</label><input id="lgNet" type="number" step="1000" placeholder="155000"></div>
+            <div class="field"><label for="lgChg">Change</label><input id="lgChg" type="number" step="100" placeholder="12400"></div>
+            <div class="field"><label for="lgIdx">COT index</label><input id="lgIdx" type="number" min="0" max="100" placeholder="75"></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small primary" id="lgAdd">Add week</button><button class="btn small" data-go="8">Go to scorecard →</button></div>
+          <div class="tablebox" style="margin-top:10px"><table><thead><tr><th>Date</th><th>MM net</th><th>Change</th><th>Index</th><th></th></tr></thead><tbody id="lgRows"></tbody></table></div>
+        </div>
+        <div class="why"><b>WHY</b><div><ul><li>It's a slow signal, so it belongs in your Sunday plan, not your trading day.</li><li>A log shows the <b>trend</b> in positioning, for example "funds have added longs for 5 weeks straight". That's more reliable than any single report.</li></ul></div></div>
+      </div>
+
+      <div class="slidenav"><button class="btn slprev">← Previous</button><button class="btn primary slnext">Next slide →</button></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">The report shows swap dealers (banks) net short 160,000 gold contracts. What does that most likely mean?</p>
+      <div class="opts"><button class="opt" data-k="a">Banks are betting gold will crash, so you should short</button><button class="opt" data-k="b">They're hedging gold exposure they sold to clients. It's business, not a forecast</button><button class="opt" data-k="c">The report is wrong</button></div>
+      <p class="explain" hidden>Banks sell gold exposure to clients and hedge it by shorting futures. Their short grows when client demand grows. It isn't a directional bet, so don't copy it.</p>
+    </div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">The managed money COT index is 92. This week funds cut 20,000 net longs and gold fell. Where should you stand?</p>
+      <div class="opts"><button class="opt" data-k="a">Buy the dip, since funds are still very long</button><button class="opt" data-k="b">Stand with the small traders, who are also long</button><button class="opt" data-k="c">Step away from longs. A crowded room is starting to empty, which is where sharp drops happen</button></div>
+      <p class="explain" hidden>A full room that starts to empty means lots of longs may still need to sell. Don't be the last buyer. Protect profits, and only consider shorts if price breaks support.</p>
+    </div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">The COT index is 45, funds added longs this week, and gold rose. Where should you stand?</p>
+      <div class="opts"><button class="opt" data-k="a">With the funds: favour longs and buy pullbacks</button><button class="opt" data-k="b">Short, since funds are always wrong</button><button class="opt" data-k="c">Nowhere, since the COT is useless</button></div>
+      <p class="explain" hidden>The funds are buying, there's plenty of room left, and price agrees. That's the best place for a retail trader: riding with the money that's still pushing.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>In the middle of a move, stand with the funds. At the extremes, never be the last one in. Always wait for price to agree.</p><b>WHY</b><p class="whyt">You can't move gold, so you win by riding with the money that can. The COT shows where that money is and whether it has room left. It's 3 days old when you see it, so it sets your bias and your chart handles the timing.</p></div>
+  <div class="stepnav"><button class="btn" data-go="11">← Back</button><button class="btn primary" data-go="0">Back to the map</button></div>
+</section>
+
+<footer>
+  <p><b>Education only, not financial advice.</b> The relationships here are historical tendencies and can break down. Futures trading carries substantial risk. Always follow your prop firm's rules.</p>
+  <p>On a free TradingView plan, COMEX, CME and CBOT futures (symbols ending in 1!) are delayed about 10 minutes. TVC: and OANDA: symbols are real-time. FRED: series update once a day. For live intraday reads, use your prop firm's platform or TradingView's CME data add-on.</p>
+  <p>Free data: <a href="https://fred.stlouisfed.org/series/DFII10" target="_blank" rel="noopener">FRED real yields</a> · <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener">CME FedWatch</a> · <a href="https://www.cmegroup.com/markets/metals/precious/gold.volume.html" target="_blank" rel="noopener">CME gold volume &amp; OI</a> · <a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm" target="_blank" rel="noopener">CFTC COT</a> · <a href="https://www.gold.org/goldhub" target="_blank" rel="noopener">World Gold Council Goldhub</a></p>
+</footer>
+  </main>
+</div>
+</div>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem('gfl:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('gfl:'+k,JSON.stringify(v))}catch(e){}}};
+const money=n=>(n<0?'−':'')+'$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function seg(container,opts,value,onChange){container.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o.label;if(o.cls)b.className=o.cls;b.setAttribute('aria-pressed',String(o.value===value));b.addEventListener('click',()=>{$$('button',container).forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');onChange(o.value)});container.appendChild(b)});}
+async function copyText(text,btn,fallback){try{await navigator.clipboard.writeText(text);const t=btn.textContent;btn.textContent='Copied';setTimeout(()=>btn.textContent=t,1500)}catch(e){fallback.hidden=false;fallback.value=text;fallback.focus();fallback.select()}}
+
+/* ---------- navigation & progress ---------- */
+const steps=$$('.step'); const rail=$('#railList');
+let done=store.get('done',{});
+steps.forEach((s,i)=>{const li=document.createElement('li');const b=document.createElement('button');b.className='navbtn';b.type='button';b.dataset.i=i;
+  b.innerHTML=`<span class="n">${i===0?'◆':i}</span><span>${s.dataset.title}${s.dataset.new?'<span class="new">NEW</span>':''}</span><span class="ok">✓</span>`;
+  b.addEventListener('click',()=>show(i));li.appendChild(b);rail.appendChild(li)});
+function show(i,noScroll){steps.forEach((s,j)=>s.hidden=j!==i);$$('.navbtn').forEach((b,j)=>{if(j===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});store.set('step',i);
+  try{history.replaceState(null,'','#s'+i)}catch(e){}
+  const cur=$$('.navbtn')[i]; if(cur&&cur.scrollIntoView&&window.innerWidth<880)cur.scrollIntoView({block:'nearest',inline:'center'});
+  if(!noScroll)window.scrollTo({top:0});}
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>show(+b.dataset.go)));
+function refreshProgress(){let n=0;$$('.navbtn').forEach((b,i)=>{const d=i>0&&done[i];b.classList.toggle('done',!!d);if(d)n++});const T=steps.length-1;$('#progText').textContent=`${n} of ${T} steps done`;$('#progFill').style.width=(n/T*100)+'%'}
+refreshProgress();
+let start=store.get('step',0); const hm=location.hash.match(/^#s(\d+)$/); if(hm&&+hm[1]<steps.length)start=+hm[1];
+show(Math.min(start,steps.length-1),true);
+
+/* ---------- quizzes ---------- */
+$$('.quiz').forEach(q=>{q.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+  const right=o.dataset.k===q.dataset.answer; q.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+  o.classList.add(right?'right':'wrong'); const ex=q.querySelector('.explain'); ex.hidden=false;
+  ex.innerHTML=(right?'<b class="pos">Correct. </b>':'<b class="neg">Not quite. </b>')+ex.dataset.base;
+  q.dataset.ok=right?'1':'';
+  const step=q.closest('.step'); const i=steps.indexOf(step); const all=$$('.quiz',step).every(x=>x.dataset.ok==='1');
+  if(all&&i>0){done[i]=true;store.set('done',done);refreshProgress()}
+}));const ex=q.querySelector('.explain');ex.dataset.base=ex.innerHTML});
+
+/* ---------- step 0 funnel ---------- */
+const layers=[['Macro','Which way is the wind blowing?','weeks',2],['Intermarket','Do other markets agree?','days',3],['Volume, OI & positioning','Is real money behind the move?','days',4],['News calendar','When could the tape turn violent?','hours',5],['History & seasonality','Is there a precedent or a tailwind?','context',6],['Bias scorecard','So which direction, and how big?','weekly',8],['Risk & trigger','Where do I get in, and how much can I lose?','every trade',9]];
+const fn=$('#funnel');layers.forEach((l,i)=>{const d=document.createElement('div');d.className='fbar';d.style.paddingRight=(i*4)+'%';
+  d.innerHTML=`<span class="num">${i+1}</span><button class="body" type="button"><span><b>${l[0]}</b> <span>— ${l[1]}</span></span><em>${l[2]}</em></button>`;
+  d.querySelector('button').addEventListener('click',()=>show(l[3]));fn.appendChild(d)});
+
+/* ---------- step 1 session clock ---------- */
+(function(){const svg=$('#sessionSvg');const X=h=>20+h/24*780;
+  const bands=[[0,9,'Asia · range builds','var(--surface-2)'],[9,14.33,'London · first move','var(--info-soft)'],[14.33,19.5,'NY · peak volume','var(--gold-soft)'],[19.5,23,'Thin afternoon','var(--surface-2)'],[23,24,'','var(--line)']];
+  bands.forEach(b=>{el('rect',{x:X(b[0]),y:44,width:X(b[1])-X(b[0])-1,height:40,rx:4,style:`fill:${b[3]}`},svg);if(b[2])el('text',{x:(X(b[0])+X(b[1]))/2,y:68,'text-anchor':'middle',class:'t-ink',style:'font-size:12px'},svg,b[2])});
+  const ev=[[0,'18:00 Globex opens','top','start'],[9,'03:00 London open','top'],[14.5,'08:30 US data','top'],[19.5,'13:30 COMEX settle','top'],[16,'10:00 London PM fix','bot'],[20,'14:00 FOMC days','bot'],[23,'17:00 Close','bot']];
+  ev.forEach(e=>{const x=X(e[0]);el('line',{x1:x,x2:x,y1:e[2]==='top'?34:44,y2:e[2]==='top'?84:94,style:'stroke:var(--muted);stroke-width:1'},svg);el('text',{x:x,y:e[2]==='top'?28:108,'text-anchor':e[3]||'middle',class:'t-ink'},svg,e[1])});
+  for(let h=0;h<24;h+=3){const x=X(h);el('text',{x:x,y:132,'text-anchor':h===0?'start':'middle'},svg,String((h+18)%24).padStart(2,'0')+':00')}
+  let parts;try{parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(p=>[p.type,p.value]))}catch(e){parts=null}
+  const nt=$('#nowText');if(!parts){nt.textContent='';return}
+  const hr=+parts.hour%24,mn=+parts.minute,wd=parts.weekday;const hs=((hr-18+24)%24)+mn/60;
+  const closed=wd==='Sat'||(wd==='Sun'&&hr<18)||(wd==='Fri'&&hr>=17)||hr===17;
+  const tstr=String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0');
+  if(!closed){const x=X(hs);el('line',{x1:x,x2:x,y1:38,y2:90,style:'stroke:var(--bear);stroke-width:2.5'},svg);el('circle',{cx:x,cy:38,r:4,style:'fill:var(--bear)'},svg)}
+  const sess=hs<9?'the Asia session (usually a range: mark its high and low)':hs<14.33?'the London session (watch for the first real move)':hs<19.5?'the New York session (peak volume and US data)':'the thin afternoon (moves are less reliable)';
+  nt.innerHTML=closed?`<b>${tstr} ET, ${wd}</b>: gold futures are closed right now.`:`<b style="color:var(--bear)">Now ${tstr} ET</b>: it's ${sess}.`;
+})();
+
+/* ---------- step 1 contract calc ---------- */
+function calc1(){const m=+$('#c1Type').value,q=Math.max(1,+$('#c1Qty').value||1),lim=Math.max(1,+$('#c1Limit').value||1),mv=+$('#c1Move').value;
+  $('#c1MoveOut').textContent='$'+mv;const loss=m*q*mv;$('#c1Loss').textContent=money(-loss);
+  $('#c1Pct').textContent=`${Math.round(loss/lim*100)}% of your daily limit`;
+  const br=lim/(m*q);$('#c1Break').textContent='$'+(br<10?br.toFixed(1):Math.round(br));
+  const box=$('#c1Box');let t,c;
+  if(br<10){t='Gold can move this far in one 5-minute candle on news. Far too big.';c='bear'}
+  else if(br<25){t='About one busy London or New York hour. Still aggressive.';c='warn'}
+  else if(br<60){t='Roughly a normal day\'s range. Workable if stops are tight.';c='bull'}
+  else{t='More than a typical day. Plenty of room.';c='bull'}
+  box.className='readout '+c;$('#c1Feel').textContent=t}
+['c1Type','c1Qty','c1Limit','c1Move'].forEach(id=>$('#'+id).addEventListener('input',calc1));calc1();
+
+/* ---------- step 2 seesaw ---------- */
+let mCb=0,mRegime='new';
+seg($('#mCb'),[{label:'Weak',value:-1},{label:'Steady',value:0},{label:'Strong',value:1}],0,v=>{mCb=v;calc2()});
+seg($('#mRegime'),[{label:'Pre-2022',value:'old'},{label:'2022+',value:'new'}],'new',v=>{mRegime=v;calc2()});
+const ss=$('#seesaw');
+el('path',{d:'M320 150 L292 185 L348 185 Z',style:'fill:var(--muted)'},ss);
+const beam=el('g',{},ss);
+el('rect',{x:60,y:140,width:520,height:8,rx:4,style:'fill:var(--ink)'},beam);
+el('rect',{x:60,y:92,width:150,height:48,rx:6,style:'fill:var(--info-soft);stroke:var(--info)'},beam);
+el('text',{x:135,y:112,'text-anchor':'middle',class:'t-ink',style:'font-size:12px'},beam,'Cost of holding gold');
+el('text',{x:135,y:128,'text-anchor':'middle',style:'font-size:11px'},beam,'yields · dollar · Fed');
+el('rect',{x:430,y:92,width:150,height:48,rx:6,style:'fill:var(--gold-strong)'},beam);
+el('text',{x:505,y:121,'text-anchor':'middle',style:'font-size:15px;font-weight:600;fill:var(--on-gold)'},beam,'GOLD');
+const ssLabel=el('text',{x:320,y:24,'text-anchor':'middle',class:'t-ink',style:'font-size:13px'},ss,'');
+function calc2(){const ry=+$('#mRy').value,dx=+$('#mDxy').value,fed=+$('#mFed').value,st=+$('#mStress').value;
+  $('#mRyO').textContent=(ry>0?'+':'')+ry+' bp';$('#mDxyO').textContent=(dx>0?'+':'')+dx+'%';$('#mFedO').textContent=(fed>0?'+':'')+fed+' pts';$('#mStressO').textContent=['Calm','Some','High','Crisis'][st];
+  const W=mRegime==='old'?{ry:35,dx:25,fed:20,st:15,cb:5}:{ry:20,dx:20,fed:20,st:15,cb:25};
+  const parts=[['Real yields',-ry/50*W.ry,W.ry],['Dollar',-dx/3*W.dx,W.dx],['Fed cut odds',fed/40*W.fed,W.fed],['Safe haven',st/3*W.st,W.st],['Central banks',mCb*W.cb,W.cb]];
+  const score=Math.round(parts.reduce((a,p)=>a+p[1],0));
+  $('#mScore').textContent=(score>0?'+':'')+score;
+  let t,c;if(score>=40){t='Strong tailwind. Favor longs and buy dips.';c='bull'}else if(score>=15){t='Tailwind. Lean long and be picky about entries.';c='bull'}else if(score>-15){t='Mixed. Let price action and volume decide, and trade smaller.';c=''}else if(score>-40){t='Headwind. Lean short or sell rallies.';c='bear'}else{t='Strong headwind. Avoid longs.';c='bear'}
+  $('#mBox').className='readout '+c;$('#mText').textContent=t;
+  $('#mScore').className='big '+(score>=15?'pos':score<=-15?'neg':'');
+  beam.setAttribute('transform',`rotate(${(-score/100*14).toFixed(2)} 320 144)`);
+  ssLabel.textContent=score>=15?'Gold side rising':score<=-15?'Gold side sinking':'Roughly balanced';
+  const cc=$('#mContrib');cc.innerHTML='';parts.forEach(p=>{const r=document.createElement('div');r.className='crow';const w=Math.abs(p[1])/35*50;
+    r.innerHTML=`<span>${p[0]}</span><div class="ctrack"><div class="cbar" style="${p[1]>=0?'left:50%':'right:50%'};width:${w}%;background:var(${p[1]>=0?'--bull':'--bear'})"></div></div><span class="v ${p[1]>0.5?'pos':p[1]<-0.5?'neg':''}">${p[1]>0?'+':''}${Math.round(p[1])}</span>`;cc.appendChild(r)})}
+['mRy','mDxy','mFed','mStress'].forEach(id=>$('#'+id).addEventListener('input',calc2));calc2();
+
+/* ---------- step 3 relationship map ---------- */
+(function(){const svg=$('#relMap');const cx=320,cy=150;
+  const nodes=[['DXY (dollar)','inv',-155,-95],['10Y real yield','inv',155,-95],['USD/JPY','inv',230,0],['Silver','pos',155,95],['Miners (GDX)','pos',-155,95],['VIX / stress','mix',-230,0]];
+  nodes.forEach(n=>{const x=cx+n[2],y=cy+n[3];const st=n[1]==='pos'?'stroke:var(--bull);stroke-width:2.5':n[1]==='inv'?'stroke:var(--bear);stroke-width:2.5;stroke-dasharray:7 5':'stroke:var(--muted);stroke-width:2;stroke-dasharray:2 5';el('line',{x1:cx,y1:cy,x2:x,y2:y,style:st},svg)});
+  el('circle',{cx,cy,r:40,style:'fill:var(--gold-strong)'},svg);el('text',{x:cx,y:cy+5,'text-anchor':'middle',style:'font-size:16px;font-weight:600;fill:var(--on-gold)'},svg,'GOLD');
+  nodes.forEach(n=>{const x=cx+n[2],y=cy+n[3];el('rect',{x:x-62,y:y-20,width:124,height:40,rx:6,style:'fill:var(--surface);stroke:var(--line)'},svg);el('text',{x,y:y-3,'text-anchor':'middle',class:'t-ink',style:'font-size:12px'},svg,n[0]);el('text',{x,y:y+12,'text-anchor':'middle',class:n[1]==='pos'?'t-bull':n[1]==='inv'?'t-bear':'',style:'font-size:10px'},svg,n[1]==='pos'?'moves with':n[1]==='inv'?'moves against':'depends')});
+})();
+
+/* ---------- step 3 divergence reader ---------- */
+const im={gold:1,dxy:1,yld:1,slv:1,gdx:1,vix:0};
+const imDefs=[['gold','Gold','the market you trade',0],['dxy','Dollar (DXY)','usually against gold',-1],['yld','US 10Y yield','usually against gold',-1],['slv','Silver','usually with gold',1],['gdx','Gold miners (GDX)','usually with gold, often leads',1],['vix','VIX (fear)','calm, rising, or spiking',0]];
+const imRows=$('#imRows');imDefs.forEach(d=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div><div class="name">${d[1]}</div><div class="hint">${d[2]}</div></div><div class="seg"></div>`;imRows.appendChild(r);
+  const o=d[0]==='vix'?[{label:'Calm',value:0},{label:'Rising',value:1},{label:'Spiking',value:2}]:[{label:'↓ Down',value:-1,cls:'down'},{label:'Flat',value:0},{label:'↑ Up',value:1,cls:'up'}];
+  seg($('.seg',r),o,im[d[0]],v=>{im[d[0]]=v;calc3()})});
+function calc3(){const g=im.gold;const box=$('#imBox');let title,text,c='';
+  if(g===0){title='Set gold\'s direction';text='Choose whether gold rose or fell, then compare the other markets.';box.className='readout';$('#imTitle').textContent=title;$('#imText').textContent=text;$('#imCount').textContent='';return}
+  let conf=0,div=0;[['dxy',-1],['yld',-1],['slv',1],['gdx',1]].forEach(([k,r])=>{const v=im[k]*r;if(v===g)conf++;else if(v===-g)div++});
+  if(g===1&&im.vix===1)conf++;
+  if(g===1&&im.dxy===1&&im.yld===1){title='Strength divergence: bullish tell';text='Gold is rising against a stronger dollar and higher yields. A big buyer is absorbing the headwind. Look for longs on pullbacks.';c='bull'}
+  else if(g===-1&&im.dxy===-1&&im.yld===-1){title='Weakness divergence: warning';text='Gold is falling even with a weaker dollar and lower yields. Demand is poor or longs are being liquidated. Don\'t buy the dip yet.';c='bear'}
+  else if(g===-1&&im.vix===2){title='Possible dash for cash';text='Fear is spiking and gold is falling with it. In panics gold gets sold to cover margin calls first. Wait for the selling to exhaust (a volume climax plus a reversal) before looking for longs.';c='warn'}
+  else if(g===1&&(im.slv===-1||im.gdx===-1)){title='Metals not confirming';text='Silver or miners aren\'t joining the move. Breakouts like this fail more often. Trade smaller or wait for a retest.';c='warn'}
+  else if(conf>=3&&div===0){title='High-quality move';text=`The other markets confirm gold's ${g>0?'rise':'drop'}. This is the kind of move to trade with, not against.`;c=g>0?'bull':'bear'}
+  else if(div>=2){title='Low-quality move';text='Most related markets disagree with gold. Be suspicious. The move may reverse or lack follow-through.';c='warn'}
+  else{title='Partial confirmation';text='Some markets agree and some don\'t. Keep normal caution and let volume and OI (step 4) break the tie.';c=''}
+  box.className='readout '+c;$('#imTitle').textContent=title;$('#imText').textContent=text;$('#imCount').textContent=`${conf} confirming · ${div} diverging`}
+calc3();
+
+/* ---------- step 4 ledger ---------- */
+let lv=0,lo=0,llog=[];const ledTxt={'1':'New buyer + new seller → Vol +1, OI +1','0':'Old long → new buyer → Vol +1, OI 0','-1':'Old long + old short exit → Vol +1, OI −1'};
+function ledRender(){$('#ledVol').textContent=lv;$('#ledOi').textContent=lo;$('#ledLog').innerHTML=llog.length?llog.slice(-4).map(t=>`<span>${t}</span>`).join(''):'<span>Tap a trade to start.</span>'}
+$$('[data-led]').forEach(b=>b.addEventListener('click',()=>{const d=+b.dataset.led;if(d===-1&&lo===0){llog.push('No open positions to close yet');ledRender();return}lv++;lo+=d;llog.push(ledTxt[b.dataset.led]);ledRender()}));
+$('#ledReset').addEventListener('click',()=>{lv=0;lo=0;llog=[];ledRender()});
+
+/* ---------- step 4 OI decoder ---------- */
+const oi={p:'u',v:'u',o:'d'};
+const oiMap={
+ uuu:['New buying: strong uptrend','Fresh longs are entering and the volume shows conviction. This is the healthiest trend signal in futures.','Trade with it. Buy pullbacks to VWAP or the value-area high. Don\'t fade it.','bull','uu'],
+ udu:['New buying on light volume','Longs are still being added, but participation is thin. The trend is intact but less convincing.','Stay long-biased, but take partial profits sooner and wait for clean setups.','bull','uu'],
+ uud:['Short covering: sharp but fragile','Price is rising because shorts are buying back, not because new buyers arrived. These rallies are fast and often stall once covering is done.','Don\'t chase late. Take profits into strength, and wait for OI to rise before trusting the trend.','warn','ud'],
+ udd:['Weak short covering','A drift higher while money leaves the market. Little conviction on either side.','Low-quality move. Sit out, or look for a fade at resistance.','','ud'],
+ duu:['New selling: strong downtrend','Fresh shorts are pressing on heavy volume. The mirror image of new buying.','Sell rallies to VWAP or the value-area low. Don\'t try to catch the bottom.','bear','du'],
+ ddu:['Quiet short build','Shorts are being added, but without urgency.','Lean bearish, and wait for volume to confirm before adding size.','bear','du'],
+ dud:['Long liquidation: forced selling','Longs are dumping positions in size. This often ends in a capitulation spike that marks a short-term low.','Don\'t short the late stage. Watch for a volume climax plus a reversal candle to mark exhaustion.','warn','dd'],
+ ddd:['Mild long liquidation','Longs are drifting out, price sags, little energy.','The trend is losing steam. Tighten stops on shorts, since a base may be forming.','','dd']};
+const ud=[{label:'↑ Up',value:'u',cls:'up'},{label:'↓ Down',value:'d',cls:'down'}];
+seg($('#oiP'),ud,oi.p,v=>{oi.p=v;calc4()});seg($('#oiV'),[{label:'Above avg',value:'u',cls:'up'},{label:'Below avg',value:'d',cls:'down'}],oi.v,v=>{oi.v=v;calc4()});seg($('#oiO'),[{label:'↑ Rising',value:'u',cls:'up'},{label:'↓ Falling',value:'d',cls:'down'}],oi.o,v=>{oi.o=v;calc4()});
+function calc4(){const r=oiMap[oi.p+oi.v+oi.o];$('#oiTitle').textContent=r[0];$('#oiText').textContent=r[1];$('#oiAct').textContent=r[2];$('#oiBox').className='readout '+r[3];
+  $$('#oiMatrix .cell').forEach(c=>c.classList.toggle('on',c.dataset.cell===r[4]))}
+calc4();
+$$('#oiMatrix .cell').forEach(c=>{c.style.cursor='pointer';c.addEventListener('click',()=>{oi.p=c.dataset.cell[0];oi.o=c.dataset.cell[1];
+  seg($('#oiP'),ud,oi.p,v=>{oi.p=v;calc4()});seg($('#oiO'),[{label:'↑ Rising',value:'u',cls:'up'},{label:'↓ Falling',value:'d',cls:'down'}],oi.o,v=>{oi.o=v;calc4()});calc4()})});
+
+/* ---------- step 4 volume profile ---------- */
+(function(){const svg=$('#vpSvg');const lo=4010,hi=4070,step=2,rowH=14,top=20;const levels=[];
+  for(let p=hi;p>=lo;p-=step){const v=Math.round(900*Math.exp(-Math.pow((p-4036)/7,2))+520*Math.exp(-Math.pow((p-4016)/5,2))+70+((p*7)%5)*8);levels.push({p,v})}
+  const total=levels.reduce((a,l)=>a+l.v,0);let pi=0;levels.forEach((l,i)=>{if(l.v>levels[pi].v)pi=i});
+  let a=pi,b=pi,sum=levels[pi].v;while(sum<total*0.7){const up=a>0?levels[a-1].v:-1,dn=b<levels.length-1?levels[b+1].v:-1;if(up>=dn){a--;sum+=up}else{b++;sum+=dn}}
+  const POC=levels[pi].p,VAH=levels[a].p,VAL=levels[b].p;const maxV=levels[pi].v;
+  const Y=p=>top+(hi-p)/step*rowH+rowH/2;
+  levels.forEach((l,i)=>{const y=top+i*rowH;const inVA=i>=a&&i<=b;const w=l.v/maxV*400;
+    el('rect',{x:78,y:y+1.5,width:w,height:rowH-3,rx:2,style:`fill:${i===pi?'var(--gold-strong)':inVA?'var(--gold-soft)':'var(--bar)'}`},svg);
+    if(l.p%10===0)el('text',{x:70,y:y+rowH/2+4,'text-anchor':'end'},svg,l.p.toLocaleString('en-US'))});
+  [[VAH,'VAH '+VAH],[POC,'POC '+POC],[VAL,'VAL '+VAL]].forEach(([p,t])=>{el('line',{x1:78,x2:560,y1:Y(p),y2:Y(p),style:'stroke:var(--gold);stroke-width:1;stroke-dasharray:3 3'},svg);el('text',{x:566,y:Y(p)+4,class:'t-gold',style:'font-weight:600'},svg,t)});
+  el('text',{x:566,y:Y(4026)+4,class:'t-ink'},svg,'LVN');
+  const mk=el('g',{},svg);const ml=el('line',{x1:40,x2:560,y1:0,y2:0,style:'stroke:var(--bear);stroke-width:2'},mk);const mt=el('text',{x:430,y:0,class:'t-bear',style:'font-weight:600'},mk,'Price');
+  function upd(){const p=+$('#vpPrice').value;$('#vpPriceO').textContent=p.toLocaleString('en-US');const y=Math.max(top,Math.min(top+levels.length*rowH,Y(p)));ml.setAttribute('y1',y);ml.setAttribute('y2',y);mt.setAttribute('y',y-5);
+    let t,x,c;
+    if(p>VAH){t='Above value';x=`Price is above the value-area high (${VAH}). If it holds up here, with 30-minute closes above VAH and volume building, buyers have accepted higher prices and the day can trend up. If it slips back inside, it's a failed breakout that often rotates back to the POC.`;c='bull'}
+    else if(p<VAL){t='Below value';x=`Price is below the value-area low (${VAL}). Acceptance down here means sellers are in control and the day can trend lower. A quick return inside value is a failed breakdown and often travels back up toward the POC.`;c='bear'}
+    else if(Math.abs(p-POC)<=2){t='At the POC: fair value';x='This is the price where the most business happened. Price is sticky and choppy here. It\'s a poor place to start a trend trade, and a natural profit target for trades that began at the edges.';c=''}
+    else if(p>=4022&&p<=4029){t='Inside a low-volume node';x='Little business was done at these prices, so price tends to move through them fast. Avoid entering in the middle of an LVN, and don\'t park stops just inside one.';c='warn'}
+    else if(p>=VAH-4){t='Near the top edge of value';x=`Near VAH (${VAH}). In a balanced, rotating market this edge often acts as resistance, so fades back toward the POC work. A strong close above it flips the read to breakout.`;c='warn'}
+    else if(p<=VAL+4){t='Near the bottom edge of value';x=`Near VAL (${VAL}). In a balanced market this edge often acts as support. Look for buyers to defend it, and use a break below as a warning.`;c='warn'}
+    else{t='Inside value';x='Price is rotating inside the zone where 70% of volume traded. Expect two-way trade between the edges. Be patient, since the better trades are at the edges.';c=''}
+    $('#vpTitle').textContent=t;$('#vpText').textContent=x;$('#vpBox').className='readout '+c}
+  $('#vpPrice').addEventListener('input',upd);upd();})();
+
+/* ---------- step 4 RVOL & COT ---------- */
+function calcRv(){const n=+$('#rvNow').value||0,a=+$('#rvAvg').value||1;const r=n/a;$('#rvVal').textContent=r.toFixed(2)+'×';let t,c;
+  if(r<0.7){t='Quiet. Breakouts are likely to fail, so favor range trades between known levels.';c=''}else if(r<1.3){t='Normal participation. Standard playbook.';c=''}else if(r<2){t='Active. Moves have fuel behind them, so breakouts are more trustworthy.';c='bull'}else{t='Event-level participation. Expect a trend day or a big reversal. Reduce size or widen stops.';c='warn'}
+  $('#rvText').textContent=t;$('#rvBox').className='readout '+c}
+['rvNow','rvAvg'].forEach(id=>$('#'+id).addEventListener('input',calcRv));calcRv();
+function calcCot(){const v=+$('#cot').value;$('#cotO').textContent=v+'th';let h,t,c;
+  if(v>=85){h='Crowded long';t='Most speculators are already long. Good news has less upside, and bad news can trigger fast long liquidation. Tighten stops on longs.';c='warn'}
+  else if(v>=60){h='Elevated long';t='The trend has support, but there\'s less fuel left. Fine to stay long with your trend, just don\'t add late.';c=''}
+  else if(v>40){h='Neutral';t='Positioning isn\'t a factor. Let macro and price decide.';c=''}
+  else if(v>15){h='Light positioning';t='Speculators are underinvested. Any bullish catalyst can bring new buying.';c='bull'}
+  else{h='Washed out';t='Speculators have given up on gold. That\'s fuel for sharp short-covering rallies. Watch for a reversal with rising volume.';c='bull'}
+  $('#cotTitle').textContent=h;$('#cotText').textContent=t;$('#cotBox').className='readout '+c}
+$('#cot').addEventListener('input',calcCot);calcCot();
+
+/* ---------- step 5 news timeline ---------- */
+(function(){const svg=$('#newsSvg');
+  const pts=[[20,110],[60,112],[100,108],[140,111],[180,110],[200,108],[210,52],[222,70],[236,140],[250,90],[264,120],[280,104],[300,115],[330,126],[360,132],[400,146],[440,152],[480,160],[520,166],[560,172],[620,176]];
+  el('rect',{x:20,y:20,width:180,height:170,style:'fill:var(--surface-2)'},svg);
+  el('rect',{x:200,y:20,width:80,height:170,style:'fill:var(--bear-soft)'},svg);
+  el('rect',{x:330,y:20,width:290,height:170,style:'fill:var(--info-soft)'},svg);
+  el('polyline',{points:pts.map(p=>p.join(',')).join(' '),style:'fill:none;stroke:var(--gold-strong);stroke-width:2.5;stroke-linejoin:round'},svg);
+  el('line',{x1:204,x2:204,y1:20,y2:190,style:'stroke:var(--ink);stroke-width:1.5'},svg);
+  el('text',{x:204,y:206,'text-anchor':'middle',class:'t-ink'},svg,'8:30:00');
+  el('text',{x:30,y:40,class:'t-ink'},svg,'T−5 min: flatten or tighten');
+  el('text',{x:212,y:40,class:'t-bear'},svg,'Whipsaw');
+  el('text',{x:212,y:54,class:'t-bear'},svg,'0–2 min');
+  el('text',{x:340,y:40,class:'t-ink'},svg,'T+15–30 min: the real direction');
+  el('text',{x:340,y:56},svg,'confirmed by 2Y yield + DXY');
+  el('text',{x:300,y:206,'text-anchor':'middle'},svg,'T+2');el('text',{x:620,y:206,'text-anchor':'end'},svg,'T+30');
+})();
+
+/* ---------- step 5 surprise decoder ---------- */
+const EV={cpi:{n:'Core CPI (m/m %)',thr:0.1,hawk:1,d:[0.3,0.4]},pce:{n:'Core PCE (m/m %)',thr:0.1,hawk:1,d:[0.2,0.2]},nfp:{n:'Nonfarm payrolls (thousands)',thr:50,hawk:1,d:[150,60]},ur:{n:'Unemployment rate (%)',thr:0.1,hawk:-1,d:[4.3,4.5]},retail:{n:'Retail sales (m/m %)',thr:0.3,hawk:1,d:[0.3,0.3]},ism:{n:'ISM manufacturing (index)',thr:1,hawk:1,d:[49,51.5]},fomc:{n:'FOMC decision / press conference',fomc:true}};
+const nEv=$('#nEv');Object.entries(EV).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.n;nEv.appendChild(o)});
+let nTone=1;seg($('#nTone'),[{label:'Dovish',value:-1,cls:'up'},{label:'As expected',value:0},{label:'Hawkish',value:1,cls:'down'}],1,v=>{nTone=v;calc5()});
+function setEv(){const e=EV[nEv.value];$('#nToneWrap').hidden=!e.fomc;$('#nNumWrap1').hidden=!!e.fomc;$('#nNumWrap2').hidden=!!e.fomc;if(!e.fomc){$('#nCons').value=e.d[0];$('#nAct').value=e.d[1];$('#nCons').step=e.thr<1?'0.1':'1';$('#nAct').step=e.thr<1?'0.1':'1'}calc5()}
+function tile(label,dir){const c=dir>0?'pos':dir<0?'neg':'muted';const a=dir>0?'↑':dir<0?'↓':'↔';return `<div class="readout"><span class="lbl">${label}</span><span class="big ${c}">${a}</span></div>`}
+function calc5(){const e=EV[nEv.value];const reg=$('#nReg').value;let h,size;
+  if(e.fomc){h=nTone;size=nTone===0?'In line':'Tone surprise'}else{const s=((+$('#nAct').value)-(+$('#nCons').value))/e.thr;const az=Math.abs(s);size=az<0.95?'In line':az<2.5?'Modest surprise':'Big surprise';h=az<0.95?0:Math.sign(s)*e.hawk}
+  $('#nTiles').innerHTML=tile('2-yr yield',h)+tile('US dollar',h)+tile('Gold (first reaction)',-h);
+  let t,x,c;
+  if(h===0){t=size+': expect chop';x='No real surprise. The reaction often comes from the details instead (revisions, the core vs. headline split, wage growth). Two-way whipsaw is likely, so it\'s usually a day to wait.';c=''}
+  else if(h>0){t=size+': hawkish, bearish for gold';x='Stronger or hotter than expected means fewer rate cuts, so yields and the dollar rise and gold falls.';c='bear';
+    if(reg==='inf'&&(nEv.value==='cpi'||nEv.value==='pce'))x+=' With inflation the market\'s main worry, this release carries extra weight. Expect a large reaction.';
+    if(reg==='growth')x+=' In a growth scare, strong data can also calm fears. The dip in gold may be smaller than usual.'}
+  else{t=size+': dovish, bullish for gold';x='Weaker or cooler than expected means more rate cuts get priced, so yields and the dollar fall and gold rises.';c='bull';
+    if(reg==='growth')x+=' Careful: in a growth scare, very weak data can crash stocks, and gold may be sold for cash first before it rallies.'}
+  if(e.fomc)x+=' On FOMC days the statement comes at 2:00 pm ET and the press conference at 2:30, which often reverses the first move. Dot plots come out in March, June, September and December.';
+  $('#nTitle').textContent=t;$('#nText').textContent=x;$('#nBox').className='readout '+c}
+nEv.addEventListener('change',setEv);['nCons','nAct','nReg'].forEach(id=>$('#'+id).addEventListener('input',calc5));setEv();
+
+/* ---------- step 6 history ---------- */
+const ERAS=[
+ {k:'a',name:'1971–1980',from:1971.6,to:1980.1,title:'Inflation mania',what:'The US ended dollar convertibility to gold in 1971. Two oil shocks and double-digit inflation followed.',driver:'Negative real rates, collapsing trust in paper money.',gold:'About $35 to about $850 in January 1980, ending in a parabolic blow-off top.',lesson:'Parabolic moves end violently. When everyone is talking about gold, the late buyers are the exit liquidity.'},
+ {k:'b',name:'1980–2001',from:1980.1,to:2001.3,title:'The real-rate bear market',what:'Fed chair Volcker pushed rates far above inflation. The dollar strengthened and central banks sold gold.',driver:'High positive real yields and central-bank selling.',gold:'A roughly 20-year decline to about $250 in 1999–2001.',lesson:'Sustained positive real yields are gold\'s enemy. A trend can last decades when the main driver stays in place.'},
+ {k:'c',name:'2001–2011',from:2001.3,to:2011.7,title:'Weak dollar, crisis and QE',what:'The dollar weakened, gold ETFs launched, and the 2008 crisis brought zero rates and quantitative easing.',driver:'Falling real yields, a weak dollar, safe-haven demand.',gold:'Rose to about $1,920 in September 2011. In late 2008 gold first fell about 30% (to roughly $700) as funds sold everything for cash, then rallied hard on QE.',lesson:'In a crash, gold is sold for cash before it\'s bought as a haven. Buy after the liquidation, not during it.'},
+ {k:'d',name:'2011–2015',from:2011.7,to:2016,title:'Taper tantrum and bust',what:'The Fed signaled it would slow bond buying in 2013. Real yields jumped from negative toward positive.',driver:'Rising real yields and a strengthening dollar.',gold:'Down to about $1,050 by December 2015, including the April 2013 crash.',lesson:'A fast rise in real-yield expectations kills gold trends, even long ones.'},
+ {k:'e',name:'2016–2021',from:2016,to:2022,title:'Low rates and the COVID spike',what:'Rates stayed low, then COVID brought emergency cuts and huge stimulus.',driver:'Deeply negative real yields in 2020.',gold:'A March 2020 "dash for cash" drop, then a new record near $2,075 in August 2020.',lesson:'The same liquidation-then-rally pattern as 2008. Record highs followed real yields to record lows.'},
+ {k:'f',name:'2022 – now',from:2022,to:2026.7,title:'The central-bank era',what:'The Fed hiked fast, and sanctions on Russia\'s reserves pushed central banks to buy gold at record pace.',driver:'Official-sector buying, de-dollarization, fiscal and geopolitical fear.',gold:'Held up through the hikes, then broke to successive records and topped $4,000 in October 2025.',lesson:'Driver relationships change. When gold ignores high real yields, find out who is buying, and don\'t fight it.'}];
+(function(){const svg=$('#histSvg');const x0=1970,x1=2027,L=60,R=680,T=16,B=240;const X=y=>L+(y-x0)/(x1-x0)*(R-L);const lmin=Math.log10(25),lmax=Math.log10(6000);const Y=p=>B-(Math.log10(p)-lmin)/(lmax-lmin)*(B-T);
+  const bands=[];ERAS.forEach((e,i)=>{const r=el('rect',{x:X(e.from),y:T,width:X(e.to)-X(e.from),height:B-T,style:`fill:${i%2?'var(--surface-2)':'var(--surface)'};cursor:pointer`},svg);r.addEventListener('click',()=>pickEra(e.k));bands.push(r)});
+  [50,100,250,500,1000,2000,4000].forEach(p=>{el('line',{x1:L,x2:R,y1:Y(p),y2:Y(p),style:'stroke:var(--line);stroke-width:1'},svg);el('text',{x:L-6,y:Y(p)+4,'text-anchor':'end'},svg,'$'+p.toLocaleString('en-US'))});
+  [1970,1980,1990,2000,2010,2020].forEach(y=>el('text',{x:X(y),y:B+18,'text-anchor':'middle'},svg,String(y)));
+  const M=[[1971.6,35,'$35'],[1980.05,850,'$850'],[1999.6,252,'$252'],[2008.2,1000,''],[2008.8,712,'$712'],[2011.7,1921,'$1,921'],[2015.95,1050,'$1,050'],[2020.2,1470,''],[2020.6,2075,'$2,075'],[2022.8,1620,''],[2025.8,4000,'$4,000+']];
+  el('polyline',{points:M.map(m=>X(m[0])+','+Y(m[1])).join(' '),style:'fill:none;stroke:var(--gold-strong);stroke-width:2;stroke-linejoin:round'},svg);
+  M.forEach(m=>{el('circle',{cx:X(m[0]),cy:Y(m[1]),r:3.5,style:'fill:var(--gold-strong)'},svg);if(m[2])el('text',{x:X(m[0])+(m[0]>2024?-6:6),y:Y(m[1])-7,'text-anchor':m[0]>2024?'end':'start',class:'t-ink'},svg,m[2])});
+  window.__eraBands=bands;})();
+const eb=$('#eraBtns');ERAS.forEach(e=>{const b=document.createElement('button');b.type='button';b.textContent=e.name;b.dataset.k=e.k;b.addEventListener('click',()=>pickEra(e.k));eb.appendChild(b)});
+function pickEra(k){const e=ERAS.find(x=>x.k===k);$$('#eraBtns button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));
+  (window.__eraBands||[]).forEach((r,i)=>r.style.fill=ERAS[i].k===k?'var(--gold-soft)':(i%2?'var(--surface-2)':'var(--surface)'));
+  $('#eraBox').innerHTML=`<h4>${e.name}: ${e.title}</h4><dl class="kv"><dt>What happened</dt><dd>${e.what}</dd><dt>Driver in charge</dt><dd>${e.driver}</dd><dt>Gold did</dt><dd>${e.gold}</dd><dt>Lesson</dt><dd><b>${e.lesson}</b></dd></dl>`}
+pickEra('c');
+
+/* ---------- step 7 seasonality ---------- */
+const MON=[['Jan','strong','Historically one of gold\'s firmest months. Chinese New Year buying and fresh annual allocations often extend a rally that began at a mid-December low.'],
+['Feb','mixed','Often carries January strength into the first half, then fades once Chinese New Year demand passes.'],
+['Mar','weak','Historically one of the softer months. Physical demand is in a lull after the new year.'],
+['Apr','mixed','Mixed. Indian buying ahead of Akshaya Tritiya (April/May) can offer support.'],
+['May','weak','Often soft as physical demand quiets heading into summer.'],
+['Jun','weak','The summer lull. Seasonal lows have often formed between June and early July.'],
+['Jul','mixed','A bottoming month in many years, as traders position ahead of autumn demand.'],
+['Aug','strong','Often firm. Indian restocking for the festival and wedding season begins.'],
+['Sep','strong','Historically among the strongest months, with restocking ahead of Diwali.'],
+['Oct','mixed','Dhanteras and Diwali demand, but often volatile after a strong September.'],
+['Nov','weak','Has often been soft once festival buying is done.'],
+['Dec','mixed','A mid-December low (often around the Fed meeting) has frequently come before year-end and January strength.']];
+(function(){let nowM=null;try{nowM=+new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'numeric'}).format(new Date())-1}catch(e){}
+  const g=$('#months');MON.forEach((m,i)=>{const b=document.createElement('button');b.type='button';b.className='mon '+m[1];b.innerHTML=`<b>${m[0]}</b><small>${m[1]==='strong'?'Firmer':m[1]==='weak'?'Softer':'Mixed'}</small>${i===nowM?'<span class="now">NOW</span>':''}`;b.addEventListener('click',()=>pickMon(i));g.appendChild(b)});
+  function pickMon(i){$$('.mon').forEach((b,j)=>b.classList.toggle('sel',j===i));const m=MON[i];const lab=m[1]==='strong'?'Historically firmer':m[1]==='weak'?'Historically softer':'Mixed record';
+    $('#monBox').className='readout '+(m[1]==='strong'?'bull':m[1]==='weak'?'bear':'');$('#monBox').innerHTML=`<span class="lbl">${lab}${i===nowM?' · this month':''}</span><h4>${['January','February','March','April','May','June','July','August','September','October','November','December'][i]}</h4><p>${m[2]}</p>`}
+  pickMon(nowM!=null&&nowM>=0?nowM:0)})();
+
+/* ---------- step 8 scorecard ---------- */
+const SC=[['ry','Real yields (10Y TIPS)','Falling = bullish',3,'FRED:DFII10'],['usd','US dollar (DXY)','Falling = bullish',2,'TVC:DXY'],['fed','Fed expectations (2Y, FedWatch)','More cuts priced = bullish',2,'TVC:US02Y'],['cb','Central banks & ETF flows','Strong buying = bullish',2,'AMEX:GLD'],['haven','Safe-haven backdrop','Rising fear = bullish',1,'TVC:VIX'],['voi','Volume & open interest','Price and OI rising together = bullish',2,'COMEX:GC1!'],['cot','Positioning (COT)','Washed out = bullish · crowded = bearish',1,'Commitment of Traders: Disaggregated Metrics'],['im','Intermarket confirmation','Silver & miners agree = bullish',2,'COMEX:SI1!'],['px','Price structure (weekly)','Above key levels, higher highs = bullish',3,'COMEX:GC1!'],['seas','Seasonality','Firm month = bullish',1,'']];
+const TW=SC.reduce((a,s)=>a+s[3],0);let sc=store.get('score',{});
+const scRows=$('#scRows');SC.forEach(s=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div><div class="name">${s[1]} <span class="mono muted" style="font-size:12px">×${s[3]}</span></div><div class="hint">${s[2]}</div>${s[4]?`<div style="margin-top:4px"><button type="button" class="tk sm${s[4].includes(' ')?' ind':''}" data-copy="${s[4]}">${s[4]}</button></div>`:''}</div><div class="seg"></div>`;scRows.appendChild(r);s.el=$('.seg',r)});
+function drawSc(){SC.forEach(s=>seg(s.el,[{label:'Bearish',value:-1,cls:'down'},{label:'Neutral',value:0},{label:'Bullish',value:1,cls:'up'}],sc[s[0]]||0,v=>{sc[s[0]]=v;store.set('score',sc);calc8()}))}
+function calc8(){let tot=0,pos=0,neg=0;SC.forEach(s=>{const v=sc[s[0]]||0;tot+=v*s[3];if(v>0)pos+=s[3];if(v<0)neg+=s[3]});const score=Math.round(tot/TW*100);
+  $('#scScore').textContent=(score>0?'+':'')+score;$('#scScore').className='big '+(score>=20?'pos':score<=-20?'neg':'');$('#scPin').style.left=((score+100)/2)+'%';
+  let t,x,c;const a=Math.abs(score),dir=score>0?'long':'short',side=score>0?'buy pullbacks':'sell rallies';
+  if(a>=40){t=`Strong ${dir} bias`;x=`Trade ${dir}s only, at your normal size. ${side[0].toUpperCase()+side.slice(1)} to VWAP, value-area edges or prior levels.`;c=score>0?'bull':'bear'}
+  else if(a>=20){t=`Lean ${dir}`;x=`Favor ${dir}s at half size, and only A+ setups where volume confirms.`;c=score>0?'bull':'bear'}
+  else{t='No clear edge';x='Sit out, or trade small ranges between known levels. Protect your drawdown for a stronger week.';c=''}
+  $('#scTitle').textContent=t;$('#scText').textContent=x;$('#scBox').className='readout '+c;
+  const cf=$('#scConflict');cf.hidden=!(pos>=5&&neg>=5);cf.textContent='Drivers are fighting each other (both sides carry heavy weight). Cut size in half whatever the score says.';return {score,t}}
+drawSc();calc8();
+$('#scReset').addEventListener('click',()=>{sc={};store.set('score',sc);drawSc();calc8()});
+$('#scCopy').addEventListener('click',e=>{const r=calc8();const lines=SC.map(s=>`${s[1]}: ${['Bearish','Neutral','Bullish'][(sc[s[0]]||0)+1]}`);copyText(`Gold weekly bias: ${r.score>0?'+':''}${r.score} (${r.t})\n`+lines.join('\n'),e.currentTarget,$('#scFallback'))});
+
+/* ---------- step 9 risk ---------- */
+function calc9(){const dd=+$('#rDd').value||0,pct=+$('#rPct').value||0,m=+$('#rType').value,atr=+$('#rAtr').value||0,mult=+$('#rMult').value||0;
+  const risk=dd*pct/100,stop=atr*mult,per=stop*m,q=per>0?Math.floor(risk/per):0;
+  $('#rRisk').textContent=money(risk);$('#rStop').textContent='$'+stop.toFixed(2);$('#rStopCost').textContent=money(per)+' per contract';
+  $('#rQty').textContent=q;const box=$('#rBox');
+  if(q<1){box.className='readout bear';$('#rNote').textContent=m===100?'Even one GC is too big. Switch to MGC.':'Stop is too wide for this risk. Use a tighter setup or skip the trade.'}
+  else{box.className='readout bull';$('#rNote').textContent=`Actual risk ${money(q*per)}`}
+  const actual=q*per;const n=actual>0?Math.floor(dd/actual):0;const u=$('#rUnits');u.innerHTML='';const show=Math.min(n,40);for(let i=0;i<show;i++){const s=document.createElement('span');u.appendChild(s)}
+  $('#rUnitsText').textContent=actual>0?`${n} full losses in a row before the buffer is gone${n>40?' (showing 40)':''}. Aim for at least 8–10.`:'—'}
+['rDd','rPct','rType','rAtr','rMult'].forEach(id=>$('#'+id).addEventListener('input',calc9));calc9();
+
+const CL={'Weekly (Sunday)':['Score the 10 drivers (step 8)','Mark weekly and monthly highs and lows, and last week\'s value area','List this week\'s Tier 1 events and times','Check Friday\'s COT and the open-interest trend','Note the seasonal tendency for this month'],
+'Daily (before 8:00 ET)':['Did anything overnight change the bias?','Mark the Asia and London highs and lows','Mark yesterday\'s POC, VAH, VAL and today\'s VWAP','Know today\'s event times and your firm\'s news rule','Set the daily loss limit in your platform'],
+'Before each trade':['Is it in the direction of my bias?','Does volume confirm (RVOL above 1)?','Is the stop based on ATR and beyond a level or LVN?','Is the size from the calculator?','Is there no Tier 1 event in the next 15 minutes?'],
+'After the session':['Journal every trade with its macro context','Screenshot entries and exits','Write one lesson']};
+let cl=store.get('check',{});const clBox=$('#checklist');
+function drawCl(){clBox.innerHTML='';Object.entries(CL).forEach(([h,items])=>{const d=document.createElement('div');d.innerHTML=`<h4>${h}</h4>`;items.forEach((it,i)=>{const id='cl_'+h.replace(/\W/g,'')+i;const l=document.createElement('label');l.innerHTML=`<input type="checkbox" id="${id}" ${cl[id]?'checked':''}><span>${it}</span>`;l.querySelector('input').addEventListener('change',e=>{cl[id]=e.target.checked;store.set('check',cl)});d.appendChild(l)});clBox.appendChild(d)})}
+drawCl();$('#clReset').addEventListener('click',()=>{cl={};store.set('check',cl);drawCl()});
+
+/* ---------- step 10 journal ---------- */
+const JF=['j_date','j_bias','j_driver','j_setup','j_levels','j_vol','j_news','j_r','j_plan','j_lesson'];const JL=['Date','Bias','Driver','Setup','Entry/Stop/Target','Volume & OI','News nearby','Result','Followed plan','Lesson'];
+let jd=store.get('journal',{});JF.forEach(id=>{const e=$('#'+id);if(jd[id]!=null)e.value=jd[id];e.addEventListener('input',()=>{jd[id]=e.value;store.set('journal',jd)})});
+if(!$('#j_date').value){try{$('#j_date').value=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Toronto'}).format(new Date())}catch(e){}}
+$('#jCopy').addEventListener('click',e=>copyText(JF.map((id,i)=>`${JL[i]}: ${$('#'+id).value}`).join('\n'),e.currentTarget,$('#jFallback')));
+$('#jClear').addEventListener('click',()=>{JF.forEach(id=>{if(id!=='j_plan'&&id!=='j_date')$('#'+id).value=''});jd={};store.set('journal',jd)});
+/* ---------- TradingView tickers ---------- */
+const TV={
+ gold:[['',[['Gold futures, continuous front month','COMEX:GC1!','Your main chart. Futures volume and open interest live here.'],['Micro gold futures','COMEX:MGC1!','Same chart at 1/10 the size. Good for checking your own contract.'],['Spot gold','OANDA:XAUUSD','Real-time for free. Handy for overnight news.'],['Spot gold (alternative)','TVC:GOLD','']]]],
+ macro:[['1 · Real yields',[['10-yr real yield (TIPS)','FRED:DFII10','The #1 driver. Updates once a day.'],['5-yr real yield','FRED:DFII5',''],['Live real-yield proxy','TVC:US10Y-FRED:T10YIE','10-yr yield minus breakeven inflation. Moves during the session.']]],
+  ['2 · US dollar',[['Dollar index','TVC:DXY',''],['Dollar index futures','ICEUS:DX1!',''],['Euro, the biggest weight in DXY','FX:EURUSD',''],['Yen','FX:USDJPY','']]],
+  ['3 · Fed expectations',[['2-yr Treasury yield','TVC:US02Y','Best live gauge of rate expectations.'],['10-yr Treasury yield','TVC:US10Y',''],['Fed funds futures','CBOT:ZQ1!','Implied rate = 100 minus price.'],['Effective fed funds rate','FRED:DFF',''],['Rate-cut probabilities','','No ticker. Use the CME FedWatch website.']]],
+  ['Inflation narrative',[['10-yr breakeven inflation','FRED:T10YIE',''],['5-yr breakeven inflation','FRED:T5YIE',''],['Core CPI','FRED:CPILFESL','Monthly.'],['Core PCE','FRED:PCEPILFE','Monthly.'],['Crude oil','NYMEX:CL1!','']]],
+  ['4 · Central banks & liquidity',[['Fed balance sheet (QE or QT)','FRED:WALCL','Weekly.'],['Central-bank gold buying','','No ticker. Use World Gold Council Goldhub.'],['Shanghai gold premium','','No ticker.']]]],
+ inter:[['Metals confirmation',[['Silver','COMEX:SI1!','Should join a real gold breakout.'],['Gold/silver ratio','COMEX:GC1!/COMEX:SI1!','Rising = gold outperforming, often defensive.'],['Gold miners','AMEX:GDX','Often leads gold at turning points.'],['Junior gold miners','AMEX:GDXJ',''],['Miners vs. gold','AMEX:GDX/AMEX:GLD','Rising = miners leading, a bullish tell.']]],
+  ['Growth vs. fear',[['Copper','COMEX:HG1!',''],['Gold/copper ratio','COMEX:GC1!/COMEX:HG1!','Rising = fear beating growth.']]],
+  ['Risk mood (safe haven)',[['VIX','TVC:VIX',''],['S&P 500','SP:SPX',''],['S&P 500 futures','CME_MINI:ES1!',''],['High-yield credit spread','FRED:BAMLH0A0HYM2','Widening = credit stress.']]]],
+ flows:[['Built-in indicators (search the Indicators menu)',[['Open interest','Open Interest','Add it to COMEX:GC1!. For futures it shows daily bars only.'],['Volume profile','Session Volume Profile','Or "Visible Range Volume Profile". Some versions need a paid plan.'],['VWAP','Anchored VWAP','Or plain "VWAP". Anchor to the session open or a big news bar.']]],
+  ['Positioning',[['COT (hedge-fund positioning)','Commitment of Traders: Disaggregated Metrics','Published by TradingView. Add to COMEX:GC1! and read the Managed Money line.'],['Gold CFTC code','088691','If a COT script asks for a code.'],['Gold ETF','AMEX:GLD','Price and volume. For ounces held, use the SPDR or WGC sites.']]]],
+ news:[['',[['2-yr Treasury yield','TVC:US02Y','Did it hold its move after 15–30 minutes?'],['Dollar index','TVC:DXY','Same check.'],['Spot gold','OANDA:XAUUSD','Real-time, so you see the true first reaction.'],['Fed funds futures','CBOT:ZQ1!','Shows how many cuts the market just repriced.']]]]};
+function tkBtn(v){if(!v)return '<span class="tk none">No ticker</span>';const ind=/\s/.test(v)||/^[A-Z][a-z]/.test(v);return `<button type="button" class="tk${ind?' ind':''}" data-copy="${v}">${v}</button>`}
+$$('[data-tv]').forEach(box=>{const key=box.dataset.tv;if(key==='watch')return;box.innerHTML=TV[key].map(([h,rows])=>`<div class="tvg">${h?`<h4>${h}</h4>`:''}${rows.map(r=>`<div class="tvrow"><span>${r[0]}</span>${tkBtn(r[1])}<span class="note">${r[2]}</span></div>`).join('')}</div>`).join('')+'<p class="tvhint">Tap a ticker to copy it, then paste it into TradingView\'s symbol search.</p>'});
+(function(){const box=$('[data-tv="watch"]');const syms=[];Object.values(TV).forEach(g=>g.forEach(([h,rows])=>rows.forEach(r=>{const v=r[1];if(v&&/^[A-Z_]+:[A-Z0-9_!.]+$/.test(v)&&!syms.includes(v))syms.push(v)})));
+  box.innerHTML=`<p>All ${syms.length} single symbols from this course in one list. Copy it, save it as a .txt file, then in TradingView open the watchlist menu and choose <b>Import list</b>. Add the ratio charts (like <span class="mono">COMEX:GC1!/COMEX:SI1!</span>) by hand from steps 2 and 3.</p>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="tvCopyAll">Copy all ${syms.length} tickers</button></div>
+  <textarea class="fallback" id="tvFallback" hidden readonly></textarea>
+  <p class="lbl" style="margin-top:18px">Suggested 6-chart layout (link the panels to the same timeframe)</p>
+  <div class="layout6"><div><b>COMEX:GC1!</b><span class="muted">+ Open Interest, Volume Profile, VWAP</span></div><div><b>TVC:DXY</b><span class="muted">Dollar</span></div><div><b>TVC:US02Y</b><span class="muted">Fed expectations</span></div><div><b>TVC:US10Y-FRED:T10YIE</b><span class="muted">Live real yield</span></div><div><b>COMEX:SI1!</b><span class="muted">Silver confirmation</span></div><div><b>AMEX:GDX</b><span class="muted">Miners lead</span></div></div>`;
+  $('#tvCopyAll').addEventListener('click',e=>copyText(syms.join(','),e.currentTarget,$('#tvFallback')))})();
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy]');if(!b)return;const v=b.dataset.copy;try{await navigator.clipboard.writeText(v);b.classList.add('copied');const t=b.textContent;b.textContent='Copied';setTimeout(()=>{b.textContent=t;b.classList.remove('copied')},1200)}catch(err){const sel=window.getSelection();sel.selectAllChildren(b)}});
+/* ---------- slide decks ---------- */
+$$('.deck').forEach(deck=>{const key='deck:'+deck.dataset.deck;const sl=$$('[data-slide]',deck);const dots=$('.dots',deck),cnt=$('.slcount',deck),prev=$('.slprev',deck),next=$('.slnext',deck);let cur=0;
+  sl.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Slide '+(i+1));b.addEventListener('click',()=>go(i));dots.appendChild(b)});
+  function go(i){cur=Math.max(0,Math.min(sl.length-1,i));sl.forEach((s,j)=>s.hidden=j!==cur);$$('button',dots).forEach((b,j)=>b.setAttribute('aria-current',String(j===cur)));
+    cnt.textContent=`Slide ${cur+1} of ${sl.length}`;prev.disabled=cur===0;next.textContent=cur===sl.length-1?'Test yourself ↓':'Next slide →';store.set(key,cur)}
+  prev.addEventListener('click',()=>{go(cur-1);cnt.scrollIntoView({block:'center'})});
+  next.addEventListener('click',()=>{if(cur===sl.length-1){const q=$('.quiz',deck.closest('.step'));q&&q.scrollIntoView({behavior:'smooth',block:'center'});return}go(cur+1);cnt.scrollIntoView({block:'center'})});
+  go(Math.min(+store.get(key,0)||0,sl.length-1));});
+
+/* slide 4: morning lights */
+let mcBias=1;
+seg($('#mcBias'),[{label:'Long',value:1,cls:'up'},{label:'Short',value:-1,cls:'down'}],1,v=>{mcBias=v;calcMc()});
+function calcMc(){const items=[['Dollar','TVC:DXY',+$('#mcDxy').value||0,0.3,0.7,'%'],['2-yr yield','TVC:US02Y',+$('#mc2y').value||0,5,10,' bp'],['Real yield','proxy',+$('#mcRy').value||0,5,10,' bp']];
+  let worst='g';const html=items.map(([n,t,v,t1,t2,u])=>{const hurts=mcBias===1?v>0:v<0;const a=Math.abs(v);let l='g',why;
+    if(!hurts){why=a>=t1?'Moving in your favour':'Quiet'}else if(a<t1){why='Small move against you'}else if(a<t2){l='a';why='Moving against you'}else{l='r';why='Big move against you'}
+    if(l==='r'||(l==='a'&&worst==='g'))worst=l;
+    const col=l==='g'?'--bull':l==='a'?'--gold-strong':'--bear';
+    return `<div class="lightcard"><span class="bulb" style="background:var(${col})"></span><div><b>${n} ${v>0?'+':''}${v}${u}</b><small>${why}</small></div></div>`}).join('');
+  $('#mcLights').innerHTML=html;const box=$('#mcBox');
+  if(worst==='g'){$('#mcTitle').textContent='All green: same story';$('#mcText').textContent='Nothing moved against your bias. Keep it, trade your normal size, and focus on the chart.';box.className='readout bull'}
+  else if(worst==='a'){$('#mcTitle').textContent='Amber: the story is wobbling';$('#mcText').textContent='Something moved against you, but not a lot. Trade half size, take only the cleanest setups, and trade only in your bias direction.';box.className='readout warn'}
+  else{$('#mcTitle').textContent='Red: the story may have changed';$('#mcText').textContent='A big move against your bias. Don\'t trade the open. Watch the first session, and if the move holds, go to slide 7 and re-score.';box.className='readout bear'}}
+['mcDxy','mc2y','mcRy'].forEach(id=>$('#'+id).addEventListener('input',calcMc));calcMc();
+
+/* slide 5: chart mock */
+(function(){const svg=$('#s5chart');let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+  const N=34,L=40,W=400,top=18,ph=150,vb=236;let p=50;const c=[];for(let i=0;i<N;i++){const o=p;const drift=i<12?-0.6:i<20?1.6:0.4;const cl=o+drift+(rnd()-0.5)*5;const hi=Math.max(o,cl)+rnd()*2.5,lo=Math.min(o,cl)-rnd()*2.5;const v=i===12||i===13?1:0.25+rnd()*0.45;c.push({o,cl,hi,lo,v});p=cl}
+  const mx=Math.max(...c.map(k=>k.hi))+2,mn=Math.min(...c.map(k=>k.lo))-2;const Y=v=>top+(mx-v)/(mx-mn)*ph;const X=i=>L+i*(W/N)+4;const bw=W/N-4;
+  el('rect',{x:L-6,y:6,width:W+14,height:vb-2,rx:8,style:'fill:var(--surface);stroke:var(--line)'},svg);
+  const lv1=c[4].hi+1.5,lv2=c[11].lo;
+  [[lv1,'Asia high'],[lv2,'Yesterday VAL']].forEach(([v,t])=>{el('line',{x1:L,x2:L+W,y1:Y(v),y2:Y(v),style:'stroke:var(--gold);stroke-dasharray:4 3'},svg);el('text',{x:L+4,y:Y(v)-4,class:'t-gold'},svg,t)});
+  let sum=0,vw=[];c.forEach((k,i)=>{sum+=(k.hi+k.lo+k.cl)/3;vw.push(sum/(i+1))});
+  el('polyline',{points:vw.map((v,i)=>(X(i)+bw/2)+','+Y(v)).join(' '),style:'fill:none;stroke:var(--info);stroke-width:2'},svg);
+  el('text',{x:X(N-1)+bw,y:Y(vw[N-1])+14,'text-anchor':'end',style:'fill:var(--info)'},svg,'VWAP');
+  c.forEach((k,i)=>{const up=k.cl>=k.o;const col=up?'var(--bull)':'var(--bear)';el('line',{x1:X(i)+bw/2,x2:X(i)+bw/2,y1:Y(k.hi),y2:Y(k.lo),style:`stroke:${col}`},svg);el('rect',{x:X(i),y:Y(Math.max(k.o,k.cl)),width:bw,height:Math.max(1,Math.abs(Y(k.o)-Y(k.cl))),style:`fill:${col}`},svg);
+    el('rect',{x:X(i),y:vb-k.v*48,width:bw,height:k.v*48,style:`fill:${k.v>0.9?'var(--gold-strong)':'var(--bar)'}`},svg)});
+  el('text',{x:X(12)-2,y:vb-54,'text-anchor':'middle',class:'t-gold'},svg,'big volume');
+  el('text',{x:L+2,y:vb+0,class:'t-ink',style:'font-size:10px'},svg,'');
+  const gx=470;['TVC:DXY','TVC:US02Y','Real yield'].forEach((t,i)=>{const y=10+i*78;el('rect',{x:gx,y,width:160,height:68,rx:8,style:'fill:var(--surface-2);stroke:var(--line);stroke-dasharray:4 3'},svg);el('text',{x:gx+80,y:y+30,'text-anchor':'middle'},svg,t);el('text',{x:gx+80,y:y+48,'text-anchor':'middle',style:'font-size:10px'},svg,'hidden until news or alert')});
+  el('text',{x:L+W/2,y:vb+13,'text-anchor':'middle',class:'t-ink',style:'font-size:11px'},svg,'COMEX:GC1! · your only live chart');
+  svg.setAttribute('viewBox','0 0 640 256');})();
+
+/* slide 7: decision checker */
+const DC=[['Did the 2-yr yield move more than 15 bp this week?','Fed expectations and real yields'],['Did the dollar (DXY) move more than 1.5% this week, or break a big level?','the dollar'],['Did a big release (CPI, jobs, Fed) come in far from the forecast?','Fed expectations, the dollar and real yields'],['Was there a real shock: war, a bank failure, a surprise Fed move?','safe-haven demand and everything else'],['Did gold close past a key weekly level against your bias, with open interest rising?','price structure and volume/OI']];
+const dcAns=DC.map(()=>0);const dcRows=$('#dcRows');
+DC.forEach((d,i)=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<div style="flex:1;min-width:220px"><span class="mono muted">${i+1}.</span> ${d[0]}</div><div class="seg"></div>`;dcRows.appendChild(r);
+  seg($('.seg',r),[{label:'No',value:0},{label:'Yes',value:1,cls:'down'}],0,v=>{dcAns[i]=v;calcDc()})});
+function calcDc(){const yes=DC.filter((d,i)=>dcAns[i]);const box=$('#dcBox');
+  if(!yes.length){$('#dcTitle').textContent='Keep your bias';$('#dcText').textContent='None of the five triggers fired, so nothing important changed. Keep trading your Sunday plan and ignore the noise.';box.className='readout bull'}
+  else{$('#dcTitle').textContent='Re-score before your next trade';$('#dcText').textContent=`Update the scorecard for: ${yes.map(d=>d[1]).join('; ')}. Until you've done that, trade half size or not at all.`;box.className='readout warn'}}
+calcDc();
+
+/* slide 8 visuals */
+(function(){const mc=$('#miniCal');const days=['S','M','T','W','T','F','S'];days.forEach(d=>{const s=document.createElement('span');s.textContent=d;mc.appendChild(s)});
+  for(let i=1;i<=28;i++){const s=document.createElement('span');s.textContent=i;const dow=(i-1)%7;if(dow===0)s.className='sun';if(i===1)s.className='hl';mc.appendChild(s)}
+  const t=$('#t50');const pat='wlwwlwlwwlwwllwwlwlwwwlwlwwlwlww';for(let i=0;i<50;i++){const s=document.createElement('span');if(i<32)s.className=pat[i]==='w'?'w':'l';t.appendChild(s)}})();
+/* ---------- slide 0: chain reaction ---------- */
+(function(){let dir=1,cur=0,seen=0;
+  const L=[
+   ['Fed expectations','Traders expect higher rates','Traders expect lower rates','It starts with expectations','Markets move on what they <i>expect</i> the Fed to do, not on today\'s rate. A hot inflation number or a strong jobs report makes traders expect higher rates. Weak numbers make them expect cuts. That\'s why the news calendar matters.'],
+   ['2-yr yield','Rises','Falls','The 2-yr yield moves first','The 2-yr Treasury yield is the interest on a safe 2-year US government bond. It tracks what the Fed is expected to do over the next two years, so it reacts within seconds. That\'s why it\'s your live gauge (TVC:US02Y).'],
+   ['Real yield','Rises','Falls','Real yield = yield minus inflation','What matters is the return <i>after</i> inflation. If a bond pays 4% and inflation is expected at 2.5%, the real yield is 1.5%. When rate expectations rise faster than inflation expectations, the real yield rises (FRED:DFII10).'],
+   ['Cost of holding gold','Goes up','Goes down','Gold pays nothing','Gold pays no interest. Every dollar in gold is a dollar not earning that real yield. The higher the real yield, the more you give up by holding gold. Try the calculator below.'],
+   ['US dollar','Strengthens','Weakens','The dollar joins in','Higher US rates pull money in from around the world to earn them, so the dollar rises. Gold is priced in dollars, so it becomes more expensive for buyers paying in euros, yuan or rupees, and they buy less.'],
+   ['Gold price','Falls','Rises','Result: more sellers than buyers','Big funds move money out of gold into bonds that pay more, and foreign buyers step back. With more sellers than buyers, the price falls. Reverse every arrow and you get a gold rally.']];
+  const box=$('#chain');
+  L.forEach((l,i)=>{const b=document.createElement('button');b.type='button';b.className='link';b.addEventListener('click',()=>{cur=i;seen=Math.max(seen,i);draw()});box.appendChild(b)});
+  seg($('#chDir'),[{label:'Raise rates (hawkish)',value:1,cls:'down'},{label:'Cut rates (dovish)',value:-1,cls:'up'}],1,v=>{dir=v;draw()});
+  function draw(){$$('.link',box).forEach((b,i)=>{const l=L[i];let up=dir===1;if(i===5)up=!up;const a=i===0?(dir===1?'↑':'↓'):(up?'↑':'↓');
+      const good=i===5?(dir===-1):(dir===-1);const col=good?'var(--bull)':'var(--bear)';
+      b.innerHTML=`<span class="ln">${i+1}</span><b>${l[0]}</b><span class="arr" style="color:${i<=seen?col:'var(--muted)'}">${i<=seen?a:'?'}</span><span class="muted" style="font-size:12px">${i<=seen?(dir===1?l[1]:l[2]):'…'}</span>`;
+      b.classList.toggle('cur',i===cur);b.classList.toggle('seen',i<=seen)});
+    const l=L[cur];let txt=l[4];if(dir===-1&&cur===5)txt='Big funds move money back into gold because bonds now pay less after inflation, and a weaker dollar makes gold cheaper for foreign buyers. With more buyers than sellers, the price rises.';
+    $('#chStep').textContent=`Link ${cur+1} of 6`;$('#chTitle').textContent=l[3];$('#chWhy').innerHTML=txt;
+    $('#chBox').className='readout '+(cur===5?(dir===1?'bear':'bull'):'');
+    $('#chPrev').disabled=cur===0;$('#chNext').textContent=cur===5?'Start over':'Next link →'}
+  $('#chPrev').addEventListener('click',()=>{cur=Math.max(0,cur-1);draw()});
+  $('#chNext').addEventListener('click',()=>{if(cur===5){cur=0;seen=0}else{cur++;seen=Math.max(seen,cur)}draw()});
+  draw();
+  function cg(){const amt=+$('#cgAmt').value||0,ry=+$('#cgRy').value;$('#cgRyO').textContent=(ry>0?'+':'')+ry.toFixed(2)+'%';const v=amt*ry/100;const box=$('#cgBox');
+    if(ry>0){$('#cgVal').textContent=money(v)+' / year';$('#cgVal').className='big neg';$('#cgText').textContent=`That's the after-inflation income you give up by holding gold instead of safe bonds. The higher this gets, the more big investors prefer bonds.`}
+    else if(ry<0){$('#cgVal').textContent=money(-v)+' / year';$('#cgVal').className='big pos';$('#cgText').textContent=`Negative real yield: safe bonds lose this much to inflation each year. Holding gold costs you nothing extra, which is why gold often rallies when real yields go below zero (2020 is a good example).`}
+    else{$('#cgVal').textContent='$0';$('#cgVal').className='big';$('#cgText').textContent='At a zero real yield, bonds and gold both earn nothing after inflation, so gold costs you nothing extra to hold.'}}
+  ['cgAmt','cgRy'].forEach(id=>$('#'+id).addEventListener('input',cg));cg();})();
+/* ---------- step 12: COT ---------- */
+(function(){
+  const G=[['Managed money','--g-mm',190000,35000,9000,-3400],['Swap dealers','--g-sw',30000,185000,-4000,7000],['Producers & merchants','--g-pr',20000,60000,500,2500],['Other reportables','--g-ot',60000,25000,1000,-500],['Small traders (you)','--g-sm',30000,25000,-600,300]];
+  const fmt=n=>(n>0?'+':n<0?'−':'')+Math.abs(n).toLocaleString('en-US');
+  const totL=G.reduce((a,g)=>a+g[2],0),totS=G.reduce((a,g)=>a+g[3],0);
+  // stacked
+  const st=$('#cotStack');const X0=110,W=515;
+  [['All longs',2,20],['All shorts',3,72]].forEach(([lab,k,y])=>{el('text',{x:0,y:y+22,class:'t-ink',style:'font-size:12px'},st,lab);let x=X0;
+    G.forEach(g=>{const w=g[k]/totL*W;el('rect',{x,y,width:Math.max(0,w-1.5),height:34,rx:3,style:`fill:var(${g[1]})`},st);if(w>46)el('text',{x:x+w/2,y:y+21,'text-anchor':'middle',style:'fill:#fff;font-size:10px'},st,Math.round(g[k]/1000)+'k');x+=w});
+    el('text',{x:X0+W+4,y:y+22,class:'t-ink',style:'font-size:10px'},st,'')});
+  el('text',{x:X0+W/2,y:124,'text-anchor':'middle',class:'t-ink'},st,`Both add up to ${totL.toLocaleString('en-US')} contracts. They always match.`);
+  $('#cotLegend').innerHTML=G.map(g=>`<span><i class="gdot" style="background:var(${g[1]});margin-top:0"></i>${g[0]}</span>`).join('');
+  // table
+  $('#cotRows').innerHTML=G.map((g,i)=>{const net=g[2]-g[3],ch=g[4]-g[5];return `<tr${i===0?' class="hl"':''}><td><i class="gdot" style="background:var(${g[1]});margin:0 6px 0 0;vertical-align:-1px"></i>${g[0]}</td><td>${g[2].toLocaleString('en-US')}</td><td>${g[3].toLocaleString('en-US')}</td><td>${fmt(net)}</td><td class="${ch>0?'pos':ch<0?'neg':''}">${fmt(ch)}</td></tr>`}).join('')+`<tr><td><b>Total</b></td><td>${totL.toLocaleString('en-US')}</td><td>${totS.toLocaleString('en-US')}</td><td><b>0</b></td><td><b>0</b></td></tr>`;
+  // net chart
+  const nc=$('#cotNet');const C=380,S=180/160000;el('line',{x1:C,x2:C,y1:6,y2:186,style:'stroke:var(--muted)'},nc);
+  G.forEach((g,i)=>{const net=g[2]-g[3];const y=10+i*35;el('text',{x:0,y:y+17,class:'t-ink',style:'font-size:12px'},nc,g[0]);const w=Math.abs(net)*S;
+    el('rect',{x:net>=0?C:C-w,y,width:w,height:24,rx:3,style:`fill:var(${g[1]})`},nc);
+    el('text',{x:net>=0?C+w+6:C-w-6,y:y+16,'text-anchor':net>=0?'start':'end',class:'t-ink'},nc,fmt(net))});
+  el('text',{x:C-8,y:198,'text-anchor':'end'},nc,'← net short');el('text',{x:C+8,y:198},nc,'net long →');
+  // size
+  function sz(){const m=Math.max(1,+$('#szMgc').value||1),mm=Math.max(1,+$('#szMm').value||1);const gc=m/10;const r=mm/gc;
+    $('#szYou').textContent=gc.toLocaleString('en-US',{maximumFractionDigits:1})+' GC';$('#szYouOz').textContent=(m*10).toLocaleString('en-US')+' oz of gold';
+    $('#szThem').textContent=mm.toLocaleString('en-US')+' GC';$('#szThemOz').textContent=(mm*100/1e6).toLocaleString('en-US',{maximumFractionDigits:1})+' million oz';
+    $('#szRatio').textContent=Math.round(r).toLocaleString('en-US')+'×';
+    const side=Math.sqrt(5350/r)*100;const thing=side<3?'a coin':side<12?'a sticky note':side<35?'a sheet of paper':'a doormat';
+    $('#szPic').textContent=`If their position were a football field, yours would be about ${thing} (${side<10?side.toFixed(1):Math.round(side)} cm across).`}
+  ['szMgc','szMm'].forEach(id=>$('#'+id).addEventListener('input',sz));sz();
+  // COT index
+  function zoneTxt(v){if(v>=80)return['Room is full','Most funds that wanted to buy already have. Upside fuel is low, and a rush for the exit is possible.','bear'];if(v<=20)return['Room is nearly empty','Funds have mostly given up on gold. Lots of buying power is waiting on the sidelines.','bull'];return['Room is filling','Funds lean long but still have room to add. Positioning isn\'t extreme.','']}
+  function ci(){const n=+$('#ciNow').value,lo=+$('#ciMin').value,hi=+$('#ciMax').value;let v=hi>lo?(n-lo)/(hi-lo)*100:50;v=Math.max(0,Math.min(100,v));
+    $('#ciVal').textContent=Math.round(v);$('#ciPin').style.left=v+'%';const z=zoneTxt(v);$('#ciTitle').textContent=z[0];$('#ciText').textContent=z[1];$('#ciBox').className='readout '+z[2]}
+  ['ciNow','ciMin','ciMax'].forEach(id=>$('#'+id).addEventListener('input',ci));ci();
+  // where to stand
+  let flow='B',px='U';
+  seg($('#wsFlow'),[{label:'Buying (net long up)',value:'B',cls:'up'},{label:'Selling',value:'S',cls:'down'}],'B',v=>{flow=v;ws()});
+  seg($('#wsPx'),[{label:'↑ Up',value:'U',cls:'up'},{label:'↓ Down',value:'D',cls:'down'}],'U',v=>{px=v;ws()});
+  const Z={LB:['Get ready for longs: the funds are coming back','Look for longs, but only after price confirms, for example by breaking above a recent high. Start small.','Bullish, once price confirms','bull'],
+   LS:['Stand aside: washed out but still falling','Don\'t short a washed-out market, and don\'t buy yet. Wait for the funds to stop selling.','Neutral','warn'],
+   MB:['Stand with the funds: long','Favour longs. Buy pullbacks to VWAP or support in your bias direction.','Bullish','bull'],
+   MS:['Stand with the funds: no longs','Lean short or stay flat. Sell rallies, and don\'t buy dips.','Bearish','bear'],
+   HB:['Stay in, but lighten up: late in the move','Keep trend trades, but smaller and with tighter stops. Don\'t start big new longs.','Neutral (bullish trend, crowded)','warn'],
+   HS:['Step away from longs: crowded exit','No new longs, and protect profits. Only short if price breaks support.','Bearish','bear']};
+  function ws(){const v=+$('#wsIdx').value;$('#wsIdxO').textContent=v;const zk=(v<20?'L':v<=80?'M':'H')+flow;const z=Z[zk];
+    $$('.zone').forEach(e=>e.classList.toggle('on',e.dataset.z===zk));$('#wsTitle').textContent=z[0];$('#wsAct').textContent=z[1];$('#wsScore').textContent='mark Positioning (COT) as '+z[2];$('#wsBox').className='readout '+z[3];
+    let note;if(flow==='B'&&px==='U')note='Price agrees with the funds: confirmed.';else if(flow==='B')note='The funds are buying while price falls (buying the dip). Wait for price to turn up before acting.';else if(px==='D')note='Price agrees with the funds: confirmed.';else note='Price is rising while the funds sell. The rally is probably short covering and may fade.';
+    $('#wsPxNote').textContent=note}
+  $('#wsIdx').addEventListener('input',ws);ws();
+  $$('.zone').forEach(e=>{e.style.cursor='pointer';e.addEventListener('click',()=>{const k=e.dataset.z;$('#wsIdx').value=k[0]==='L'?10:k[0]==='M'?50:90;flow=k[1];seg($('#wsFlow'),[{label:'Buying (net long up)',value:'B',cls:'up'},{label:'Selling',value:'S',cls:'down'}],flow,v=>{flow=v;ws()});ws()})});
+  // log
+  let log=store.get('cotlog',[]);
+  function drawLog(){$('#lgRows').innerHTML=log.length?log.map((r,i)=>`<tr><td>${r.d}</td><td class="mono">${r.n}</td><td class="mono ${+r.c>0?'pos':+r.c<0?'neg':''}">${r.c}</td><td class="mono">${r.x}</td><td><button class="btn small" data-del="${i}">Remove</button></td></tr>`).join(''):'<tr><td colspan="5" class="muted">No weeks logged yet. Add this Friday\'s numbers above.</td></tr>';
+    $$('[data-del]',$('#lgRows')).forEach(b=>b.addEventListener('click',()=>{log.splice(+b.dataset.del,1);store.set('cotlog',log);drawLog()}))}
+  $('#lgAdd').addEventListener('click',()=>{const r={d:$('#lgDate').value||'—',n:$('#lgNet').value||'—',c:$('#lgChg').value||'—',x:$('#lgIdx').value||'—'};if(r.n==='—'&&r.x==='—')return;log.unshift(r);store.set('cotlog',log);['lgNet','lgChg','lgIdx','lgDate'].forEach(id=>$('#'+id).value='');drawLog()});
+  drawLog();
+})();
+})();
+</script>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"><style>:root{--display:"Archivo","Arial Narrow",system-ui,sans-serif;--bodyf:"Source Sans 3",system-ui,sans-serif;--monof:"JetBrains Mono",ui-monospace,Menlo,monospace;--ground:#f3f4f6;--surface:#ffffff;--surface-2:#eceef2;--ink:#1c2230;--muted:#5d6577;--line:#dde0e7;--gold:#9a6a12;--gold-strong:#9a6a12;--gold-soft:#f4ead4;--on-gold:#ffffff;--bull:#18794e;--bull-soft:#e3f3ea;--bear:#b4232c;--bear-soft:#fbe7e8;--info:#2f5f9e;--info-soft:#e2eaf6;--bar:#dde0e7;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:light;}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#12151c;--surface:#1a1f29;--surface-2:#212734;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--gold:#d9a441;--gold-strong:#d9a441;--gold-soft:#2e2615;--on-gold:#1a1f29;--bull:#4cc38a;--bull-soft:#15301f;--bear:#f0727a;--bear-soft:#3a1a1d;--info:#7fa9e0;--info-soft:#1a2638;--bar:#2b3240;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:dark;}}:root[data-theme="dark"]{--ground:#12151c;--surface:#1a1f29;--surface-2:#212734;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--gold:#d9a441;--gold-strong:#d9a441;--gold-soft:#2e2615;--on-gold:#1a1f29;--bull:#4cc38a;--bull-soft:#15301f;--bear:#f0727a;--bear-soft:#3a1a1d;--info:#7fa9e0;--info-soft:#1a2638;--bar:#2b3240;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:dark;}:root[data-theme="light"]{--ground:#f3f4f6;--surface:#ffffff;--surface-2:#eceef2;--ink:#1c2230;--muted:#5d6577;--line:#dde0e7;--gold:#9a6a12;--gold-strong:#9a6a12;--gold-soft:#f4ead4;--on-gold:#ffffff;--bull:#18794e;--bull-soft:#e3f3ea;--bear:#b4232c;--bear-soft:#fbe7e8;--info:#2f5f9e;--info-soft:#e2eaf6;--bar:#dde0e7;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:light;}body{font-family:var(--bodyf)}h1,h2,h3,h4{font-family:var(--display);font-stretch:85%}
+.brand h1{font-stretch:80%;font-weight:800}</style><script>(function(){function a(){var t;try{t=parent.document.documentElement.getAttribute("data-theme")}catch(e){}
+var r=document.documentElement;if(t)r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+if(window.__deskTheme)window.__deskTheme();}window.__deskApply=a;a();
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",a)}catch(e){}})();</script></body></html>

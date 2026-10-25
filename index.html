@@ -1,0 +1,83 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Gold Study Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one-screen app. Ledger-style header with section tabs; the active study tool fills the rest of the screen. Same palette and type as the Micro Gold Journal. */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --ink:#1c2230; --muted:#5d6577; --line:#dde0e7; --brass:#9a6a12; --brass-soft:#f4ead4;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif; --body:"Source Sans 3",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--panel:#1a1f29;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--brass:#d9a441;--brass-soft:#2e2615;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--panel:#1a1f29;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--brass:#d9a441;--brass-soft:#2e2615;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);display:flex;flex-direction:column;overflow:hidden}
+.top{flex:none;background:var(--panel);border-bottom:2px solid var(--ink);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 0}
+.bar{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.75rem;letter-spacing:-.01em;margin:0;line-height:1}
+h1 span{color:var(--brass)}
+.journal{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brass);text-decoration:none;border:1px solid var(--brass);border-radius:4px;padding:4px 10px}
+.journal:hover{background:var(--brass-soft)}
+nav{max-width:1240px;margin:12px auto 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.tab{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:none;border:0;border-bottom:3px solid transparent;
+  padding:6px 14px 9px;cursor:pointer;color:var(--muted);font:inherit;text-align:left}
+.tab b{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.92rem;letter-spacing:.04em;text-transform:uppercase}
+.tab small{font-family:var(--mono);font-size:.68rem}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--brass)}
+.tab[aria-selected="true"] small{color:var(--brass)}
+.tab:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.stage{flex:1;min-height:0;position:relative}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--mono);font-size:.85rem}
+</style>
+
+<header class="top">
+  <div class="bar">
+    <h1>Gold Study <span>Desk</span></h1>
+    <a class="journal" href="https://claude.ai/artifact/WEjirwAhNuh47wHh6mFVWE" target="_blank" rel="noopener">Open trade journal ↗</a>
+  </div>
+  <nav role="tablist" aria-label="Study sections" id="tabs"></nav>
+</header>
+<div class="stage" id="stage"><div class="loading" id="loading">Loading…</div></div>
+
+<script>
+(function(){
+const S=[
+  {id:"lab",src:"lab.html",name:"Futures Lab",meta:"12-step gold course"},
+  {id:"orderflow",src:"dale.html",name:"Order Flow Q&A",meta:"207 questions · 4 books"},
+  {id:"candles",src:"candles.html",name:"Candlesticks",meta:"14-pattern drills"},
+  {id:"fvg",src:"fvg.html",name:"Fair Value Gaps",meta:"FVG + IFVG drills"}
+];
+const tabs=document.getElementById("tabs"),stage=document.getElementById("stage"),frames={};
+tabs.innerHTML=S.map(s=>`<button class="tab" role="tab" id="tab-${s.id}" aria-controls="pane-${s.id}" data-id="${s.id}"><b>${s.name}</b><small>${s.meta}</small></button>`).join("");
+function show(id){
+  if(!S.some(s=>s.id===id))id=S[0].id;
+  S.forEach(s=>{
+    const on=s.id===id;document.getElementById("tab-"+s.id).setAttribute("aria-selected",on);
+    if(on&&!frames[s.id]){
+      const f=document.createElement("iframe");f.id="pane-"+s.id;f.title=s.name;f.src=s.src;
+      f.addEventListener("load",()=>{document.getElementById("loading").hidden=true;sync(f)});
+      stage.appendChild(f);frames[s.id]=f;
+    }
+    if(frames[s.id])frames[s.id].hidden=!on;
+  });
+  try{localStorage.setItem("desk_tab",id)}catch(e){}
+}
+function sync(f){try{f.contentWindow.__deskApply&&f.contentWindow.__deskApply()}catch(e){}}
+tabs.addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)show(b.dataset.id)});
+tabs.addEventListener("keydown",e=>{
+  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
+  const i=S.findIndex(s=>document.getElementById("tab-"+s.id).getAttribute("aria-selected")==="true");
+  const n=S[(i+(e.key==="ArrowRight"?1:S.length-1))%S.length];show(n.id);document.getElementById("tab-"+n.id).focus();
+});
+new MutationObserver(()=>Object.values(frames).forEach(sync)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+let start=(location.hash||"").slice(1);
+if(!start){try{start=localStorage.getItem("desk_tab")||""}catch(e){}}
+show(start);
+})();
+</script>
+</body></html>

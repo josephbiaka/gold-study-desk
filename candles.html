@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candlestick Practice</title>
+<style>
+:root{--bg:#faf9f5;--card:#fff;--text:#1f1e1d;--muted:#6b6a65;--border:rgba(0,0,0,.12);--accent:#185FA5;--accentbg:#E6F1FB;--good:#0F6E56;--goodbg:#E1F5EE;--bad:#A32D2D;--badbg:#FCEBEB;--up:#1D9E75;--down:#E24B4A;--grid:rgba(0,0,0,.05);--mark:rgba(55,138,221,.12);--markb:#378ADD}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--card:#2a2927;--text:#f1efe8;--muted:#b4b2a9;--border:rgba(255,255,255,.14);--accent:#85B7EB;--accentbg:#0C447C;--good:#9FE1CB;--goodbg:#085041;--bad:#F7C1C1;--badbg:#791F1F;--grid:rgba(255,255,255,.05);--mark:rgba(133,183,235,.14);--markb:#85B7EB}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:580px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+summary{cursor:pointer;font-weight:500}
+.gh{font-size:14px;font-weight:500;margin:14px 0 6px}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gi{border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+.gi b{font-size:13px;font-weight:500;display:block}
+.gi span{font-size:12px;color:var(--muted);line-height:1.4;display:block;margin-top:2px}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:6px;background:var(--accentbg);color:var(--accent);margin-bottom:8px}
+.prompt{font-size:17px;font-weight:500;margin:0 0 10px}
+svg{display:block;width:100%;height:auto}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt,.mini{text-align:left;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:15px;cursor:pointer}
+.opts.two{grid-template-columns:1fr 1fr}
+.mini{padding:6px 8px}
+.mini b{font-weight:500;font-size:14px}
+.sel{border-color:var(--accent)!important;background:var(--accentbg)!important;color:var(--accent)}
+.right{border-color:var(--good)!important;background:var(--goodbg)!important;color:var(--good)}
+.wrong{border-color:var(--bad)!important;background:var(--badbg)!important;color:var(--bad)}
+.actions{display:flex;gap:10px;margin-top:14px}
+.btn{padding:10px 18px;border-radius:8px;border:1px solid var(--text);background:var(--text);color:var(--bg);font:inherit;font-size:15px;cursor:pointer}
+.err{color:var(--bad);font-size:13px;margin:8px 0 0;min-height:1em}
+.fb{margin-top:12px;padding:12px 14px;border-radius:8px;font-size:14px}
+.fb.good{background:var(--goodbg);color:var(--good)}
+.fb.bad{background:var(--badbg);color:var(--bad)}
+.big{font-size:40px;font-weight:500;margin:4px 0}
+.rows div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:15px}
+.rows .y{color:var(--good)}.rows .n{color:var(--bad)}
+.legend{font-size:13px;color:var(--muted);margin-top:6px}
+.hit{cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<h1>Candlestick pattern practice</h1>
+<p class="sub">Each set covers all 14 patterns once, in a random order. Every pattern also rotates through different question types, so you won't see the same question again until you've worked through the others.</p>
+<details>
+<summary>Cheat sheet (tap to open)</summary>
+<p class="gh">Bearish reversals (after an uptrend)</p><div class="gal" id="galBear"></div>
+<p class="gh">Bullish reversals (after a downtrend)</p><div class="gal" id="galBull"></div>
+</details>
+<div class="meta"><span id="count"></span><span id="sc"></span></div>
+<div class="bar"><i id="prog" style="width:0"></i></div>
+<div id="app"></div>
+</main>
+<script>
+const r=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const M=c=>({o:100-c.o,c:100-c.c,h:100-c.l,l:100-c.h});
+const K=(o,c,up,dn)=>({o,c,h:Math.max(o,c)+up,l:Math.min(o,c)-dn});
+const lc=s=>s.charAt(0).toLowerCase()+s.slice(1);
+
+const KINDS=['hang','shoot','doji','cloud','engulf','harami','star'];
+const NAME={bear:{hang:'Hanging man',shoot:'Shooting star',doji:'Northern doji',cloud:'Dark cloud',engulf:'Bearish engulfing',harami:'Bearish harami',star:'Evening star'},
+ bull:{hang:'Inverted hammer',shoot:'Hammer',doji:'Southern doji',cloud:'Piercing',engulf:'Bullish engulfing',harami:'Bullish harami',star:'Morning star'}};
+const META={};for(const d of ['bear','bull'])for(const k of KINDS)META[NAME[d][k]]={dir:d,kind:k,n:{hang:1,shoot:1,doji:1,cloud:2,engulf:2,harami:2,star:3}[k]};
+const ALL=Object.keys(META);
+const RULE={
+ 'Hanging man':'Small body at the top, long lower wick (about 2x the body or more), after an uptrend. Same shape as a hammer, but at a top.',
+ 'Shooting star':'Small body near the low, long upper wick, after an uptrend. Buyers pushed up, sellers slammed it back.',
+ 'Northern doji':'Open and close almost equal, appearing at the top of an uptrend. Indecision at a high.',
+ 'Dark cloud':'Big green candle, then a red one that opens above it and closes below the middle of the green body (but not below its open).',
+ 'Bearish engulfing':'A red body completely covers the previous green body, after an uptrend.',
+ 'Bearish harami':'Big green candle, then a small red body that fits inside it. Buying momentum stalls.',
+ 'Evening star':'Three candles: big green, a small star gapping up, then a big red closing deep into the first body.',
+ 'Hammer':'Small body at the top, long lower wick (about 2x the body or more), after a downtrend. Sellers pushed down, buyers took it back.',
+ 'Inverted hammer':'Small body near the low, long upper wick, after a downtrend. Same shape as a shooting star, but at a bottom.',
+ 'Southern doji':'Open and close almost equal, appearing at the bottom of a downtrend. Indecision at a low.',
+ 'Piercing':'Big red candle, then a green one that opens below it and closes above the middle of the red body (but not above its open).',
+ 'Bullish engulfing':'A green body completely covers the previous red body, after a downtrend.',
+ 'Bullish harami':'Big red candle, then a small green body that fits inside it. Selling momentum stalls.',
+ 'Morning star':'Three candles: big red, a small star gapping down, then a big green closing deep into the first body.'};
+const TWIN={'Hanging man':['Hammer','Shooting star'],'Hammer':['Hanging man','Inverted hammer'],'Shooting star':['Inverted hammer','Hanging man'],'Inverted hammer':['Shooting star','Hammer'],
+ 'Northern doji':['Southern doji','Shooting star'],'Southern doji':['Northern doji','Hammer'],'Dark cloud':['Bearish engulfing','Piercing'],'Piercing':['Bullish engulfing','Dark cloud'],
+ 'Bearish engulfing':['Dark cloud','Bearish harami'],'Bullish engulfing':['Piercing','Bullish harami'],'Bearish harami':['Bearish engulfing','Bullish harami'],'Bullish harami':['Bullish engulfing','Bearish harami'],
+ 'Evening star':['Morning star','Bearish engulfing'],'Morning star':['Evening star','Bullish engulfing']};
+const RQ={
+ 'Hanging man':[['What makes a hanging man different from a hammer?',['It appears after an uptrend','It has a long upper wick','Its body must be red'],0,'Same shape as a hammer. Location decides: at a top it is a hanging man.'],
+  ['A hanging man\'s lower wick should be…',['At least about twice the body','Shorter than the body','The same as the upper wick'],0,'The long lower wick is the whole point of the shape.']],
+ 'Hammer':[['Where does a hammer\'s small body sit?',['Near the top of the candle','Near the bottom','In the exact middle'],0,'Small body up top, long wick below, like a hammer head and handle.'],
+  ['What does a hammer show?',['Sellers pushed down, but buyers took price back','Buyers failed at the high','Nothing happened all session'],0,'The long lower wick is rejected selling.']],
+ 'Shooting star':[['Where is a shooting star\'s long wick?',['Above the body','Below the body','Equal on both sides'],0,'Long upper wick, small body near the low.'],
+  ['What does a shooting star show?',['Buyers pushed up, but sellers drove price back down','Sellers were rejected at the low','Price barely moved'],0,'The long upper wick is rejected buying at a high.']],
+ 'Inverted hammer':[['An inverted hammer has the same shape as a…',['Shooting star','Hammer','Doji'],0,'Same shape; inverted hammer is the bottom version.'],
+  ['Why does an inverted hammer especially need confirmation?',['It closes near its low, so buyers haven\'t proven control yet','It is always red','It has no wicks'],0,'Wait for a strong green candle after it.']],
+ 'Northern doji':[['Why is it called a "northern" doji?',['It forms at the top of an uptrend','It has a long upper wick','It forms in the Asian session'],0,'North = top. It is a doji at a high.'],
+  ['What does a northern doji suggest?',['Buyers are losing conviction at a high','The uptrend will surely continue','Sellers are exhausted'],0,'Indecision after a rally is a warning, not a guarantee.']],
+ 'Southern doji':[['Where does a southern doji form?',['At the bottom of a downtrend','At the top of an uptrend','Anywhere on the chart'],0,'South = bottom. It is a doji at a low.'],
+  ['What makes a candle a doji?',['Open and close are almost equal','It has a long lower wick only','It gaps from the prior candle'],0,'The body is a thin line. Wicks can be any length.']],
+ 'Dark cloud':[['Where does the red candle in a dark cloud open?',['Above the green candle\'s high or close','Inside the green body','Below the green candle\'s open'],0,'It opens strong, then sells off.'],
+  ['If that red candle closes below the green candle\'s open, the pattern becomes…',['Bearish engulfing','Bearish harami','Evening star'],0,'Dark cloud closes past the midpoint; engulfing closes past the whole body.']],
+ 'Piercing':[['Where does the green candle in a piercing pattern open?',['Below the red candle\'s low or close','Inside the red body','Above the red candle\'s open'],0,'It opens weak, then rallies.'],
+  ['The green candle in a piercing pattern must close…',['Above the middle of the red body','Below the middle of the red body','Above the red candle\'s open'],0,'Above the midpoint but below the red open. Above the open would be bullish engulfing.']],
+ 'Bearish engulfing':[['In a bearish engulfing, which candle is red?',['The second one','The first one','Both'],0,'Small green first, then a big red that swallows it.'],
+  ['What must the red body do in a bearish engulfing?',['Completely cover the prior green body','Fit inside the green body','Close just under the green close'],0,'The second body engulfs the whole first body.']],
+ 'Bullish engulfing':[['In a bullish engulfing, the green body…',['Completely covers the prior red body','Fits inside the red body','Opens above the red open'],0,'The second body engulfs the whole first body.'],
+  ['Which usually shows stronger buying?',['Bullish engulfing','Bullish harami','They are equal'],0,'Engulfing shows buyers overpowering sellers; harami only shows selling slowing.']],
+ 'Bearish harami':[['In a bearish harami, the second body is…',['Small and inside the first green body','Bigger than the first','Gapped above the first'],0,'The small body sits inside the big one.'],
+  ['What does "harami" mean in Japanese?',['Pregnant','Cloud','Star'],0,'The big candle "carries" the small one inside it.']],
+ 'Bullish harami':[['A bullish harami appears after…',['A downtrend','An uptrend','A big gap up'],0,'It is a bottom pattern.'],
+  ['The first candle of a bullish harami is…',['A big red candle','A small green candle','A doji'],0,'Big red first, then a small green inside it.']],
+ 'Evening star':[['What is the middle candle of an evening star?',['A small-bodied star, often gapping up','A big red candle','A big green candle'],0,'The star shows the rally stalling.'],
+  ['How far should the third candle of an evening star close?',['Well into the first body, ideally past its middle','Just below the star','Above the first candle\'s close'],0,'A deep close shows sellers have taken over.']],
+ 'Morning star':[['What is the third candle of a morning star?',['A big green candle closing deep into the first body','A small doji','A big red candle'],0,'The big green finishes the reversal.'],
+  ['A morning star is the bullish version of a…',['Evening star','Bearish harami','Shooting star'],0,'Flip an evening star upside down and you get a morning star.']]};
+
+function trend(n){let p=r(38,44),cs=[];for(let i=0;i<n;i++){const red=i>0&&i<n-1&&Math.random()<.18,o=p,c=red?p-r(.6,1.4):p+r(2,4);cs.push(K(o,c,r(.2,1),r(.2,1)));p=c;}return cs;}
+function bearPat(kind,p){
+  const b=r(3.5,5);
+  if(kind==='hang'){const o=p+r(.3,1),bd=r(1.1,1.6),c=Math.random()<.5?o+bd:o-bd;return[K(o,c,r(0,.2),bd*r(3,4))];}
+  if(kind==='shoot'){const o=p+r(.3,1),bd=r(1.1,1.6),c=Math.random()<.5?o+bd:o-bd;return[K(o,c,bd*r(3,4),r(0,.2))];}
+  if(kind==='doji'){const o=p+r(.5,1.2);return[K(o,o+r(-.1,.1),r(2.2,3.5),r(2.2,3.5))];}
+  if(kind==='cloud'){const c1=K(p,p+b*1.3,r(.2,.5),r(.2,.5)),o=c1.h+r(.4,1),c=c1.o+b*1.3*r(.15,.4);return[c1,K(o,c,r(.1,.4),r(.1,.5))];}
+  if(kind==='engulf'){const c1=K(p,p+r(1.2,2),r(.2,.5),r(.2,.5)),o=c1.c+r(.3,.8),c=c1.o-r(.6,1.5);return[c1,K(o,c,r(.1,.4),r(.1,.5))];}
+  if(kind==='harami'){const B=b*1.3,c1=K(p,p+B,r(.2,.5),r(.2,.5)),o=c1.c-B*r(.15,.3),c=o-B*r(.2,.3);return[c1,K(o,c,r(.1,.3),r(.1,.3))];}
+  if(kind==='star'){const B=b*1.3,c1=K(p,p+B,r(.2,.5),r(.2,.5)),so=c1.h+r(.6,1.2),sc=so+r(-.5,.5);let s=K(so,sc,r(.3,.8),r(.2,.5));s.l=Math.max(s.l,c1.c+.1);
+    const o3=Math.min(so,sc)-r(0,.3),c3=c1.o+B*r(.1,.4);return[c1,s,K(o3,c3,r(.1,.3),r(.2,.5))];}
+}
+function make(name,tn=6,after=0,trendDir){
+  const m=META[name];let tr=trend(tn);
+  const flipTrend=trendDir&&trendDir!==(m.dir==='bear'?'up':'down');
+  const pat=bearPat(m.kind,tr.length?tr[tr.length-1].c:r(45,55));let tail=[];
+  let p=pat[pat.length-1].c;for(let i=0;i<after;i++){const c=p-r(1.5,3.5);tail.push(K(p,c,r(.2,.8),r(.2,.8)));p=c;}
+  if(flipTrend){const last=tr[tr.length-1].c;tr=tr.map(M).map(c=>({o:c.o+2*last-100,c:c.c+2*last-100,h:c.h+2*last-100,l:c.l+2*last-100}));}
+  let cs=[...tr,...pat,...tail];if(m.dir==='bull')cs=cs.map(M);
+  return{cs,mark:pat.map((_,i)=>tn+i)};
+}
+function chart(cs,o={}){
+  const w=o.w||360,h=o.h||200;let v=[];cs.forEach(c=>v.push(c.h,c.l));
+  let hi=Math.max(...v),lo=Math.min(...v),p=(hi-lo)*.07;hi+=p;lo-=p;
+  const y=x=>8+(hi-x)/(hi-lo)*(h-16),n=cs.length,step=Math.min(36,(w-20)/n),x0=(w-step*n)/2,bw=Math.max(5,step*.55);
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Candlestick chart">`;
+  for(let g=1;g<4;g++)s+=`<line x1="0" x2="${w}" y1="${h*g/4}" y2="${h*g/4}" stroke="var(--grid)"/>`;
+  if(o.mark&&o.mark.length){const a=Math.min(...o.mark),b=Math.max(...o.mark);s+=`<rect x="${x0+step*a+1}" y="2" width="${step*(b-a+1)-2}" height="${h-4}" rx="5" fill="var(--mark)" stroke="var(--markb)" stroke-width="1" stroke-dasharray="4 3"/>`;}
+  if(o.sel!=null)s+=`<rect x="${x0+step*o.sel+2}" y="4" width="${step-4}" height="${h-8}" rx="4" fill="none" stroke="var(--accent)" stroke-width="1.6"/>`;
+  cs.forEach((c,i)=>{const cx=x0+step*i+step/2,col=c.c>=c.o?'var(--up)':'var(--down)',t=y(Math.max(c.o,c.c));
+    s+=`<line x1="${cx}" x2="${cx}" y1="${y(c.h)}" y2="${y(c.l)}" stroke="${col}" stroke-width="1.6"/><rect x="${cx-bw/2}" y="${t}" width="${bw}" height="${Math.max(1.6,y(Math.min(c.o,c.c))-t)}" fill="${col}"/>`;
+    if(o.click)s+=`<rect class="hit" data-i="${i}" x="${x0+step*i}" y="0" width="${step}" height="${h}" fill="transparent"/>`;});
+  return s+'</svg>';
+}
+const opt3=(ans,pool)=>shuffle([ans,...shuffle(pool.filter(x=>x!==ans)).slice(0,3)]);
+
+const Q={
+ name(n){const P=make(n),tw=TWIN[n];const rest=shuffle(ALL.filter(x=>x!==n&&!tw.includes(x)));
+  return{type:'Name the pattern',prompt:'What is the highlighted pattern?',kind:'choice',chart:()=>chart(P.cs,{mark:P.mark}),opts:shuffle([n,tw[0],...shuffle([tw[1],...rest]).slice(0,2)]),ans:n,ex:`It's a ${lc(n)}. ${RULE[n]}`};},
+ dir(n){const P=make(n),d=META[n].dir,ans=d==='bear'?'Bearish reversal':'Bullish reversal';
+  return{type:'Bullish or bearish',prompt:'What does the highlighted pattern signal?',kind:'choice',two:true,chart:()=>chart(P.cs,{mark:P.mark}),opts:['Bullish reversal','Bearish reversal'],ans,
+   ex:`It's a ${lc(n)} after a${d==='bear'?'n up':' down'}trend, so it warns of a move ${d==='bear'?'down':'up'}. ${RULE[n]}`};},
+ pick(n){const others=shuffle(TWIN[n].filter(x=>META[x].dir===META[n].dir).concat(shuffle(ALL.filter(x=>META[x].dir===META[n].dir&&x!==n&&!TWIN[n].includes(x))))).slice(0,2);
+  const list=[n,...others],order=shuffle([0,1,2]),L=['A','B','C'];
+  const minis=order.map((j,i)=>{const P=make(list[j],4);return{label:L[i],svg:chart(P.cs,{mark:P.mark,h:130})};});
+  return{type:'Pick the chart',prompt:`Which chart shows a ${lc(n)}?`,kind:'mini',minis,ans:L[order.indexOf(0)],ex:`${RULE[n]} The other charts were: ${others.map(lc).join(' and ')}.`};},
+ truefalse(n){const real=Math.random()<.5?n:TWIN[n][0],P=make(real),claim=n;const ans=real===claim?'True':'False';
+  return{type:'True or false',prompt:`True or false: the highlighted pattern is a ${lc(claim)}.`,kind:'choice',two:true,chart:()=>chart(P.cs,{mark:P.mark}),opts:['True','False'],ans,
+   ex:real===claim?`True. ${RULE[n]}`:`False. This is a ${lc(real)}. ${RULE[real]}`};},
+ spot(n){const P=make(n,Math.floor(r(4,8)),2+Math.floor(r(0,2)));
+  return{type:'Spot it',prompt:`Tap any candle of the ${lc(n)} on this chart.`,kind:'tap',cs:P.cs,ans:P.mark,ex:`The ${lc(n)} is highlighted now. ${RULE[n]} The candles after it show the reversal playing out.`};},
+ trap(n){const wrongTrend=META[n].dir==='bear'?'down':'up';const tw={'Hanging man':'Hammer','Hammer':'Hanging man','Shooting star':'Inverted hammer','Inverted hammer':'Shooting star','Northern doji':'Southern doji','Southern doji':'Northern doji'}[n];
+  if(!tw)return Q.name(n);const P=make(n,6,0,wrongTrend);
+  return{type:'Context trap',prompt:'Look at the trend first. What is the highlighted candle?',kind:'choice',chart:()=>chart(P.cs,{mark:P.mark}),opts:shuffle([n,tw]),ans:tw,
+   ex:`It's a ${lc(tw)}. The shape alone would also fit a ${lc(n)}, but this one comes after a${wrongTrend==='up'?'n up':' down'}trend. ${RULE[tw]}`};},
+ trend(n){const P=make(n,0),d=META[n].dir;const ans=d==='bear'?'An uptrend':'A downtrend';
+  return{type:'Which trend',prompt:`This is a ${lc(n)}. What should come before it for it to count?`,kind:'choice',chart:()=>chart(P.cs,{mark:P.mark,w:200,h:130}),opts:['An uptrend','A downtrend','A sideways range'],ans,
+   ex:`A ${lc(n)} is a ${d==='bear'?'bearish':'bullish'} reversal, so it needs ${lc(ans)} to reverse.`};},
+ count(n){const P=make(n,5),ans=String(META[n].n);
+  return{type:'Count the candles',prompt:`How many candles make up a ${lc(n)}?`,kind:'choice',two:false,chart:()=>chart(P.cs,{}),hint:'The pattern is hidden in the last few candles of this chart.',opts:['1','2','3'],ans,
+   ex:`${ans} candle${ans==='1'?'':'s'}. ${RULE[n]}`};},
+ confirm(n){const P=make(n),d=META[n].dir;const good=d==='bear'?'A strong red candle closing below the pattern':'A strong green candle closing above the pattern';
+  const bad1=d==='bear'?'A green candle closing above the pattern':'A red candle closing below the pattern';
+  return{type:'Confirm it',prompt:`This ${lc(n)} just formed. Which next candle would confirm it?`,kind:'choice',chart:()=>chart(P.cs,{mark:P.mark}),opts:shuffle([good,bad1,'Another small doji at the same level']),ans:good,
+   ex:`Confirmation means the next candle moves in the reversal direction. ${d==='bear'?'A green close above would cancel the bearish signal.':'A red close below would cancel the bullish signal.'}`};},
+ rule0(n){return rq(n,0);},rule1(n){return rq(n,1);}
+};
+function rq(n,i){const [q,o,a,e]=RQ[n][i],P=make(n,4);return{type:'Know the rules',prompt:q,kind:'choice',chart:()=>chart(P.cs,{mark:P.mark,w:240,h:120}),cap:n,opts:shuffle(o),ans:o[a],ex:e};}
+const TYPES=Object.keys(Q);
+
+let store={deck:[],seen:{}};
+try{const s=JSON.parse(localStorage.getItem('candle-practice-v2')||'null');if(s&&s.seen)store=s;}catch(e){}
+const save=()=>{try{localStorage.setItem('candle-practice-v2',JSON.stringify(store));}catch(e){}};
+let lastType=null;
+function nextQ(n){
+  const own=TYPES.filter(t=>t!=='trap'||META[n].kind==='hang'||META[n].kind==='shoot'||META[n].kind==='doji');
+  const seen=store.seen[n]||[];let avail=own.filter(t=>!seen.includes(t));
+  if(!avail.length){store.seen[n]=[];avail=own.slice();}
+  let cand=avail.filter(t=>t!==lastType&&!(t.startsWith('rule')&&lastType&&lastType.startsWith('rule')));if(!cand.length)cand=avail;
+  const t=pick(cand);(store.seen[n]=store.seen[n]||[]).push(t);lastType=t;
+  const q=Q[t](n);q.pattern=n;return q;
+}
+let S;
+function newSet(){const order=shuffle(ALL);const qs=order.map(nextQ);save();S={qs,i:0,score:0,sel:null,done:false,res:[]};render();}
+
+function render(){
+  const app=document.getElementById('app'),N=S.qs.length;
+  document.getElementById('prog').style.width=(S.i/N*100)+'%';
+  document.getElementById('sc').textContent='Score '+S.score;
+  if(S.i>=N){document.getElementById('count').textContent='Set complete';const pct=S.score/N;
+    const rows=S.res.map(x=>`<div><span>${x.p}</span><span class="${x.ok?'y':'n'}">${x.ok?'Got it':'Review'} · ${x.t}</span></div>`).join('');
+    app.innerHTML=`<div class="card"><span class="tag">Results</span><p class="big">${S.score} / ${N}</p><p class="sub">${pct>=.85?'Your pattern eye is sharp.':pct>=.6?'Solid. Review the patterns marked below in the cheat sheet.':'Keep going. Study the cheat sheet, then run another set.'} Next set uses new question types for each pattern.</p><div class="rows">${rows}</div><div class="actions"><button class="btn" id="again">New set</button></div></div>`;
+    document.getElementById('again').onclick=()=>{newSet();scrollTo({top:0,behavior:'smooth'});};return;}
+  const q=S.qs[S.i];document.getElementById('count').textContent=`Question ${S.i+1} of ${N}`;
+  const isAns=v=>Array.isArray(q.ans)?q.ans.includes(v):v===q.ans;
+  const cls=v=>S.done?(isAns(v)?' right':v===S.sel?' wrong':''):(v===S.sel?' sel':'');
+  let h=`<div class="card"><span class="tag">${q.type}</span><p class="prompt">${q.prompt}</p>`;
+  if(q.kind==='choice'){h+=q.chart();if(q.hint)h+=`<p class="legend">${q.hint}</p>`;
+    h+=`<div class="opts${q.two?' two':''}">${q.opts.map((o,i)=>`<button class="opt${cls(o)}" data-k="${i}">${o}</button>`).join('')}</div>`;}
+  else if(q.kind==='mini')h+=`<div class="opts">${q.minis.map((m,i)=>`<button class="mini${cls(m.label)}" data-k="${i}"><b>${m.label}</b>${m.svg}</button>`).join('')}</div>`;
+  else{h+=chart(q.cs,{click:!S.done,sel:S.done?null:S.sel,mark:S.done?q.ans:null});h+=`<p class="legend">${S.done?'':S.sel!=null?'Candle '+(S.sel+1)+' selected':'Tap a candle.'}</p>`;}
+  h+=`<p class="err" id="err"></p>`;
+  if(S.done){const ok=isAns(S.sel);h+=`<div class="fb ${ok?'good':'bad'}">${ok?'Right. ':'Not quite. '}${q.ex}</div><div class="actions"><button class="btn" id="next">${S.i===N-1?'See results':'Next'}</button></div>`;}
+  else h+=`<div class="actions"><button class="btn" id="check">Check</button></div>`;
+  app.innerHTML=h+'</div>';
+  if(!S.done){
+    app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=+b.dataset.k;S.sel=q.kind==='mini'?q.minis[k].label:q.opts[k];render();});
+    app.querySelectorAll('.hit').forEach(b=>b.onclick=()=>{S.sel=+b.dataset.i;render();});
+    document.getElementById('check').onclick=()=>{if(S.sel==null){document.getElementById('err').textContent=q.kind==='tap'?'Tap a candle first.':'Pick an answer first.';return;}
+      S.done=true;const ok=isAns(S.sel);if(ok)S.score++;S.res.push({p:q.pattern,ok,t:q.type});render();};}
+  else document.getElementById('next').onclick=()=>{S.i++;S.sel=null;S.done=false;render();scrollTo({top:0,behavior:'smooth'});};
+}
+function gallery(){for(const dir of ['bear','bull'])document.getElementById(dir==='bear'?'galBear':'galBull').innerHTML=KINDS.map(k=>{const n=NAME[dir][k],P=make(n,4);
+  return`<div class="gi"><b>${n}</b>${chart(P.cs,{mark:P.mark,w:180,h:110})}<span>${RULE[n]}</span></div>`;}).join('');}
+gallery();newSet();
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"><style>:root{--display:"Archivo","Arial Narrow",system-ui,sans-serif;--bodyf:"Source Sans 3",system-ui,sans-serif;--monof:"JetBrains Mono",ui-monospace,Menlo,monospace;--bg:#f3f4f6;--card:#ffffff;--text:#1c2230;--muted:#5d6577;--border:#dde0e7;--accent:#9a6a12;--accentbg:#f4ead4;--good:#18794e;--goodbg:#e3f3ea;--bad:#b4232c;--badbg:#fbe7e8;--up:#18794e;--down:#b4232c;--grid:rgba(28,34,48,.06);--zone:rgba(154,106,18,.22);--zonestroke:#9a6a12;--mark:rgba(154,106,18,.10);--markb:#9a6a12;color-scheme:light;}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--zone:rgba(217,164,65,.22);--zonestroke:#d9a441;--mark:rgba(217,164,65,.12);--markb:#d9a441;color-scheme:dark;}}:root[data-theme="dark"]{--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--zone:rgba(217,164,65,.22);--zonestroke:#d9a441;--mark:rgba(217,164,65,.12);--markb:#d9a441;color-scheme:dark;}:root[data-theme="light"]{--bg:#f3f4f6;--card:#ffffff;--text:#1c2230;--muted:#5d6577;--border:#dde0e7;--accent:#9a6a12;--accentbg:#f4ead4;--good:#18794e;--goodbg:#e3f3ea;--bad:#b4232c;--badbg:#fbe7e8;--up:#18794e;--down:#b4232c;--grid:rgba(28,34,48,.06);--zone:rgba(154,106,18,.22);--zonestroke:#9a6a12;--mark:rgba(154,106,18,.10);--markb:#9a6a12;color-scheme:light;}body{font-family:var(--bodyf);font-size:15px}
+main{max-width:640px}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.7rem;letter-spacing:-.01em;line-height:1.05}
+.tag{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;border-radius:4px}
+.card,details{border-radius:6px}.opt,.mini,.btn{border-radius:4px}.gi{border-radius:4px}
+.btn,.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--card);font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+#candles-flag .btn{}
+.big{font-family:var(--monof);font-weight:600}.meta,.legend{font-family:var(--monof);font-size:12px}
+.prompt,summary{font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}</style><script>(function(){function a(){var t;try{t=parent.document.documentElement.getAttribute("data-theme")}catch(e){}
+var r=document.documentElement;if(t)r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+if(window.__deskTheme)window.__deskTheme();}window.__deskApply=a;a();
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",a)}catch(e){}})();</script></body>
+</html>

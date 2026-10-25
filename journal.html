@@ -1,0 +1,585 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Micro Gold Journal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a trading-desk ledger. Top: Topstep risk strip. Left: ticket (log + sizing + rules). Right: scoreboard, curve, payout progress, breakdowns, blotter. Stacks on phones. */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --ink:#1c2230; --muted:#5d6577; --line:#dde0e7;
+  --brass:#9a6a12; --brass-soft:#f4ead4; --win:#18794e; --loss:#b4232c; --warn:#a85d00; --win-soft:#e3f3ea; --loss-soft:#fbe7e8; --warn-soft:#fbefdc;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif; --body:"Source Sans 3",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151c; --panel:#1a1f29; --ink:#e7e9ee; --muted:#9aa2b3; --line:#2b3240;
+  --brass:#d9a441; --brass-soft:#2e2615; --win:#4cc38a; --loss:#f0727a; --warn:#f0a94a; --win-soft:#15301f; --loss-soft:#3a1a1d; --warn-soft:#352612; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151c; --panel:#1a1f29; --ink:#e7e9ee; --muted:#9aa2b3; --line:#2b3240;
+  --brass:#d9a441; --brass-soft:#2e2615; --win:#4cc38a; --loss:#f0727a; --warn:#f0a94a; --win-soft:#15301f; --loss-soft:#3a1a1d; --warn-soft:#352612; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:2rem;letter-spacing:-.01em;margin:0;line-height:1;text-wrap:balance}
+h1 span{color:var(--brass)}
+.sub{font-family:var(--display);font-stretch:85%;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.spec{font-family:var(--mono);font-size:.78rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px}
+.spec b{color:var(--ink);font-weight:600}
+.risk{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+@media (max-width:900px){.risk{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cell{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:3px solid transparent}
+.cell.ok{border-top-color:var(--win)} .cell.warn{border-top-color:var(--warn);background:var(--warn-soft)} .cell.bad{border-top-color:var(--loss);background:var(--loss-soft)}
+.cell .k{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.cell .v{font-family:var(--mono);font-size:1.2rem;font-weight:600;font-variant-numeric:tabular-nums}
+.cell .s{font-size:.78rem;color:var(--muted)}
+.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brass)}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+h2{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.09em;margin:0 0 12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);font-weight:600;min-width:0}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 8px;width:100%;min-width:0}
+input[type=number],.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+textarea{resize:vertical;min-height:54px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--brass);outline-offset:1px}
+.row{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.row.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+form{display:flex;flex-direction:column;gap:10px}
+.dir{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.dir input{position:absolute;opacity:0;width:1px;height:1px}
+.dir label{flex-direction:row;justify-content:center;padding:8px;cursor:pointer;font-family:var(--display);font-stretch:85%;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dir input:checked+label.l{background:var(--win-soft);color:var(--win)}
+.dir input:checked+label.s{background:var(--loss-soft);color:var(--loss)}
+.dir input:focus-visible+label{outline:2px solid var(--brass);outline-offset:-2px}
+button{font:inherit;cursor:pointer;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px}
+button.primary{background:var(--brass);border-color:var(--brass);color:var(--panel);font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+button.small{padding:3px 8px;font-size:.78rem}
+button.danger{color:var(--loss);border-color:var(--loss)}
+.preview{font-family:var(--mono);font-size:.82rem;background:var(--brass-soft);border-radius:4px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.preview b{font-weight:600}
+.alert{font-size:.85rem;border-radius:4px;padding:8px 10px;background:var(--loss-soft);color:var(--loss);font-weight:600}
+.alert.warn{background:var(--warn-soft);color:var(--warn)}
+.out{font-family:var(--mono);font-size:.85rem;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:10px 0 0}
+.out dt{color:var(--muted)} .out dd{margin:0;text-align:right;font-weight:600}
+.big{font-size:1.5rem;color:var(--brass)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+@media (max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--mono);font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums}
+.pos{color:var(--win)} .neg{color:var(--loss)} .wrn{color:var(--warn)}
+.chart{width:100%;height:180px;display:block}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th{text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;font-family:var(--mono)}
+td.note{white-space:normal;min-width:160px;max-width:280px;color:var(--muted)}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.pill.L{background:var(--win-soft);color:var(--win)} .pill.S{background:var(--loss-soft);color:var(--loss)}
+.pill.ok{background:var(--win-soft);color:var(--win)} .pill.no{background:var(--line);color:var(--muted)} .pill.over{background:var(--loss-soft);color:var(--loss)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:700px){.two{grid-template-columns:minmax(0,1fr)}}
+.empty{color:var(--muted);text-align:center;padding:28px 12px}
+.status{font-size:.8rem;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar select{width:auto}
+.hint{font-size:.75rem;color:var(--muted);margin:0}
+.payout{display:flex;flex-direction:column;gap:10px}
+.check{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:.9rem}
+.check span:last-child{font-family:var(--mono);font-weight:600}
+fieldset{border:1px solid var(--line);border-radius:4px;padding:8px 10px 10px;margin:0;min-width:0}
+legend{font-size:.78rem;color:var(--muted);font-weight:600;padding:0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip label{flex-direction:row;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;background:var(--bg)}
+.chip input:checked+label{border-color:var(--brass);background:var(--brass-soft);color:var(--brass)}
+.chip input:checked+label::before{content:"✓"}
+.chip input:focus-visible+label{outline:2px solid var(--brass);outline-offset:1px}
+.confcount{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.sync{margin-top:12px;padding:12px;border:1px solid var(--brass);border-radius:4px;background:var(--brass-soft)}
+.synchead{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--brass);margin-bottom:8px}
+.rules{margin:0;padding-left:18px;font-size:.85rem;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Micro Gold <span>Journal</span></h1>
+      <div class="sub">Topstep 150K Express Funded · DLL on</div>
+    </div>
+    <div class="spec">
+      <span>COMEX <b>MGC</b></span><span>10 troy oz</span><span>Tick <b>$0.10 = $1.00</b></span><span><b>$1.00 move = $10</b> / contract</span><span>10 MGC = 1 mini</span>
+    </div>
+  </header>
+
+  <div class="risk" id="risk"></div>
+
+  <div class="grid">
+    <div class="col">
+      <section class="panel">
+        <h2>Log a trade <span class="status" id="saveStatus"></span></h2>
+        <form id="tradeForm" autocomplete="off">
+          <div class="row">
+            <label>Session date<input type="date" id="f_date" required></label>
+            <label>Time (ET)<input type="time" id="f_time"></label>
+          </div>
+          <div class="dir" role="radiogroup" aria-label="Direction">
+            <input type="radio" name="dir" id="f_long" value="L" checked><label class="l" for="f_long">Long</label>
+            <input type="radio" name="dir" id="f_short" value="S"><label class="s" for="f_short">Short</label>
+          </div>
+          <div class="row three">
+            <label>Contracts<input type="number" id="f_qty" min="1" step="1" value="1" required></label>
+            <label>Entry<input type="number" id="f_entry" step="0.1" placeholder="2745.3" required></label>
+            <label>Exit<input type="number" id="f_exit" step="0.1" placeholder="2748.9" required></label>
+          </div>
+          <div class="row">
+            <label>Stop<input type="number" id="f_stop" step="0.1" placeholder="optional, for R"></label>
+            <label>Target<input type="number" id="f_target" step="0.1" placeholder="optional"></label>
+          </div>
+          <div class="row">
+            <label>Setup<select id="f_setup"></select></label>
+            <label>Session<select id="f_session">
+              <option>Asia</option><option>London</option><option selected>NY AM</option><option>NY PM</option><option>Overnight</option>
+            </select></label>
+          </div>
+          <fieldset>
+            <legend>Confirmations <span class="confcount" id="confCount"></span></legend>
+            <div class="chips" id="f_confs"></div>
+          </fieldset>
+          <div class="row">
+            <label>Followed plan?<select id="f_plan"><option value="yes">Yes</option><option value="partly">Partly</option><option value="no">No</option></select></label>
+            <label>Mistake<select id="f_mistake">
+              <option value="">None</option><option>Moved stop</option><option>Early exit</option><option>Late entry</option><option>Chased</option><option>Oversized</option><option>Revenge trade</option><option>No setup</option><option>Traded news at max size</option>
+            </select></label>
+          </div>
+          <label>Notes<textarea id="f_notes" placeholder="Why you took it, what price did, what you'd change"></textarea></label>
+          <div class="preview num" id="preview">Fill in entry and exit to see P&amp;L.</div>
+          <div id="formAlert" hidden></div>
+          <button class="primary" type="submit" id="saveBtn">Save trade</button>
+          <p class="hint">Session date is the Topstep trading day, which starts 5:00 PM CT the evening before. A trade at 7 PM ET Monday goes on Tuesday.</p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Position size</h2>
+        <label>Max risk per trade ($)<input type="number" id="s_riskusd" step="25" min="0"></label>
+        <div class="row" style="margin-top:10px">
+          <label>Entry<input type="number" id="z_entry" step="0.1" placeholder="2745.0"></label>
+          <label>Stop<input type="number" id="z_stop" step="0.1" placeholder="2741.5"></label>
+        </div>
+        <dl class="out" id="sizeOut"></dl>
+      </section>
+
+      <section class="panel">
+        <h2>Account rules</h2>
+        <div class="row">
+          <label>Daily loss limit ($)<input type="number" id="s_dll" step="50" min="0"></label>
+          <label>Max loss limit ($)<input type="number" id="s_mll" step="50" min="0"></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label>Payout path<select id="s_path"><option value="standard">Standard</option><option value="consistency">Consistency</option></select></label>
+          <label>Fees / side / contract ($)<input type="number" id="s_fee" step="0.01" min="0"></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label>Account started<input type="date" id="s_acctstart"></label>
+          <label>Payout cycle started<input type="date" id="s_cycle"></label>
+        </div>
+        <div class="sync">
+          <div class="synchead">From TopstepX</div>
+          <div class="row">
+            <label>Total P&amp;L / balance ($)<input type="number" id="s_pnl" step="0.01" placeholder="e.g. 1250.00"></label>
+            <label>Current max loss limit ($)<input type="number" id="s_mllnow" step="0.01" placeholder="e.g. -3250.00"></label>
+          </div>
+          <label style="margin-top:10px">These numbers already include my logged trades through<input type="date" id="s_asof"></label>
+          <p class="hint" style="margin-top:6px">Copy both numbers from TopstepX. Trades you log on later session dates are added on top, and the max loss limit keeps trailing from there. Leave the date empty if none of your logged trades are in those numbers yet. Leave both numbers empty to calculate everything from a $0 start.</p>
+        </div>
+        <label style="margin-top:10px">Setup names (comma separated)<input type="text" id="s_setups"></label>
+        <label style="margin-top:10px">Confirmations (comma separated)<input type="text" id="s_confs"></label>
+        <label style="margin-top:10px">Minimum confirmations to take a trade<input type="number" id="s_minconf" min="0" step="1"></label>
+        <p class="hint" style="margin-top:8px">Changes save automatically.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Topstep XFA rules built in</h2>
+        <ul class="rules">
+          <li><b>Max loss limit $4,500</b> below balance, trails your end-of-day high, locks at $0. Enforced live, including open P&amp;L.</li>
+          <li><b>Daily loss limit $3,000</b>: hitting it flattens you for the rest of the session. The account stays open.</li>
+          <li><b>Flat by 3:10 PM CT</b> (4:10 PM ET). No overnight or weekend holds.</li>
+          <li><b>Scaling plan</b> caps size by balance, set at the session start: 30 / 40 / 50 / 100 / 150 MGC.</li>
+          <li><b>No max size into major scheduled news.</b></li>
+          <li><b>Standard payout</b>: 5 winning days of $150+. <b>Consistency</b>: 3+ trading days, best day ≤ 40% of net profit.</li>
+        </ul>
+        <p class="hint" style="margin-top:8px">Your TopstepX Risk Settings page is the final word. If a number differs, change it under Account rules.</p>
+      </section>
+    </div>
+
+    <div class="col">
+      <div class="toolbar">
+        <label style="flex-direction:row;align-items:center;gap:8px">Show
+          <select id="range"><option value="all">All trades</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="cycle">This payout cycle</option></select>
+        </label>
+        <span style="flex:1"></span>
+        <button class="small" id="exportBtn" hidden>Export CSV</button>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <section class="panel">
+        <h2>Payout progress <span class="status" id="pathName"></span></h2>
+        <div class="payout" id="payout"></div>
+      </section>
+
+      <section class="panel">
+        <h2>XFA balance vs max loss limit</h2>
+        <svg class="chart" id="curve" viewBox="0 0 800 180" preserveAspectRatio="none" role="img" aria-label="End-of-day balance and max loss limit"></svg>
+        <p class="hint">Solid line: end-of-day balance after fees. Dashed red: max loss limit.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Daily results</h2>
+        <div class="tablewrap" id="byDay"></div>
+      </section>
+
+      <div class="two">
+        <section class="panel"><h2>By setup</h2><div class="tablewrap" id="bySetup"></div></section>
+        <section class="panel"><h2>By session</h2><div class="tablewrap" id="bySession"></div></section>
+      </div>
+
+      <section class="panel">
+        <h2>By confirmation</h2>
+        <div class="two">
+          <div class="tablewrap" id="byConf"></div>
+          <div class="tablewrap" id="byConfCount"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Trade log <span class="status" id="count"></span></h2>
+        <div class="tablewrap" id="log"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const PT=10, TICK=0.1;
+const $=id=>document.getElementById(id);
+const DEF={fee:0.85,riskusd:500,dll:3000,mll:4500,path:"standard",acctstart:"2026-10-19",cycle:"2026-10-19",pnl:null,mllnow:null,asof:"",setups:"Breakout, Pullback, Reversal, Range fade, News",
+  confs:"Higher-timeframe trend, Key level, Liquidity sweep, Break of structure, Retest held, Volume spike, VWAP",minconf:2};
+const confList=()=>(settings.confs||"").split(",").map(s=>s.trim()).filter(Boolean);
+// Topstep 150K XFA scaling plan, in MGC (10 micros = 1 mini)
+const TIERS=[[4500,150],[3000,100],[2000,50],[1500,40],[-Infinity,30]];
+let settings={...DEF}, trades=[], db=null, pendingDelete=null, downloads=null;
+
+const money=v=>(v<0?"-":"")+"$"+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0=v=>(v<0?"-":"")+"$"+Math.abs(Math.round(v)).toLocaleString();
+const sign=v=>v>0?"pos":v<0?"neg":"";
+const fmtR=v=>v==null||!isFinite(v)?"–":(v>0?"+":"")+v.toFixed(2)+"R";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tierMax=b=>TIERS.find(t=>b>=t[0])[1];
+
+// Chicago clock and Topstep session date (session opens 5:00 PM CT, flat by 3:10 PM CT)
+function ctNow(){
+  const p=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/Chicago",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false,weekday:"short"}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`,h:+p.hour%24,m:+p.minute,wd:p.weekday};
+}
+function addDays(ds,n){const d=new Date(ds+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+function sessionDate(){
+  const c=ctNow();let d=c.date;
+  if(c.h>=17)d=addDays(d,1);
+  const wd=new Date(d+"T12:00:00Z").getUTCDay();
+  if(wd===6)d=addDays(d,2); else if(wd===0)d=addDays(d,1);
+  return d;
+}
+function clockState(){
+  const c=ctNow(),mins=c.h*60+c.m,close=15*60+10,open=17*60;
+  const weekendClosed=(c.wd==="Fri"&&mins>=close)||c.wd==="Sat"||(c.wd==="Sun"&&mins<open);
+  if(weekendClosed)return {cls:"ok",v:"Closed",s:"Weekend. Opens Sunday 5:00 PM CT."};
+  if(mins>=close&&mins<open)return {cls:"ok",v:"Closed",s:"Next session opens 5:00 PM CT."};
+  let left=mins<close?close-mins:close+1440-mins;
+  const hh=Math.floor(left/60),mm=left%60;
+  return {cls:left<=15?"bad":left<=45?"warn":"ok",v:`${hh}h ${String(mm).padStart(2,"0")}m`,s:"Until flat-by 3:10 PM CT"};
+}
+
+function calc(t){
+  const d=t.dir==="S"?-1:1, pts=(t.exit-t.entry)*d, gross=pts*PT*t.qty, fees=(settings.fee||0)*2*t.qty;
+  const risk=t.stop!=null&&t.stop!==""?Math.abs(t.entry-t.stop):null;
+  return {pts,ticks:Math.round(pts/TICK),gross,fees,net:gross-fees,r:risk?pts/risk:null,
+    rr:risk&&t.target!=null&&t.target!==""?Math.abs(t.target-t.entry)/risk:null,riskUsd:risk?risk*PT*t.qty+fees:null};
+}
+function num(id){const v=$(id).value;return v===""?null:Number(v)}
+function formTrade(){
+  return {date:$("f_date").value,time:$("f_time").value,dir:document.querySelector("input[name=dir]:checked").value,
+    qty:num("f_qty")||1,entry:num("f_entry"),exit:num("f_exit"),stop:num("f_stop"),target:num("f_target"),
+    setup:$("f_setup").value,session:$("f_session").value,
+    confs:[...document.querySelectorAll("#f_confs input:checked")].map(i=>i.value),plan:$("f_plan").value,mistake:$("f_mistake").value,notes:$("f_notes").value.trim()};
+}
+function sorted(){return [...trades].sort((a,b)=>(a.date+(a.time||"")+a.created).localeCompare(b.date+(b.time||"")+b.created))}
+
+// Account model: daily nets → EOD balances → trailing MLL
+function account(){
+  const days={};sorted().forEach(t=>{(days[t.date]=days[t.date]||{net:0,n:0}).net+=calc(t).net;days[t.date].n++});
+  const dates=Object.keys(days).sort(), mll=settings.mll||4500;
+  const manualPnl=settings.pnl!=null&&settings.pnl!=="", manualMll=settings.mllnow!=null&&settings.mllnow!=="";
+  const asof=(manualPnl||manualMll)?(settings.asof||""):"";
+  let bal=manualPnl?+settings.pnl:0;
+  // floor = the MLL level known right now; it only ever rises, trails EOD highs, caps at $0
+  let floor=manualMll?Math.min(0,+settings.mllnow):Math.min(0,bal-mll);
+  const levelFor=pk=>Math.min(0,Math.max(floor,pk-mll));
+  let peak=-Infinity;
+  const series=[{date:"start",bal,mll:levelFor(peak),open:bal}];
+  const today=sessionDate();
+  dates.forEach(d=>{
+    if(asof&&d<=asof){series.push({date:d,pre:true,net:days[d].net,n:days[d].n});return} // already inside the TopstepX numbers
+    const open=bal;bal+=days[d].net;
+    series.push({date:d,bal,open,net:days[d].net,n:days[d].n,mll:levelFor(peak),max:tierMax(open)}); // MLL during the day uses prior EOD peak
+    if(d!==today)peak=Math.max(peak,bal);
+  });
+  const sessionOpen=days[today]&&!(asof&&today<=asof)?bal-days[today].net:bal;
+  const level=levelFor(peak);
+  return {days,dates,series,balance:bal,peak,mll:level,locked:level>=0,buffer:bal-level,manual:manualPnl||manualMll,
+    todayNet:days[today]?days[today].net:0,todayMax:tierMax(sessionOpen),sessionOpen,today};
+}
+
+function updatePreview(){
+  const t=formTrade(),a=account();
+  const alerts=[];
+  const mc=+settings.minconf||0;
+  $("confCount").textContent=`${t.confs.length}${mc?` of ${mc} needed`:""}`;
+  $("confCount").className="confcount "+(mc&&t.confs.length<mc?"wrn":t.confs.length?"pos":"");
+  const warns=[];
+  if(mc&&t.confs.length<mc)warns.push(`Only ${t.confs.length} confirmation${t.confs.length===1?"":"s"}. Your rule is at least ${mc}.`);
+  if(t.qty>a.todayMax)alerts.push(`${t.qty} MGC is over your scaling-plan limit of ${a.todayMax} for this session.`);
+  if(t.entry==null||t.exit==null){$("preview").textContent="Fill in entry and exit to see P&L."}
+  else{
+    const c=calc(t);
+    $("preview").innerHTML=`<span>${c.pts>=0?"+":""}${c.pts.toFixed(1)} pts · ${c.ticks} ticks</span><span>Gross <b class="${sign(c.gross)}">${money(c.gross)}</b></span><span>Fees ${money(c.fees)}</span><span>Net <b class="${sign(c.net)}">${money(c.net)}</b></span>${c.r!=null?`<span>${fmtR(c.r)}</span>`:""}${c.rr!=null?`<span>Planned ${c.rr.toFixed(1)}:1</span>`:""}`;
+    if(t.date===a.today){
+      const after=a.todayNet+c.net;
+      if(settings.dll&&after<=-settings.dll)alerts.push(`This trade puts today at ${money(after)}, past your ${money0(settings.dll)} daily loss limit.`);
+      if(a.balance+c.net<=a.mll)alerts.push(`This trade takes the balance to or below the max loss limit (${money(a.mll)}).`);
+    }
+  }
+  const el=$("formAlert"),all=[...alerts,...warns];el.hidden=!all.length;el.className=alerts.length?"alert":"alert warn";el.innerHTML=all.map(esc).join("<br>");
+}
+function sizing(){
+  const a=account(),budget=num("s_riskusd"),e=num("z_entry"),s=num("z_stop");
+  const dllLeft=settings.dll?settings.dll+Math.min(0,a.todayNet):Infinity, mllLeft=a.buffer;
+  const room=Math.min(budget??Infinity,dllLeft,mllLeft);
+  let html=`<dt>Your risk budget</dt><dd>${budget!=null?money0(budget):"–"}</dd>
+    <dt>DLL room today</dt><dd>${isFinite(dllLeft)?money0(dllLeft):"off"}</dd>
+    <dt>Room to max loss</dt><dd>${money0(mllLeft)}</dd>
+    <dt>Scaling cap</dt><dd>${a.todayMax} MGC</dd>`;
+  if(e!=null&&s!=null&&e!==s){
+    const dist=Math.abs(e-s), perC=dist*PT+(settings.fee||0)*2, byRisk=isFinite(room)?Math.floor(room/perC):a.todayMax;
+    const n=Math.max(0,Math.min(byRisk,a.todayMax));
+    const why=n===a.todayMax&&byRisk>a.todayMax?"capped by scaling plan":room===budget?"limited by your risk budget":room===dllLeft?"limited by DLL room":"limited by max loss room";
+    html+=`<dt>Stop distance</dt><dd>${dist.toFixed(1)} pts · ${Math.round(dist/TICK)} ticks</dd><dt>Risk / contract</dt><dd>${money(perC)}</dd>
+      <dt>Max contracts</dt><dd class="big">${n}</dd><dt>Actual risk</dt><dd>${money(n*perC)}</dd><dt></dt><dd style="font-weight:400" class="${n===0?"neg":""}">${n===0?"Stop too wide for the room you have":why}</dd>`;
+  } else html+=`<dt>Max contracts</dt><dd>enter entry and stop</dd>`;
+  $("sizeOut").innerHTML=html;
+}
+function renderRisk(a){
+  const dll=settings.dll||0, dllLeft=dll?dll+Math.min(0,a.todayNet):null, dllUsed=dll?Math.max(0,-a.todayNet)/dll:0;
+  const cls=(r)=>r>=1?"bad":r>=.6?"warn":"ok";
+  const mllUsedRatio=1-Math.min(1,a.buffer/(settings.mll||4500));
+  const ck=clockState();
+  const cells=[
+    {k:"Total P&L (XFA balance)",v:money(a.balance),cls:a.balance>=0?"ok":"warn",s:a.manual?`TopstepX figure${settings.asof?` thru ${settings.asof}`:""} + later trades`:`since ${settings.acctstart||"start"}, from $0`},
+    {k:"Max loss limit",v:money0(a.mll),cls:a.locked?"ok":cls(mllUsedRatio),s:a.locked?`Locked at $0 · ${money0(a.buffer)} room`:`${money0(a.buffer)} room · trails EOD high`,bar:1-Math.min(1,Math.max(0,a.buffer)/(settings.mll||4500))},
+    {k:"Daily loss limit",v:dll?money0(dllLeft):"Off",cls:dll?(dllLeft<=0?"bad":cls(dllUsed)):"ok",s:dll?(dllLeft<=0?"Hit: done for the session":`left of ${money0(dll)} · today ${money(a.todayNet)}`):"No DLL set",bar:dll?Math.min(1,dllUsed):null},
+    {k:"Size limit this session",v:`${a.todayMax} MGC`,cls:"ok",s:`= ${a.todayMax/10} minis · from ${money0(a.sessionOpen)} open balance`},
+    {k:"Flat-by clock",v:ck.v,cls:ck.cls,s:ck.s}
+  ];
+  $("risk").innerHTML=cells.map(c=>`<div class="cell ${c.cls}"><span class="k">${c.k}</span><span class="v">${c.v}</span>${c.bar!=null?`<div class="bar"><i style="width:${(c.bar*100).toFixed(0)}%"></i></div>`:""}<span class="s">${c.s}</span></div>`).join("");
+}
+function renderPayout(a){
+  const from=settings.cycle||"";
+  const ds=a.dates.filter(d=>!from||d>=from), nets=ds.map(d=>a.days[d].net);
+  const total=nets.reduce((x,y)=>x+y,0);
+  $("pathName").textContent=(settings.path==="consistency"?"Consistency path":"Standard path")+(from?` · since ${from}`:"");
+  let html="";
+  if(settings.path==="consistency"){
+    const best=nets.length?Math.max(...nets):0, pct=total>0?best/total:null;
+    const okDays=ds.length>=3, okPct=pct!=null&&pct<=0.4&&total>0;
+    html+=`<div class="check"><span>Trading days (need 3)</span><span class="${okDays?"pos":""}">${ds.length} / 3</span></div><div class="bar"><i style="width:${Math.min(100,ds.length/3*100)}%"></i></div>
+      <div class="check"><span>Best day ÷ net profit (need ≤ 40%)</span><span class="${okPct?"pos":pct!=null?"neg":""}">${pct!=null?Math.round(pct*100)+"%":"–"}</span></div>
+      <div class="check"><span>Net profit this cycle</span><span class="${sign(total)}">${money(total)}</span></div>`;
+    if(total>0&&!okPct)html+=`<p class="hint">To get under 40%, net profit needs to reach ${money0(best/0.4)} without a bigger best day.</p>`;
+    html+=`<div class="check"><span>Status</span><span class="pill ${okDays&&okPct?"ok":"no"}">${okDays&&okPct?"Eligible to request":"Not yet"}</span></div>`;
+  } else {
+    const wins=nets.filter(n=>n>=150).length;
+    html+=`<div class="check"><span>Winning days of $150+ (need 5)</span><span class="${wins>=5?"pos":""}">${Math.min(wins,99)} / 5</span></div><div class="bar"><i style="width:${Math.min(100,wins/5*100)}%"></i></div>
+      <div class="check"><span>Net profit this cycle</span><span class="${sign(total)}">${money(total)}</span></div>
+      <div class="check"><span>Payout available (50% of balance)</span><span>${a.balance>0?money0(a.balance*0.5):"–"}</span></div>
+      <div class="check"><span>Status</span><span class="pill ${wins>=5?"ok":"no"}">${wins>=5?"Eligible to request":"Not yet"}</span></div>`;
+  }
+  html+=`<p class="hint">Payout caps vary by account size. Check the amount in your Topstep dashboard before requesting.</p>`;
+  $("payout").innerHTML=html;
+}
+function renderSetups(){
+  const cur=$("f_setup").value, list=(settings.setups||DEF.setups).split(",").map(s=>s.trim()).filter(Boolean);
+  $("f_setup").innerHTML=list.map(s=>`<option>${esc(s)}</option>`).join("")+`<option>Other</option>`;
+  if(cur&&[...$("f_setup").options].some(o=>o.value===cur))$("f_setup").value=cur;
+  const checked=new Set([...document.querySelectorAll("#f_confs input:checked")].map(i=>i.value));
+  $("f_confs").innerHTML=confList().map((c,i)=>`<span class="chip"><input type="checkbox" id="f_conf_${i}" value="${esc(c)}"${checked.has(c)?" checked":""}><label for="f_conf_${i}">${esc(c)}</label></span>`).join("")||`<span class="hint">Add your confirmations under Account rules.</span>`;
+}
+function confTables(list){
+  if(!list.length){$("byConf").innerHTML=`<p class="empty">Tick confirmations when you log trades to see which ones pay.</p>`;$("byConfCount").innerHTML="";return}
+  const row=(k,ts)=>{const c=ts.map(calc),net=c.reduce((a,x)=>a+x.net,0),w=c.filter(x=>x.net>0).length,rs=c.map(x=>x.r).filter(x=>x!=null);
+    return `<tr><td>${esc(k)}</td><td class="n">${ts.length}</td><td class="n">${ts.length?Math.round(w/ts.length*100)+"%":"–"}</td><td class="n">${fmtR(rs.length?rs.reduce((a,b)=>a+b,0)/rs.length:null)}</td><td class="n ${sign(net)}">${money(net)}</td></tr>`};
+  const head=f=>`<table><thead><tr><th>${f}</th><th class="n">Trades</th><th class="n">Win %</th><th class="n">Avg R</th><th class="n">Net</th></tr></thead><tbody>`;
+  const names=[...new Set([...confList(),...list.flatMap(t=>t.confs||[])])];
+  const rows=names.map(n=>[n,list.filter(t=>(t.confs||[]).includes(n))]).filter(r=>r[1].length)
+    .sort((a,b)=>b[1].map(calc).reduce((s,x)=>s+x.net,0)-a[1].map(calc).reduce((s,x)=>s+x.net,0));
+  $("byConf").innerHTML=rows.length?head("Confirmation")+rows.map(r=>row(r[0],r[1])).join("")+"</tbody></table>":`<p class="empty">No confirmations ticked yet.</p>`;
+  const mc=+settings.minconf||0, buckets=[["0",t=>!(t.confs||[]).length],["1",t=>(t.confs||[]).length===1],["2",t=>(t.confs||[]).length===2],["3+",t=>(t.confs||[]).length>=3]];
+  let html=head("How many")+buckets.map(([k,f])=>[k,list.filter(f)]).filter(b=>b[1].length).map(b=>row(b[0]+" confirmation"+(b[0]==="1"?"":"s"),b[1])).join("");
+  if(mc){html+=row(`Met your ${mc}+ rule`,list.filter(t=>(t.confs||[]).length>=mc))+row(`Broke your ${mc}+ rule`,list.filter(t=>(t.confs||[]).length<mc))}
+  $("byConfCount").innerHTML=html+"</tbody></table>";
+}
+function inRange(t,a){
+  const r=$("range").value; if(r==="all")return true;
+  const today=a.today;
+  if(r==="today")return t.date===today;
+  if(r==="month")return t.date.slice(0,7)===today.slice(0,7);
+  if(r==="cycle")return !settings.cycle||t.date>=settings.cycle;
+  const wd=new Date(today+"T12:00:00Z").getUTCDay(), mon=addDays(today,-((wd+6)%7));
+  return t.date>=mon&&t.date<=today;
+}
+function group(list,key){
+  const m={};list.forEach(t=>{const k=t[key]||"—";(m[k]=m[k]||[]).push(t)});
+  const rows=Object.entries(m).map(([k,ts])=>{const c=ts.map(calc),net=c.reduce((a,x)=>a+x.net,0),w=c.filter(x=>x.net>0).length;
+    return {k,n:ts.length,net,wr:w/ts.length}}).sort((a,b)=>b.net-a.net);
+  if(!rows.length)return `<p class="empty">No trades yet</p>`;
+  return `<table><thead><tr><th>${key==="setup"?"Setup":"Session"}</th><th class="n">Trades</th><th class="n">Win %</th><th class="n">Net</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${esc(r.k)}</td><td class="n">${r.n}</td><td class="n">${Math.round(r.wr*100)}%</td><td class="n ${sign(r.net)}">${money(r.net)}</td></tr>`).join("")}</tbody></table>`;
+}
+function renderDays(a,list){
+  const inR=new Set(list.map(t=>t.date));
+  const rows=a.series.filter(s=>s.date!=="start"&&inR.has(s.date)).reverse();
+  const preRow=s=>`<tr><td>${s.date}</td><td class="n">${s.n}</td><td class="n ${sign(s.net)}">${money(s.net)}</td><td class="n" colspan="3" style="text-align:left;color:var(--muted)">In your TopstepX numbers</td><td>${s.net>=150?`<span class="pill ok">$150+ day</span>`:"—"}</td></tr>`;
+  if(!rows.length){$("byDay").innerHTML=`<p class="empty">Each session's net, balance and limits show here.</p>`;return}
+  const dll=settings.dll||0;
+  $("byDay").innerHTML=`<table><thead><tr><th>Session</th><th class="n">Trades</th><th class="n">Net</th><th class="n">EOD balance</th><th class="n">MLL that day</th><th class="n">Size cap</th><th>Flags</th></tr></thead><tbody>${
+    rows.map(s=>{if(s.pre)return preRow(s);const maxQty=Math.max(...trades.filter(t=>t.date===s.date).map(t=>t.qty));const flags=[];
+      if(s.net>=150)flags.push(`<span class="pill ok">$150+ day</span>`);
+      if(dll&&s.net<=-dll)flags.push(`<span class="pill over">DLL hit</span>`);
+      if(maxQty>s.max)flags.push(`<span class="pill over">Over size cap</span>`);
+      if(s.bal<=s.mll)flags.push(`<span class="pill over">MLL breach</span>`);
+      return `<tr><td>${s.date}</td><td class="n">${s.n}</td><td class="n ${sign(s.net)}">${money(s.net)}</td><td class="n">${money(s.bal)}</td><td class="n">${money0(s.mll)}</td><td class="n">${s.max}</td><td>${flags.join(" ")||"—"}</td></tr>`}).join("")}</tbody></table>`;
+}
+function render(){
+  const a=account();
+  renderRisk(a);
+  const list=sorted().filter(t=>inRange(t,a)), c=list.map(calc);
+  const net=c.reduce((x,y)=>x+y.net,0), wins=c.filter(x=>x.net>0), losses=c.filter(x=>x.net<=0);
+  const gw=wins.reduce((x,y)=>x+y.net,0), gl=-losses.reduce((x,y)=>x+y.net,0);
+  const rs=c.map(x=>x.r).filter(x=>x!=null), avgR=rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:null;
+  const fees=c.reduce((x,y)=>x+y.fees,0);
+  const stat=(k,v,cls="")=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`;
+  $("stats").innerHTML=[
+    stat("Net P&L",money(net),sign(net)),
+    stat("Win rate",list.length?Math.round(wins.length/list.length*100)+"%":"–"),
+    stat("Profit factor",gl>0?(gw/gl).toFixed(2):wins.length?"∞":"–"),
+    stat("Expectancy",list.length?money(net/list.length):"–",sign(net)),
+    stat("Avg win",wins.length?money(gw/wins.length):"–","pos"),
+    stat("Avg loss",losses.length?money(-gl/losses.length):"–","neg"),
+    stat("Avg R",fmtR(avgR),sign(avgR||0)),
+    stat("Fees paid",money(fees))
+  ].join("");
+  renderPayout(a);
+  drawCurve(a);
+  renderDays(a,list);
+  $("bySetup").innerHTML=group(list,"setup");
+  $("bySession").innerHTML=group(list,"session");
+  confTables(list);
+  $("count").textContent=list.length?`${list.length} trade${list.length>1?"s":""}`:"";
+  $("exportBtn").hidden=!downloads||!trades.length;
+  if(!list.length){$("log").innerHTML=`<p class="empty">${trades.length?"No trades in this range.":"No trades yet. Log your first MGC trade on the left. Your balance, loss limits, size cap and payout progress update as you go."}</p>`;}
+  else $("log").innerHTML=`<table><thead><tr><th>Session</th><th></th><th class="n">Qty</th><th class="n">Entry</th><th class="n">Exit</th><th class="n">Pts</th><th class="n">Net</th><th class="n">R</th><th>Setup</th><th>Confirmations</th><th>Session</th><th>Plan</th><th>Notes</th><th></th></tr></thead><tbody>${
+    list.slice().reverse().map(t=>{const x=calc(t);return `<tr>
+      <td>${esc(t.date)} <span class="status">${esc(t.time||"")}</span></td><td><span class="pill ${t.dir}">${t.dir==="L"?"Long":"Short"}</span></td>
+      <td class="n">${t.qty}</td><td class="n">${t.entry.toFixed(1)}</td><td class="n">${t.exit.toFixed(1)}</td>
+      <td class="n ${sign(x.pts)}">${x.pts>=0?"+":""}${x.pts.toFixed(1)}</td><td class="n ${sign(x.net)}">${money(x.net)}</td><td class="n">${fmtR(x.r)}</td>
+      <td>${esc(t.setup)}</td><td class="note"><b class="${(+settings.minconf||0)>(t.confs||[]).length?"wrn":""}">${(t.confs||[]).length}</b>${(t.confs||[]).length?" · "+esc(t.confs.join(", ")):""}</td><td>${esc(t.session)}</td><td>${esc(t.plan)}${t.mistake?` · <span class="neg">${esc(t.mistake)}</span>`:""}</td>
+      <td class="note">${esc(t.notes)}</td>
+      <td>${pendingDelete===t.id?`<button class="small danger" data-confirm="${t.id}">Delete</button> <button class="small" data-cancel>Keep</button>`:`<button class="small" data-del="${t.id}" aria-label="Delete trade">✕</button>`}</td></tr>`}).join("")}</tbody></table>`;
+  sizing();updatePreview();
+}
+function drawCurve(a){
+  const svg=$("curve"),W=800,H=180,P=10, s=a.series.filter(x=>!x.pre);
+  if(s.length<2){svg.innerHTML=`<text x="400" y="95" text-anchor="middle" fill="var(--muted)" font-size="14">Your balance and max loss limit appear after the first trade</text>`;return}
+  const vals=s.flatMap(x=>[x.bal,x.mll]),mn=Math.min(0,...vals),mx=Math.max(0,...vals),rng=mx-mn||1;
+  const X=i=>P+(W-2*P)*i/(s.length-1),Y=v=>P+(H-2*P)*(1-(v-mn)/rng);
+  const line=s.map((v,i)=>`${X(i).toFixed(1)},${Y(v.bal).toFixed(1)}`).join(" ");
+  const ml=s.map((v,i)=>`${X(i).toFixed(1)},${Y(v.mll).toFixed(1)}`).join(" ");
+  const last=s[s.length-1].bal,col=last>=0?"var(--win)":"var(--loss)";
+  svg.innerHTML=`<line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+    <polygon points="${X(0)},${Y(0)} ${line} ${X(s.length-1)},${Y(0)}" fill="${col}" fill-opacity=".12"/>
+    <polyline points="${ml}" fill="none" stroke="var(--loss)" stroke-width="1.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>
+    <polyline points="${line}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    <circle cx="${X(s.length-1)}" cy="${Y(last)}" r="4" fill="${col}"/>`;
+}
+
+// events
+$("tradeForm").addEventListener("input",updatePreview);
+["z_entry","z_stop"].forEach(id=>$(id).addEventListener("input",sizing));
+$("range").addEventListener("change",()=>{try{localStorage.setItem("mgc_range",$("range").value)}catch(e){}render()});
+const SKEYS=["riskusd","dll","mll","path","fee","acctstart","cycle","pnl","mllnow","asof","setups","confs","minconf"];
+let st;
+SKEYS.forEach(k=>{const el=$("s_"+k);el.addEventListener(el.tagName==="SELECT"||el.type==="date"?"change":"input",()=>{
+  const n={};SKEYS.forEach(k2=>{const e2=$("s_"+k2);n[k2]=e2.type==="number"?(e2.value===""?(k2==="dll"?0:DEF[k2]):Number(e2.value)):e2.value});
+  if(k==="pnl"||k==="mllnow"){if(!n.asof){let p=addDays(sessionDate(),-1);while([0,6].includes(new Date(p+"T12:00:00Z").getUTCDay()))p=addDays(p,-1);n.asof=p;$("s_asof").value=p}}
+  if(!n.setups)n.setups=DEF.setups;settings=n;
+  renderSetups();render();
+  clearTimeout(st);st=setTimeout(()=>{if(db)db.doc("settings/main").set(settings).catch(()=>{})},700);
+})});
+$("tradeForm").addEventListener("submit",async e=>{
+  e.preventDefault();const t=formTrade();
+  if(t.entry==null||t.exit==null||!t.date){$("saveStatus").textContent="Session date, entry and exit are required";return}
+  if(!db){$("saveStatus").textContent="Can't save: open this page signed in to claude.ai";return}
+  t.created=new Date().toISOString();$("saveBtn").disabled=true;
+  try{await db.collection("trades").add(t);$("saveStatus").textContent="Saved";
+    ["f_entry","f_exit","f_stop","f_target","f_notes"].forEach(id=>$(id).value="");$("f_mistake").value="";$("f_plan").value="yes";document.querySelectorAll("#f_confs input").forEach(i=>i.checked=false);updatePreview();
+  }catch(err){$("saveStatus").textContent="Not saved: "+(err&&err.code==="not_granted"?"permission declined":"try again")}
+  $("saveBtn").disabled=false;setTimeout(()=>$("saveStatus").textContent="",2500);
+});
+$("log").addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.del){pendingDelete=b.dataset.del;render()}
+  else if(b.hasAttribute("data-cancel")){pendingDelete=null;render()}
+  else if(b.dataset.confirm){const id=b.dataset.confirm;pendingDelete=null;try{await db.collection("trades").doc(id).delete()}catch(err){}}
+});
+$("exportBtn").addEventListener("click",async()=>{
+  const head=["session_date","time_et","direction","contracts","entry","exit","stop","target","points","ticks","gross","fees","net","r","setup","confirmations","session","plan","mistake","notes"];
+  const rows=sorted().map(t=>{const c=calc(t);return [t.date,t.time,t.dir==="L"?"Long":"Short",t.qty,t.entry,t.exit,t.stop??"",t.target??"",c.pts.toFixed(1),c.ticks,c.gross.toFixed(2),c.fees.toFixed(2),c.net.toFixed(2),c.r!=null?c.r.toFixed(2):"",t.setup,(t.confs||[]).join("; "),t.session,t.plan,t.mistake,t.notes]});
+  const csv=[head,...rows].map(r=>r.map(v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v}).join(",")).join("\n");
+  try{await downloads.save({filename:"mgc-topstep-trades.csv",data:csv})}catch(e){}
+});
+
+// init
+$("f_date").value=sessionDate();
+try{const r=localStorage.getItem("mgc_range");if(r)$("range").value=r}catch(e){}
+function fillSettings(){SKEYS.forEach(k=>{$("s_"+k).value=settings[k]??""});renderSetups()}
+fillSettings();render();
+setInterval(()=>renderRisk(account()),30000);
+
+if(window.claude&&claude.use){
+  claude.use("downloads").then(d=>{downloads=d;render()}).catch(()=>{});
+  claude.use("db").then(d=>{
+    db=d;if(!db){$("saveStatus").textContent="Sign in to claude.ai to save trades";return}
+    db.doc("settings/main").onSnapshot(s=>{if(s.exists){const cur=(document.activeElement&&document.activeElement.id)||"";if(!cur.startsWith("s_")){settings={...DEF,...s.data()};fillSettings();render()}}},()=>{});
+    db.collection("trades").onSnapshot(q=>{trades=q.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{$("saveStatus").textContent="Couldn't load trades"});
+  }).catch(()=>{});
+} else $("saveStatus").textContent="Saving works when opened on claude.ai";
+})();
+</script>
+</body></html>
