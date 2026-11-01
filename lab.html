@@ -103,6 +103,8 @@ p{margin:0}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
 .field{display:grid;gap:5px;align-content:start}
 .field label,.lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.wsum{display:block;font-size:12.5px;line-height:1.4;color:var(--muted)}
+.wsum b{color:var(--ink);font-weight:600}
 .field output{font-family:var(--mono);font-size:13px;color:var(--ink)}
 input[type=number],select,textarea,input[type=text]{width:100%;font:14px var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)}
 textarea{font-family:var(--sans);resize:vertical}
@@ -470,11 +472,11 @@ footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid va
       <p class="caption" id="mWeek" style="margin-top:0"></p>
       <div class="svgbox"><svg id="seesaw" viewBox="0 0 640 190" width="640" role="img" aria-label="Seesaw showing macro pressure on gold"></svg></div>
       <div class="grid2" style="margin-top:12px">
-        <div class="field"><label for="mRy">Real yield change: <output id="mRyO"></output></label><input id="mRy" type="range" min="-50" max="50" step="1" value="-15"></div>
-        <div class="field"><label for="mDxy">Dollar (DXY) change: <output id="mDxyO"></output></label><input id="mDxy" type="range" min="-3" max="3" step="0.05" value="-0.5"></div>
-        <div class="field"><label for="mFed">Change in rate-cut odds: <output id="mFedO"></output></label><input id="mFed" type="range" min="-40" max="40" step="1" value="10"></div>
-        <div class="field"><label for="mStress">Safe-haven stress: <output id="mStressO"></output></label><input id="mStress" type="range" min="0" max="3" step="1" value="1"></div>
-        <div class="field"><label>Central-bank buying</label><div class="seg" id="mCb"></div></div>
+        <div class="field"><label for="mRy">Real yield change: <output id="mRyO"></output></label><input id="mRy" type="range" min="-50" max="50" step="1" value="-15"><small class="wsum" id="mRyS"></small></div>
+        <div class="field"><label for="mDxy">Dollar (DXY) change: <output id="mDxyO"></output></label><input id="mDxy" type="range" min="-3" max="3" step="0.05" value="-0.5"><small class="wsum" id="mDxyS"></small></div>
+        <div class="field"><label for="mFed">Change in rate-cut odds: <output id="mFedO"></output></label><input id="mFed" type="range" min="-40" max="40" step="1" value="10"><small class="wsum" id="mFedS"></small></div>
+        <div class="field"><label for="mStress">Safe-haven stress: <output id="mStressO"></output></label><input id="mStress" type="range" min="0" max="3" step="1" value="1"><small class="wsum" id="mStressS"></small></div>
+        <div class="field"><label>Central-bank buying</label><div class="seg" id="mCb"></div><small class="wsum" id="mCbS"></small></div>
         <div class="field"><label>Market regime</label><div class="seg" id="mRegime"></div></div>
       </div>
       <div class="grid2" style="margin-top:18px;align-items:start">
@@ -485,10 +487,6 @@ footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid va
     </div>
   </div>
 
-  <div class="block">
-    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Macro driver tickers</h3></div>
-    <div class="panel" data-tv="macro"></div>
-  </div>
   <div class="block">
     <div class="bhead"><span class="tag check">Check yourself</span></div>
     <div class="panel quiz" data-answer="b">
@@ -1442,7 +1440,7 @@ function calc1(){const m=+$('#c1Type').value,q=Math.max(1,+$('#c1Qty').value||1)
 ['c1Type','c1Qty','c1Limit','c1Move'].forEach(id=>$('#'+id).addEventListener('input',calc1));calc1();
 
 /* ---------- step 2 seesaw ---------- */
-/*WEEK-DATA*/const WEEK={asOf:'Oct 26–30, 2026',ry:-3,dxy:0.15,fed:-8,stress:1,cb:0,note:'10Y real yield 2.66% → 2.63% (−3bp). DXY +0.15% to 101.96. No cuts priced; December hike odds rose from ~72% to 75–83%, so the cut-odds slider sits at −8. Stocks sold off and money ran to Treasuries, not gold. No new central-bank data this week (latest: 39t in August; PBoC +23t in September). Gold still fell 3.7%, a weakness divergence.'};/*/WEEK-DATA*/
+/*WEEK-DATA*/const WEEK={asOf:'Oct 26–30, 2026',ry:-3,dxy:0.15,fed:-8,stress:1,cb:0,note:'Gold fell 3.7% to about $3,875 even though real yields and the dollar barely moved. That is a weakness divergence, driven by rising December hike odds and liquidation selling.',sum:{ry:'10Y TIPS yield went from 2.66% to 2.63% by Thursday (−3bp), and likely dipped further Friday as money ran to Treasuries. A small tailwind for gold.',dxy:'DXY rose 0.15% to 101.96, just under its 52-week high of 102.58. Barely moved, so not the reason gold fell.',fed:'No cuts priced. December hike odds rose from about 72% to 75–83% after a 10–2 hold with two dissents for a hike, 3.4% Q3 GDP and 3.6% PCE inflation. Shown as −8 on the cut-odds scale. The main headwind this week.',stress:'Some. AI-led tech selloff (S&P 500 −1.8% Friday), a record Binance hack and oil above $100. Haven money went to Treasuries, not gold.',cb:'Steady. No new data this week. Latest: 39t net buying in August and PBoC +23t in September (63t in Q3). The WGC Q3 report is due in early November.'}};/*/WEEK-DATA*/
 let mCb=WEEK.cb,mRegime='new';
 seg($('#mCb'),[{label:'Weak',value:-1},{label:'Steady',value:0},{label:'Strong',value:1}],WEEK.cb,v=>{mCb=v;calc2()});
 seg($('#mRegime'),[{label:'Pre-2022',value:'old'},{label:'2022+',value:'new'}],'new',v=>{mRegime=v;calc2()});
@@ -1471,6 +1469,7 @@ function calc2(){const ry=+$('#mRy').value,dx=+$('#mDxy').value,fed=+$('#mFed').
     r.innerHTML=`<span>${p[0]}</span><div class="ctrack"><div class="cbar" style="${p[1]>=0?'left:50%':'right:50%'};width:${w}%;background:var(${p[1]>=0?'--bull':'--bear'})"></div></div><span class="v ${p[1]>0.5?'pos':p[1]<-0.5?'neg':''}">${p[1]>0?'+':''}${Math.round(p[1])}</span>`;cc.appendChild(r)})}
 [['mRy','ry'],['mDxy','dxy'],['mFed','fed'],['mStress','stress']].forEach(([id,k])=>{const i=$('#'+id),v=Math.min(+i.max,Math.max(+i.min,+WEEK[k]));if(!isNaN(v))i.value=v});
 $('#mWeek').innerHTML='<b>Loaded with week of '+WEEK.asOf+'.</b> '+WEEK.note+' Move the sliders to test other scenarios; reload to get this week back.';
+if(WEEK.sum)[['mRyS','ry'],['mDxyS','dxy'],['mFedS','fed'],['mStressS','stress'],['mCbS','cb']].forEach(([id,k])=>{const e=$('#'+id);if(e&&WEEK.sum[k])e.innerHTML='<b>This week:</b> '+WEEK.sum[k]});
 ['mRy','mDxy','mFed','mStress'].forEach(id=>$('#'+id).addEventListener('input',calc2));calc2();
 
 /* ---------- step 3 relationship map ---------- */
