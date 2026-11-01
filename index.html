@@ -59,7 +59,7 @@ function show(id){
   S.forEach(s=>{
     const on=s.id===id;document.getElementById("tab-"+s.id).setAttribute("aria-selected",on);
     if(on&&!frames[s.id]){
-      const f=document.createElement("iframe");f.id="pane-"+s.id;f.title=s.name;f.src=s.src;
+      const f=document.createElement("iframe");f.id="pane-"+s.id;f.title=s.name;f.src=s.src+"?v="+Date.now();
       f.addEventListener("load",()=>{document.getElementById("loading").hidden=true;sync(f)});
       stage.appendChild(f);frames[s.id]=f;
     }
