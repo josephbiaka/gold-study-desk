@@ -209,6 +209,15 @@ dl.kv dd{margin:0}
 .checklist label{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:14px;cursor:pointer}
 .checklist input{margin-top:4px;accent-color:var(--bull)}
 .fallback{margin-top:8px;font-family:var(--mono);font-size:12px;height:120px}
+.tag.wk{background:var(--gold-soft);color:var(--gold)}
+.cotwk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.cotwk{grid-template-columns:1fr}}
+.cotwk-t{margin:0 0 6px;font-size:15px}
+.cotwk-t small{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:4px}
+.cotwk .cottable{font-size:12.5px}
+.cotwk .cottable th,.cotwk .cottable td{padding-left:6px;padding-right:6px;white-space:nowrap}
+.cotwk .cottable th:last-child{white-space:normal}
+.cotwk-x{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
 .tag.tv{background:var(--ink);color:var(--surface)}
 .tvg + .tvg{margin-top:14px}
 .tvg h4{font-size:15px;font-weight:600;margin-bottom:2px}
@@ -487,6 +496,19 @@ footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid va
     </div>
   </div>
 
+  <div class="block">
+    <div class="bhead"><span class="tag wk">Updated weekly</span><h3>This week's COT: who holds gold futures</h3></div>
+    <div class="panel">
+      <p class="caption" id="cotWkHead" style="margin-top:0"></p>
+      <div class="cotwk">
+        <div><h4 class="cotwk-t">Gold (GC) <small>100 oz · CFTC 088691</small></h4><div class="tablebox"><table class="cottable"><thead><tr><th>Group</th><th>Long</th><th>Short</th><th>Net</th><th>Week chg</th></tr></thead><tbody id="cotWkGC"></tbody></table></div><p class="cotwk-x" id="cotWkGCx"></p></div>
+        <div><h4 class="cotwk-t">Micro Gold (MGC) <small>10 oz · CFTC 088695</small></h4><div class="tablebox"><table class="cottable"><thead><tr><th>Group</th><th>Long</th><th>Short</th><th>Net</th><th>Week chg</th></tr></thead><tbody id="cotWkMGC"></tbody></table></div><p class="cotwk-x" id="cotWkMGCx"></p></div>
+      </div>
+      <div class="readout" id="cotWkBox" style="margin-top:14px"><span class="lbl">This week's read</span><span id="cotWkRead"></span></div>
+      <p class="caption">Large specs = large speculators, the non-commercials (funds, CTAs). Commercials = hedgers (producers, banks). Small traders = non-reportable positions, which is where most retail traders sit. Positions are as of Tuesday and released Friday at 3:30 pm ET, so this sets your weekly bias, not your entry.</p>
+      <button class="btn small" data-go="12" style="margin-top:4px">How to read the COT and where to stand (step 12) →</button>
+    </div>
+  </div>
   <div class="block">
     <div class="bhead"><span class="tag check">Check yourself</span></div>
     <div class="panel quiz" data-answer="b">
@@ -1471,6 +1493,14 @@ function calc2(){const ry=+$('#mRy').value,dx=+$('#mDxy').value,fed=+$('#mFed').
 $('#mWeek').innerHTML='<b>Loaded with week of '+WEEK.asOf+'.</b> '+WEEK.note+' Move the sliders to test other scenarios; reload to get this week back.';
 if(WEEK.sum)[['mRyS','ry'],['mDxyS','dxy'],['mFedS','fed'],['mStressS','stress'],['mCbS','cb']].forEach(([id,k])=>{const e=$('#'+id);if(e&&WEEK.sum[k])e.innerHTML='<b>This week:</b> '+WEEK.sum[k]});
 ['mRy','mDxy','mFed','mStress'].forEach(id=>$('#'+id).addEventListener('input',calc2));calc2();
+
+/*COT-DATA*/const COTW={asOf:'Tue Oct 27, 2026 (released Fri Oct 30)',gc:{oi:396810,oiChg:-5469,rows:[['Large specs',223724,37273,-13418,-4],['Commercials',64109,279733,4578,-15380],['Small traders',48622,19449,-2785,3759]],extra:'Managed money (hedge funds, disaggregated report): net long 105,562, up about 1,400 on the week. Large specs also hold 60,355 spread contracts, not counted in net.'},mgc:{oi:115313,oiChg:-843,rows:[['Large specs',56740,80108,204,-2107],['Commercials',7962,0,-37,0],['Small traders',43236,27830,-719,1555]],extra:'115,313 micro contracts = about 11,500 GC-equivalent, roughly 3% of gold futures. Only 49 reportable traders, so read it as retail sentiment, not big-money flow.'},read:'Gold: large speculators cut 13,400 longs while hedgers covered 15,400 shorts as price broke below $4,000. Funds are lightening up but still clearly net long, so the room is not full and not empty. Micro gold: small traders lean long (+15,400 net) and added shorts, while large specs stay net short (-23,400) and covered 2,100. Retail is on the long side of a falling market, a caution flag for dip-buying.',tone:'bear'};/*/COT-DATA*/
+(function(){const f=n=>(n>0?'+':n<0?'−':'')+Math.abs(n).toLocaleString('en-US');const n=v=>v.toLocaleString('en-US');
+  $('#cotWkHead').innerHTML='<b>CFTC Commitments of Traders, futures only, positions as of '+COTW.asOf+'.</b>';
+  [['gc','#cotWkGC','#cotWkGCx'],['mgc','#cotWkMGC','#cotWkMGCx']].forEach(([k,tb,x])=>{const d=COTW[k];
+    $(tb).innerHTML=d.rows.map(r=>{const net=r[1]-r[2],ch=r[3]-r[4];return `<tr><td>${r[0]}</td><td>${n(r[1])}</td><td>${n(r[2])}</td><td><b>${f(net)}</b></td><td class="${ch>0?'pos':ch<0?'neg':''}">${f(ch)}</td></tr>`}).join('')+`<tr><td><b>Open interest</b></td><td colspan="3">${n(d.oi)}</td><td class="${d.oiChg>0?'pos':d.oiChg<0?'neg':''}">${f(d.oiChg)}</td></tr>`;
+    $(x).textContent=d.extra});
+  $('#cotWkRead').textContent=COTW.read;$('#cotWkBox').className='readout '+(COTW.tone||'')})();
 
 /* ---------- step 3 relationship map ---------- */
 (function(){const svg=$('#relMap');const cx=320,cy=150;
