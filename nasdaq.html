@@ -1,0 +1,1091 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Nasdaq Futures Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#ECEFF2; --surface:#FFFFFF; --surface-2:#F4F6F8; --ink:#16202A; --muted:#566370; --line:#D3D9DF;
+  --gold:#946500; --gold-strong:#C38D1B; --gold-soft:#F5E8C8; --on-gold:#FFFFFF;
+  --bull:#1A7A50; --bull-soft:#DCF0E4; --bear:#B3362E; --bear-soft:#F6DFDB;
+  --info:#285C9E; --info-soft:#DEE8F5; --bar:#C9D1D9;
+  --g-mm:#C38D1B; --g-sw:#2F6DB5; --g-pr:#8A5BB8; --g-ot:#7D8B99; --g-sm:#1B998B;
+  --serif:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E141A; --surface:#161E27; --surface-2:#1C2631; --ink:#E3E8ED; --muted:#96A3B0; --line:#2B3745;
+    --gold:#E4B34E; --gold-strong:#E4B34E; --gold-soft:#3A2D12; --on-gold:#16110A;
+    --bull:#4EC48C; --bull-soft:#143429; --bear:#EF7068; --bear-soft:#3D1F1D;
+    --info:#74A6E2; --info-soft:#172A40; --bar:#33414F;
+    --g-mm:#E4B34E; --g-sw:#6FA3E6; --g-pr:#B48BE0; --g-ot:#9AA8B6; --g-sm:#3CC4B4;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E141A; --surface:#161E27; --surface-2:#1C2631; --ink:#E3E8ED; --muted:#96A3B0; --line:#2B3745;
+  --gold:#E4B34E; --gold-strong:#E4B34E; --gold-soft:#3A2D12; --on-gold:#16110A;
+  --bull:#4EC48C; --bull-soft:#143429; --bear:#EF7068; --bear-soft:#3D1F1D;
+  --info:#74A6E2; --info-soft:#172A40; --bar:#33414F;
+    --g-mm:#E4B34E; --g-sw:#6FA3E6; --g-pr:#B48BE0; --g-ot:#9AA8B6; --g-sm:#3CC4B4;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--info)}
+:focus-visible{outline:2px solid var(--gold-strong);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--serif);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--ground);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand h1{font-size:22px;font-weight:700;letter-spacing:.01em}
+.ticker{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:1px 6px}
+.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);min-width:220px}
+.prog .track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden;min-width:120px}
+.prog .fill{height:100%;background:var(--gold-strong);width:0;transition:width .4s}
+
+/* shell */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);gap:32px;padding-top:24px}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);align-self:start}
+.rail ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.navbtn{width:100%;display:grid;grid-template-columns:28px 1fr 16px;align-items:center;gap:8px;text-align:left;background:none;border:0;border-radius:7px;padding:7px 8px;color:var(--ink);font:500 14px/1.3 var(--sans);cursor:pointer}
+.navbtn:hover{background:var(--surface-2)}
+.navbtn .n{font-family:var(--mono);font-size:12px;color:var(--muted);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line)}
+.navbtn[aria-current="step"]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.navbtn[aria-current="step"] .n{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.navbtn .ok{color:var(--bull);font-weight:700;visibility:hidden}
+.navbtn.done .ok{visibility:visible}
+.navbtn .new{font-family:var(--mono);font-size:10px;color:var(--gold);margin-left:4px}
+@media (max-width:880px){
+  .shell{grid-template-columns:1fr;gap:16px;padding-top:12px}
+  .rail{position:static;overflow-x:auto;margin-inline:-16px;padding-inline:16px;padding-bottom:4px}
+  .rail ol{display:flex;gap:6px;width:max-content}
+  .navbtn{grid-template-columns:auto auto auto;white-space:nowrap;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+}
+
+/* step */
+.step{max-width:880px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.step > header h2{font-size:clamp(28px,4vw,38px);font-weight:700;margin-top:6px}
+.goal{margin-top:10px;font-size:17px;color:var(--muted);max-width:66ch}
+.block{margin-top:30px}
+.bhead{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.bhead h3{font-size:21px;font-weight:600}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.tag.learn{background:var(--info-soft);color:var(--info)}
+.tag.try{background:var(--gold-soft);color:var(--gold)}
+.tag.check{background:var(--bull-soft);color:var(--bull)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.panel + .panel{margin-top:14px}
+.prose{display:grid;gap:10px;max-width:68ch}
+.prose ul,.prose ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.rule{margin-top:26px;background:var(--gold-soft);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline}
+.rule b{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--gold)}
+.rule p{font-weight:500}
+.stepnav{display:flex;justify-content:space-between;gap:12px;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
+.btn{font:600 14px var(--sans);padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn[disabled]{opacity:.35;cursor:default}
+
+/* form bits */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.field{display:grid;gap:5px;align-content:start}
+.field label,.lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.wsum{display:block;font-size:12.5px;line-height:1.4;color:var(--muted)}
+.wsum b{color:var(--ink);font-weight:600}
+.field output{font-family:var(--mono);font-size:13px;color:var(--ink)}
+input[type=number],select,textarea,input[type=text]{width:100%;font:14px var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink)}
+textarea{font-family:var(--sans);resize:vertical}
+input[type=range]{width:100%;accent-color:var(--gold-strong)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{font:500 13px var(--sans);border:0;background:none;color:var(--ink);padding:7px 11px;cursor:pointer;min-width:40px}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg button[aria-pressed="true"].up{background:var(--bull);color:#fff}
+.seg button[aria-pressed="true"].down{background:var(--bear);color:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .name{font-weight:600}
+.row .hint{font-size:13px;color:var(--muted)}
+.readout{border-radius:10px;padding:14px 16px;background:var(--surface-2);display:grid;gap:6px}
+.readout.bull{background:var(--bull-soft)}
+.readout.bear{background:var(--bear-soft)}
+.readout.warn{background:var(--gold-soft)}
+.readout h4{font-size:19px}
+.big{font-family:var(--serif);font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.stat{display:grid;gap:4px}
+.pos{color:var(--bull)} .neg{color:var(--bear)} .gold{color:var(--gold)}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;max-width:100%;height:auto}
+svg text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+svg .t-ink{fill:var(--ink)} svg .t-gold{fill:var(--gold)} svg .t-bull{fill:var(--bull)} svg .t-bear{fill:var(--bear)} svg .t-surface{fill:var(--surface)}
+.caption{font-size:12px;color:var(--muted);margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.tablebox{overflow-x:auto}
+
+/* quiz */
+.quiz + .quiz{margin-top:14px}
+.quiz .q{font-weight:600;margin-bottom:10px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:14px/1.45 var(--sans);cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt.right{border-color:var(--bull);background:var(--bull-soft)}
+.opt.wrong{border-color:var(--bear);background:var(--bear-soft)}
+.explain{margin-top:10px;font-size:14px;padding:10px 12px;border-radius:8px;background:var(--surface-2)}
+
+/* specific */
+.funnel{display:grid;gap:6px}
+.fbar{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:center}
+.fbar .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.fbar .body{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.fbar .body:hover{border-color:var(--gold-strong)}
+.fbar .body b{font-family:var(--serif);font-size:17px}
+.fbar .body span{color:var(--muted);font-size:14px}
+.fbar .body em{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--gold)}
+
+.contrib{display:grid;gap:8px}
+.crow{display:grid;grid-template-columns:130px 1fr 48px;gap:10px;align-items:center;font-size:13px}
+.ctrack{position:relative;height:12px;background:var(--surface-2);border-radius:3px}
+.ctrack::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted)}
+.cbar{position:absolute;top:0;height:100%;border-radius:2px}
+.crow .v{font-family:var(--mono);text-align:right}
+
+.matrix{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;font-size:14px}
+.matrix .ax{font-family:var(--mono);font-size:11px;color:var(--muted);display:grid;place-items:center;text-transform:uppercase;letter-spacing:.06em}
+.cell{border-radius:8px;padding:12px;border:2px solid transparent;display:grid;gap:3px}
+.cell b{font-family:var(--serif);font-size:17px}
+.cell small{font-size:12px}
+.cell.sb{background:var(--bull-soft)} .cell.wb{background:var(--surface-2)} .cell.sr{background:var(--bear-soft)} .cell.wr{background:var(--surface-2)}
+.cell.sb small,.cell.wb small{color:var(--bull)} .cell.sr small,.cell.wr small{color:var(--bear)}
+.cell.on{border-color:var(--ink)}
+
+.ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ledger .btn{text-align:left;font-weight:500;line-height:1.35}
+.log{font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;gap:2px;min-height:60px}
+
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media (max-width:560px){.months{grid-template-columns:repeat(4,1fr)}}
+.mon{border:2px solid transparent;border-radius:8px;padding:8px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);display:grid;gap:2px}
+.mon b{font-family:var(--serif);font-size:18px}
+.mon small{font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.mon.strong{background:var(--bull-soft)} .mon.strong small{color:var(--bull)}
+.mon.weak{background:var(--bear-soft)} .mon.weak small{color:var(--bear)}
+.mon.mixed{background:var(--surface-2)} .mon.mixed small{color:var(--muted)}
+.mon.sel{border-color:var(--ink)}
+.mon .now{font-family:var(--mono);font-size:10px;color:var(--gold);font-weight:600}
+
+.eras{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.eras button{font:500 13px var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:20px;padding:6px 12px;cursor:pointer}
+.eras button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+dl.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 16px;margin:0}
+dl.kv dt{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:2px}
+dl.kv dd{margin:0}
+@media (max-width:560px){dl.kv{grid-template-columns:1fr} dl.kv dd{margin-bottom:6px}}
+
+.meter{position:relative;height:16px;border-radius:8px;background:linear-gradient(90deg,var(--bear) 0%,var(--bear-soft) 40%,var(--surface-2) 50%,var(--bull-soft) 60%,var(--bull) 100%)}
+.meter .pin{position:absolute;top:-5px;width:4px;height:26px;background:var(--ink);border-radius:2px;transform:translateX(-50%);transition:left .3s}
+.meter-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+
+.units{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.units span{width:22px;height:14px;border-radius:2px;background:var(--gold-strong)}
+.units span.rest{background:var(--line)}
+
+.checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.checklist h4{font-size:16px;margin-bottom:6px}
+.checklist label{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:14px;cursor:pointer}
+.checklist input{margin-top:4px;accent-color:var(--bull)}
+.fallback{margin-top:8px;font-family:var(--mono);font-size:12px;height:120px}
+.tag.wk{background:var(--gold-soft);color:var(--gold)}
+.cotwk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.cotwk{grid-template-columns:1fr}}
+.cotwk-t{margin:0 0 6px;font-size:15px}
+.cotwk-t small{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:4px}
+.cotwk .cottable{font-size:12.5px}
+.cotwk .cottable th,.cotwk .cottable td{padding-left:6px;padding-right:6px;white-space:nowrap}
+.cotwk .cottable th:last-child{white-space:normal}
+.cotwk-x{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.tag.tv{background:var(--ink);color:var(--surface)}
+.tvg + .tvg{margin-top:14px}
+.tvg h4{font-size:15px;font-weight:600;margin-bottom:2px}
+.tvrow{display:grid;grid-template-columns:minmax(140px,200px) auto minmax(0,1fr);gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.tvg .tvrow:last-child{border-bottom:0}
+.tvrow .note{font-size:13px;color:var(--muted)}
+@media (max-width:620px){.tvrow{grid-template-columns:minmax(0,1fr) auto}.tvrow .note{grid-column:1/-1;margin-top:-4px}}
+.tk{font:500 13px var(--mono);padding:4px 9px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);cursor:pointer;white-space:nowrap;justify-self:start}
+.tk:hover{border-color:var(--gold-strong)}
+.tk.ind{font-family:var(--sans);white-space:normal;text-align:left}
+.tk.none{cursor:default;border-style:dashed;color:var(--muted);font-family:var(--sans)}
+.tk.none:hover{border-color:var(--line)}
+.tk.copied{border-color:var(--bull);color:var(--bull)}
+.tk.sm{font-size:12px;padding:2px 7px}
+.tvhint{font-size:12px;color:var(--muted);margin-top:10px}
+.layout6{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.layout6 div{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--surface-2);font-size:13px;display:grid;gap:2px}
+.layout6 b{font-family:var(--mono);font-size:12px}
+@media (max-width:560px){.layout6{grid-template-columns:repeat(2,1fr)}}
+.slidetop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.when{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.dots{display:flex;gap:6px;align-items:center}
+.dots button{width:10px;height:10px;border-radius:5px;border:0;background:var(--line);padding:0;cursor:pointer;transition:width .2s}
+.dots button[aria-current="true"]{background:var(--gold-strong);width:26px}
+.slide{display:grid;gap:16px}
+.slide[hidden],[hidden]{display:none!important}
+.slide .st{font-size:26px;font-weight:700}
+.slide .lead{font-size:16px;max-width:68ch}
+.slidenav{display:flex;justify-content:space-between;gap:12px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.dolist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.do,.skip{border-radius:8px;padding:12px 14px}
+.do{background:var(--bull-soft)} .skip{background:var(--surface-2)}
+.do > b,.skip > b{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.do > b{color:var(--bull)} .skip > b{color:var(--muted)}
+.do ul,.skip ul,ul.tight{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.weekwrap{overflow-x:auto}
+.week{display:grid;grid-template-columns:repeat(7,minmax(80px,1fr));gap:6px;min-width:600px}
+.day{display:grid;gap:5px;align-content:start}
+.dname{font:600 12px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.blk{border-radius:6px;padding:7px 8px;font-size:12px;line-height:1.35}
+.blk.plan{background:var(--gold-strong);color:var(--on-gold);min-height:190px}
+.blk.chk{background:var(--info-soft);color:var(--info);font-weight:500}
+.blk.trade{background:var(--surface-2);color:var(--muted);min-height:64px}
+.blk.news{background:var(--bear-soft);color:var(--bear);font-weight:600}
+.blk.off{border:1px dashed var(--line);color:var(--muted);min-height:190px}
+.bigline{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:12px 16px}
+.bigline span:last-child{flex:1;min-width:220px}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.flow{grid-template-columns:1fr}}
+.fstep{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:6px;align-content:start;font-size:14px}
+.fstep svg{max-width:100%;height:auto}
+.fn{font:600 12px var(--mono);width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center}
+.sticky{background:var(--gold-soft);border-radius:4px;padding:10px;font-size:13px;line-height:1.45;transform:rotate(-1deg)}
+.mini-rows{display:grid;gap:4px;font-size:13px}
+.mini-rows span{display:flex;align-items:center;gap:8px}
+.light{display:inline-block;width:14px;height:14px;border-radius:50%;flex:none;margin-top:3px}
+.light.g{background:var(--bull)} .light.a{background:var(--gold-strong)} .light.r{background:var(--bear)} .light.n{background:var(--muted)}
+.lightcard{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;border-radius:10px;padding:12px 14px;background:var(--surface-2)}
+.lightcard .bulb{width:30px;height:30px;border-radius:50%}
+.lightcard small{display:block;color:var(--muted);font-size:12px}
+.newsbar{display:grid;grid-template-columns:1fr 1.1fr 1.6fr 1.3fr;border-radius:10px;overflow:hidden}
+@media (max-width:640px){.newsbar{grid-template-columns:1fr}}
+.nb{padding:12px;display:grid;gap:4px;font-size:13px}
+.nb b{font:600 13px var(--mono)}
+.nb.g1{background:var(--surface-2)} .nb.g2{background:var(--bear-soft);color:var(--bear)} .nb.g3{background:var(--info-soft)} .nb.g4{background:var(--bull-soft)}
+.minical{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px 0}
+.minical span{aspect-ratio:1;border-radius:3px;background:var(--surface);font:10px var(--mono);color:var(--muted);display:grid;place-items:center;max-width:100%}
+.minical span.hl{background:var(--gold-strong);color:var(--on-gold);font-weight:600}
+.minical span.sun{background:var(--gold-soft)}
+.trades50{display:grid;grid-template-columns:repeat(25,1fr);gap:2px;margin-top:12px}
+.trades50 span{height:14px;border-radius:2px;background:var(--line)}
+.trades50 span.w{background:var(--bull)} .trades50 span.l{background:var(--bear)}
+.sam{display:grid;gap:8px}
+.samrow{display:grid;grid-template-columns:44px 18px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;background:var(--surface-2);border-radius:8px;font-size:14px}
+.samrow .res{font:600 13px var(--mono);white-space:nowrap}
+.why{border:1.5px solid var(--gold-strong);border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+.why > b{font:600 11px var(--mono);letter-spacing:.1em;color:var(--on-gold);background:var(--gold-strong);padding:2px 7px;border-radius:4px}
+.why ul{margin:0;padding-left:18px;display:grid;gap:6px}
+@media (max-width:520px){.why{grid-template-columns:1fr}.why > b{justify-self:start}}
+.rule p.whyt{font-weight:400}
+.chain{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.chain{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:420px){.chain{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.link{border:2px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);display:grid;gap:3px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;opacity:.5;transition:opacity .2s,border-color .2s}
+.link.seen{opacity:1}
+.link.cur{border-color:var(--ink);opacity:1}
+.link .ln{font:600 11px var(--mono);color:var(--muted)}
+.link b{font-size:13px;line-height:1.25}
+.link .arr{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1}
+.cottime{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:640px){.cottime{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cottime div{background:var(--surface-2);border-radius:8px;padding:12px;display:grid;gap:4px;font-size:13px}
+.cottime b{font-family:var(--serif);font-size:17px}
+.cottime .late{background:var(--gold-soft)}
+.glegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px}
+.glegend span{display:inline-flex;align-items:center;gap:6px}
+.gdot{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none;margin-top:5px}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.player{display:grid;grid-template-columns:auto 1fr;gap:10px;background:var(--surface-2);border-radius:10px;padding:12px;border:2px solid transparent;font-size:14px}
+.player p{margin-top:4px} .player .pl{font-size:13px;color:var(--muted)}
+.player.you{border-color:var(--g-sm);background:var(--surface)}
+.youtag{display:inline-block;font:600 10px var(--mono);letter-spacing:.1em;color:#fff;background:var(--g-sm);padding:2px 6px;border-radius:4px;margin-bottom:4px}
+.formula{font-family:var(--mono);font-size:14px;background:var(--surface-2);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:nowrap}
+.cottable td:nth-child(n+2),.cottable th:nth-child(n+2){text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cottable tr.hl td{background:var(--gold-soft);font-weight:600}
+.standmap{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:6px}
+.standmap .ax{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:center;display:grid;place-items:center}
+.standmap .ax small{text-transform:none;letter-spacing:0}
+.standmap .side{writing-mode:vertical-rl;transform:rotate(180deg)}
+.zone{border-radius:8px;padding:10px;display:grid;gap:3px;border:2px solid transparent;font-size:13px;align-content:start}
+.zone b{font-family:var(--serif);font-size:15px;line-height:1.2}
+.zone small{color:var(--muted);font-size:12px}
+.zone[data-z="MB"],.zone[data-z="LB"]{background:var(--bull-soft)}
+.zone[data-z="MS"],.zone[data-z="HS"]{background:var(--bear-soft)}
+.zone[data-z="HB"],.zone[data-z="LS"]{background:var(--gold-soft)}
+.zone.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.startcta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--gold-soft);border-radius:10px;padding:14px 18px}
+footer{margin-top:48px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px;max-width:880px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+<style>
+/* Nasdaq lab extras */
+.wkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.wk{background:var(--surface-2);border-radius:8px;padding:10px 12px;display:grid;gap:3px;font-size:13px}
+.wk b{font-family:var(--serif);font-size:20px;font-variant-numeric:tabular-nums}
+.wk small{color:var(--muted);font-size:12px;line-height:1.35}
+.sc{display:grid;gap:4px}
+.scrow{display:grid;grid-template-columns:minmax(150px,1.1fr) auto minmax(0,1.4fr);gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.scrow:last-child{border-bottom:0}
+.scrow .nm b{display:block}
+.scrow .nm small{color:var(--muted);font-size:12px}
+.scrow .wn{font-size:12.5px;color:var(--muted);line-height:1.4}
+@media (max-width:700px){.scrow{grid-template-columns:1fr}.scrow .seg{justify-self:start}}
+.cal{display:grid;gap:6px}
+.calrow{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:baseline;padding:8px 12px;background:var(--surface-2);border-radius:8px;font-size:14px}
+.calrow .d{font:600 12px var(--mono);color:var(--muted)}
+.imp{font:600 11px var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.imp.h{background:var(--bear-soft);color:var(--bear)} .imp.m{background:var(--gold-soft);color:var(--gold)}
+@media (max-width:560px){.calrow{grid-template-columns:1fr auto}.calrow .d{grid-column:1/-1}}
+.regime{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;font-size:14px}
+.regime .ax{font:500 11px var(--mono);color:var(--muted);display:grid;place-items:center;text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.regime .cell{cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.stack{display:flex;height:28px;border-radius:6px;overflow:hidden;margin-top:6px}
+.stack span{display:grid;place-items:center;font:600 11px var(--mono);color:#fff;white-space:nowrap;overflow:hidden}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><path d="M2 18 L10 10 L16 14 L28 3" style="fill:none;stroke:var(--gold-strong);stroke-width:3;stroke-linecap:round;stroke-linejoin:round"/><circle cx="28" cy="3" r="2.5" style="fill:var(--gold-strong)"/></svg>
+      <h1>Nasdaq Futures Lab</h1>
+      <span class="ticker">NQ · MNQ</span>
+    </div>
+    <div class="prog" aria-live="polite">
+      <span id="progText">0 of 9 steps done</span>
+      <div class="track"><div class="fill" id="progFill"></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="shell">
+  <nav class="rail" aria-label="Course steps"><ol id="railList"></ol></nav>
+  <main id="main">
+
+<!-- ============ STEP 0: MAP ============ -->
+<section class="step" data-title="The map" data-num="0">
+  <header>
+    <div class="eyebrow">Fundamental analysis · Nasdaq-100 futures</div>
+    <h2>Price = earnings × the multiple people will pay</h2>
+    <p class="goal">Every fundamental question about NQ comes back to two things: what the big companies will earn, and what multiple the market will pay for those earnings. Rates and the Fed set the multiple. Earnings and guidance set the earnings. This lab teaches you to read both every week.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The funnel you run before every week</h3></div>
+    <div class="panel"><div class="funnel" id="funnel"></div>
+    <p class="caption">Tap any layer to jump to its step. The wide layers change slowly (weeks). The narrow layers change fast (hours).</p></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag wk">Updated weekly</span><h3 id="wkTitle">This week's fundamental backdrop</h3></div>
+    <div class="panel">
+      <div class="wkgrid" id="wkGrid"></div>
+      <p id="wkNote" style="margin-top:12px"></p>
+      <p class="caption" id="wkSrc"></p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="startcta"><span>Each step: <b>Learn</b> the idea, <b>Try it</b> with a live calculator, then <b>Check yourself</b> to tick it off.</span><button class="btn primary" data-go="1">Start step 1 →</button></div>
+  </div>
+</section>
+
+<!-- ============ STEP 1: CONTRACT ============ -->
+<section class="step" data-title="Know the contract" data-num="1" hidden>
+  <header>
+    <div class="eyebrow">Step 1 of 9 · The instrument</div>
+    <h2>Know exactly what one Nasdaq point costs you</h2>
+    <p class="goal">NQ moves hundreds of points on a big day. Before any analysis, know what a point is worth and when the index really moves.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The contracts</h3></div>
+    <div class="panel tablebox">
+      <table>
+        <thead><tr><th>Contract</th><th>Multiplier</th><th>Tick</th><th>Tick value</th><th>100-point move</th></tr></thead>
+        <tbody>
+          <tr><td><b>NQ</b> (E-mini Nasdaq-100)</td><td class="mono">$20 × index</td><td class="mono">0.25</td><td class="mono">$5.00</td><td class="mono">$2,000</td></tr>
+          <tr><td><b>MNQ</b> (Micro E-mini)</td><td class="mono">$2 × index</td><td class="mono">0.25</td><td class="mono">$0.50</td><td class="mono">$200</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Quarterly months: Mar (H), Jun (M), Sep (U), Dec (Z). Contracts expire on the third Friday of the month; volume rolls to the next quarter about 8 days earlier (the Thursday a week before expiry). With the index near 28,000, one NQ controls about $560,000 of stock and one MNQ about $56,000. Check your prop firm's roll and contract limits.</p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The Nasdaq trading day (Eastern Time)</h3></div>
+    <div class="panel">
+      <div class="svgbox"><svg id="sessionSvg" viewBox="0 0 820 140" width="820" role="img" aria-label="Nasdaq futures session timeline from 18:00 to 17:00 Eastern Time"></svg></div>
+      <p id="nowText" class="caption" style="font-size:14px;color:var(--ink)"></p>
+      <p class="caption">Mega-cap earnings land after 16:00 ET. The futures react in the evening session, hours before the stocks can trade at the cash open.</p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>What does a move cost you?</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="c1Type">Contract</label><select id="c1Type"><option value="2">MNQ — $2 per point</option><option value="20">NQ — $20 per point</option></select></div>
+        <div class="field"><label for="c1Qty">Contracts</label><input id="c1Qty" type="number" min="1" max="50" value="2"></div>
+        <div class="field"><label for="c1Limit">Daily loss limit ($)</label><input id="c1Limit" type="number" min="100" step="100" value="1000"></div>
+      </div>
+      <div class="field" style="margin-top:16px"><label for="c1Move">NQ moves against you by <output id="c1MoveOut">60 pts</output></label><input id="c1Move" type="range" min="5" max="600" step="5" value="60"></div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="readout"><span class="lbl">Your loss</span><span class="big neg" id="c1Loss">$0</span><span class="muted" id="c1Pct"></span></div>
+        <div class="readout" id="c1Box"><span class="lbl">Daily limit is hit after a move of</span><span class="big" id="c1Break">0</span><span id="c1Feel"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Charts to open</h3></div>
+    <div class="panel" data-tv="core"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">You hold 3 MNQ and NQ drops 150 points against you. What's your loss?</p>
+      <div class="opts"><button class="opt" data-k="a">$300</button><button class="opt" data-k="b">$9,000</button><button class="opt" data-k="c">$900</button><button class="opt" data-k="d">$450</button></div>
+      <p class="explain" hidden>MNQ pays $2 a point: 150 × $2 × 3 = $900. The same move on 3 NQ would be $9,000.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Know how many NQ points your daily limit can absorb before you trade. If it's less than one normal hour's range, you're too big.</p><b>WHY</b><p class="whyt">NQ can move 100+ points in minutes after CPI or a mega-cap report. If your limit only survives a 50-point move, noise ends your day before your fundamental read has a chance to play out.</p></div>
+  <div class="stepnav"><button class="btn" data-go="0">← Map</button><button class="btn primary" data-go="2">Next: What you own →</button></div>
+</section>
+
+<!-- ============ STEP 2: COMPOSITION ============ -->
+<section class="step" data-title="What you're really trading" data-num="2" hidden>
+  <header>
+    <div class="eyebrow">Step 2 of 9 · The index</div>
+    <h2>NQ is a bet on a handful of giant companies</h2>
+    <p class="goal">The Nasdaq-100 holds the 100 largest non-financial companies listed on Nasdaq, weighted by size. A few mega-caps dominate it, so their earnings matter more than the other 90 combined.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Why concentration changes your analysis</h3></div>
+    <div class="panel prose">
+      <ul>
+        <li><b>The top 10 holdings are roughly half the index.</b> The exact weights shift every quarter; check the current list on Nasdaq's or Invesco's QQQ holdings page.</li>
+        <li><b>It's mostly technology and tech-like businesses</b>: chips, software and cloud, internet platforms, plus consumer names such as Amazon and Tesla. Banks are excluded by rule.</li>
+        <li><b>These are "long-duration" companies.</b> Much of their value comes from profits expected years from now, so they react strongly to interest rates (step 3).</li>
+        <li><b>AI spending is the current engine.</b> Chipmakers sell to the cloud giants. When the cloud giants raise capex plans, chip stocks rise. When investors question the payoff, both can fall together.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>How many NQ points does one stock move?</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="c2Lvl">Index level</label><input id="c2Lvl" type="number" step="10" value="27944"></div>
+        <div class="field"><label for="c2W">Stock's weight in the index (%)</label><input id="c2W" type="number" min="0.1" max="20" step="0.1" value="9"></div>
+        <div class="field"><label for="c2Mv">Stock's move: <output id="c2MvO"></output></label><input id="c2Mv" type="range" min="-20" max="20" step="0.5" value="-8"></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="readout" id="c2Box"><span class="lbl">Points it adds to or takes from NQ</span><span class="big" id="c2Pts">0</span><span id="c2Usd" class="muted"></span></div>
+        <div class="readout"><span class="lbl">The other stocks would need to move</span><span class="big" id="c2Off">0%</span><span class="muted">on average, the other way, to cancel it out</span></div>
+      </div>
+      <p class="caption">Points ≈ index level × weight × move. Approximate, because weights drift with price between rebalances.</p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">A stock that is 8% of the index falls 10% after earnings. With NQ at 28,000, roughly how far does that one stock pull NQ down?</p>
+      <div class="opts"><button class="opt" data-k="a">About 22 points</button><button class="opt" data-k="b">About 224 points</button><button class="opt" data-k="c">About 2,240 points</button><button class="opt" data-k="d">It doesn't matter, the index has 100 stocks</button></div>
+      <p class="explain" hidden>28,000 × 8% × 10% ≈ 224 points, which is $4,480 on one NQ contract. One report can make the whole week's move.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Before each week, know which top-10 companies report and when. Their reports are index events, not stock events.</p><b>WHY</b><p class="whyt">With heavy concentration, a single report after the close can gap NQ 1–2% overnight. Holding through one without knowing it was coming is gambling.</p></div>
+  <div class="stepnav"><button class="btn" data-go="1">← Back</button><button class="btn primary" data-go="3">Next: Valuation &amp; rates →</button></div>
+</section>
+
+<!-- ============ STEP 3: VALUATION & RATES ============ -->
+<section class="step" data-title="Valuation & rates" data-num="3" hidden>
+  <header>
+    <div class="eyebrow">Step 3 of 9 · The multiple</div>
+    <h2>Rates decide what each dollar of earnings is worth</h2>
+    <p class="goal">Index = forward earnings per share × forward P/E. Earnings change slowly. The P/E can change every day, and the 10-year real yield is its biggest driver.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Three numbers to track</h3></div>
+    <div class="panel"><dl class="kv">
+      <dt>Forward P/E</dt><dd>Price divided by the next 12 months of expected earnings. High means expectations are already rich, so disappointments hurt more. Sources disagree on the exact figure (FactSet, Bloomberg and free sites use different estimates), so use one source consistently and watch its direction.</dd>
+      <dt>Earnings yield</dt><dd>The P/E flipped: 1 ÷ P/E. A P/E of 22 means a 4.5% earnings yield. This is what stocks "pay" you in profit per dollar invested.</dd>
+      <dt>Real yield</dt><dd>The 10-year Treasury yield after inflation (FRED: DFII10). It's what a risk-free bond pays you in real terms. When it rises, future profits are discounted harder and growth stocks lose value.</dd>
+      <dt>Equity risk premium</dt><dd>Earnings yield − real yield. The extra return you get for owning stocks over safe bonds. A shrinking gap means stocks are getting expensive relative to bonds.</dd>
+    </dl></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Valuation lab: change rates and earnings, see the fair index level</h3></div>
+    <div class="panel">
+      <div class="grid2">
+        <div class="field"><label for="vLvl">Index level today</label><input id="vLvl" type="number" step="10" value="27944"></div>
+        <div class="field"><label for="vPe">Forward P/E today: <output id="vPeO"></output></label><input id="vPe" type="range" min="14" max="36" step="0.5" value="22"></div>
+        <div class="field"><label for="vRy">10-year real yield today (%)</label><input id="vRy" type="number" step="0.01" value="2.91"></div>
+        <div class="field"><label for="vSens">Assumed P/E change per +1% real yield</label><input id="vSens" type="number" step="0.5" value="-3"><small class="wsum">Your assumption, not a law. Growth-heavy indexes have often lost several P/E points when real yields jumped (2022 is the clearest example).</small></div>
+        <div class="field"><label for="vDy">Real yield moves by: <output id="vDyO"></output></label><input id="vDy" type="range" min="-100" max="100" step="5" value="25"></div>
+        <div class="field"><label for="vEg">Forward earnings revised by: <output id="vEgO"></output></label><input id="vEg" type="range" min="-15" max="15" step="0.5" value="0"></div>
+      </div>
+      <div class="grid3" style="margin-top:16px">
+        <div class="readout"><span class="lbl">Implied forward EPS</span><span class="big" id="vEps">0</span><span class="muted">index ÷ P/E</span></div>
+        <div class="readout" id="vBox"><span class="lbl">Fair index level after the change</span><span class="big" id="vNew">0</span><span id="vChg"></span></div>
+        <div class="readout" id="vErpBox"><span class="lbl">Equity risk premium</span><span class="big" id="vErp">0</span><span id="vErpT" class="muted"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Rates to watch</h3></div>
+    <div class="panel" data-tv="rates"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">Earnings estimates for the Nasdaq-100 rose 2% this week, but the 10-year real yield jumped 30bp. What usually wins for NQ in the short run?</p>
+      <div class="opts"><button class="opt" data-k="a">The real-yield jump: the P/E compression is usually bigger than a 2% earnings bump</button><button class="opt" data-k="b">Earnings: rates don't affect tech stocks</button><button class="opt" data-k="c">Neither, they always cancel exactly</button></div>
+      <p class="explain" hidden>With an assumed −3 P/E points per +1% real yield, a 30bp jump takes about 0.9 off a 22 P/E, roughly −4%. That's double the 2% earnings gain. Over months earnings matter more; week to week, rates usually move the multiple faster.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Check the 10-year real yield before you form a weekly bias. A sharp rise is a headwind for NQ even when the earnings news is good.</p><b>WHY</b><p class="whyt">Nasdaq companies are valued on profits far in the future. Higher real yields shrink the present value of those profits, so the multiple falls even when the businesses are doing fine.</p></div>
+  <div class="stepnav"><button class="btn" data-go="2">← Back</button><button class="btn primary" data-go="4">Next: Earnings →</button></div>
+</section>
+
+<!-- ============ STEP 4: EARNINGS ============ -->
+<section class="step" data-title="Earnings & guidance" data-num="4" hidden>
+  <header>
+    <div class="eyebrow">Step 4 of 9 · The earnings</div>
+    <h2>Guidance moves the index more than the beat</h2>
+    <p class="goal">Most big companies beat estimates most quarters, so a beat is expected. The market reacts to what they say about the next quarter, and for the AI trade, to how much they plan to spend.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Earnings season rhythm</h3></div>
+    <div class="panel prose">
+      <ul>
+        <li><b>Four seasons a year</b>, starting about two weeks after each quarter ends: mid-January, mid-April, mid-July, mid-October. The big platform and cloud companies usually report in the last week of the first month.</li>
+        <li><b>Nvidia reports about a month later</b> (late February, May, August and November), so it often acts as a second, separate earnings event for the whole AI complex.</li>
+        <li><b>Reports come after 16:00 ET.</b> NQ reacts in the evening session. The conference call an hour later, with guidance and capex comments, often reverses the first move.</li>
+        <li><b>What to read in each report:</b> revenue growth vs expectations, next-quarter guidance, margins, cloud growth (Microsoft Azure, Google Cloud, AWS), AI capex plans, and for chipmakers, data-centre revenue and supply comments.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Earnings reaction decoder</h3></div>
+    <div class="panel">
+      <div class="grid2">
+        <div class="field"><span class="lbl">Revenue &amp; EPS vs estimates</span><div class="seg" id="eBeat"></div></div>
+        <div class="field"><span class="lbl">Next-quarter guidance</span><div class="seg" id="eGuide"></div></div>
+        <div class="field"><span class="lbl">Stock into the report (last month)</span><div class="seg" id="eRun"></div></div>
+        <div class="field"><span class="lbl">Company type</span><div class="seg" id="eType"></div></div>
+      </div>
+      <div class="readout" id="eBox" style="margin-top:16px"><h4 id="eHead"></h4><p id="eBody"></p><p class="muted" id="eSpill"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">A chipmaker beats revenue and EPS, but guides next quarter in line with estimates. The stock had rallied 25% into the report. The most common reaction?</p>
+      <div class="opts"><button class="opt" data-k="a">Big rally: it beat</button><button class="opt" data-k="b">No move at all</button><button class="opt" data-k="c">Flat to down: the beat was priced in and guidance didn't raise the bar</button></div>
+      <p class="explain" hidden>After a big run, the market needs a raise in guidance to justify it. "Beat and in-line" after a 25% rally is a classic sell-the-news setup, and it can drag the rest of the chip group with it.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Don't hold a full-size NQ position through a top-10 company's report. Go flat, or cut to a size where a 2% overnight gap is acceptable.</p><b>WHY</b><p class="whyt">The reaction depends on guidance and positioning you can't know in advance. A beat can still fall 10%. Your edge is reading the reaction after it happens, not guessing it.</p></div>
+  <div class="stepnav"><button class="btn" data-go="3">← Back</button><button class="btn primary" data-go="5">Next: Fed &amp; data →</button></div>
+</section>
+
+<!-- ============ STEP 5: FED & MACRO ============ -->
+<section class="step" data-title="Fed & macro data" data-num="5" hidden>
+  <header>
+    <div class="eyebrow">Step 5 of 9 · The Fed</div>
+    <h2>Read every release through the Fed's eyes</h2>
+    <p class="goal">Economic data moves NQ mainly by changing what the Fed is expected to do. The same strong number can be good or bad for tech, depending on whether inflation is the Fed's problem.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The Tier 1 releases</h3></div>
+    <div class="panel tablebox"><table>
+      <thead><tr><th>Release</th><th>When (ET)</th><th>Why NQ cares</th></tr></thead>
+      <tbody>
+        <tr><td><b>CPI</b></td><td class="mono">Mid-month, 08:30</td><td>The main inflation read. Hot core CPI pushes yields up and NQ down.</td></tr>
+        <tr><td><b>FOMC decision</b></td><td class="mono">8× a year, 14:00 + 14:30 presser</td><td>Rate decision, dot plot (4 meetings a year) and tone. The press conference often reverses the first move.</td></tr>
+        <tr><td><b>Nonfarm payrolls</b></td><td class="mono">First Friday, 08:30</td><td>Jobs and wages. Too hot means more hikes; too weak means recession fear.</td></tr>
+        <tr><td><b>PCE inflation</b></td><td class="mono">Late month, 08:30</td><td>The Fed's preferred inflation gauge. Usually smaller moves, since CPI already hinted at it.</td></tr>
+        <tr><td><b>Retail sales, ISM, GDP</b></td><td class="mono">Various, 08:30 / 10:00</td><td>Growth reads. They matter most when the market is worried about recession.</td></tr>
+        <tr><td><b>FOMC minutes, Fed speakers</b></td><td class="mono">3 weeks after a meeting, 14:00</td><td>Hints about the next move. Matter most when the next decision is a close call.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The regime map: tap the quadrant you think we're in</h3></div>
+    <div class="panel">
+      <div class="regime" id="regime">
+        <span></span><span class="ax">Inflation falling</span><span class="ax">Inflation rising</span>
+        <span class="ax side" style="writing-mode:vertical-rl;transform:rotate(180deg)">Growth up</span>
+        <button class="cell sb" data-r="0"><b>Goldilocks</b><small>Best for NQ</small></button>
+        <button class="cell wr" data-r="1"><b>Overheating</b><small>Good news is bad news</small></button>
+        <span class="ax side" style="writing-mode:vertical-rl;transform:rotate(180deg)">Growth down</span>
+        <button class="cell wb" data-r="2"><b>Slowdown, Fed eases</b><small>Mixed: rates help, earnings hurt</small></button>
+        <button class="cell sr" data-r="3"><b>Stagflation</b><small>Worst for NQ</small></button>
+      </div>
+      <div class="readout" id="rgBox" style="margin-top:14px"><h4 id="rgHead">Tap a quadrant</h4><p id="rgBody">Each one changes how you should read the next data release.</p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Surprise decoder</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="nRel">Release</label><select id="nRel"><option value="cpi">CPI (core, m/m %)</option><option value="nfp">Payrolls (thousands)</option><option value="rs">Retail sales (m/m %)</option></select></div>
+        <div class="field"><label for="nCons">Consensus</label><input id="nCons" type="number" step="any" value="0.3"></div>
+        <div class="field"><label for="nAct">Actual</label><input id="nAct" type="number" step="any" value="0.4"></div>
+      </div>
+      <div class="field" style="margin-top:12px"><span class="lbl">What is the Fed doing right now?</span><div class="seg" id="nFed"></div></div>
+      <div class="readout" id="nBox" style="margin-top:16px"><h4 id="nHead"></h4><p id="nBody"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">The Fed is hiking to fight inflation. Retail sales come in much stronger than expected. What's the most likely first reaction in NQ?</p>
+      <div class="opts"><button class="opt" data-k="a">Up: strong consumers mean higher earnings</button><button class="opt" data-k="b">Down: strong demand means more hikes and higher yields</button><button class="opt" data-k="c">No reaction: retail sales don't affect tech</button></div>
+      <p class="explain" hidden>In an overheating regime, strong growth data raises the odds of more hikes. Yields rise and the multiple compresses. "Good news is bad news" until inflation is under control.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Before each release, write down which regime you're in and what a hot and a cold number would mean. Then trade the reaction, not the headline.</p><b>WHY</b><p class="whyt">The first spike after 08:30 is often reversed once traders look at the details (core vs headline, revisions). Having the map ready keeps you from chasing the first candle.</p></div>
+  <div class="stepnav"><button class="btn" data-go="4">← Back</button><button class="btn primary" data-go="6">Next: Intermarket →</button></div>
+</section>
+
+<!-- ============ STEP 6: INTERMARKET ============ -->
+<section class="step" data-title="Intermarket & liquidity" data-num="6" hidden>
+  <header>
+    <div class="eyebrow">Step 6 of 9 · Confirmation</div>
+    <h2>Ask bonds, the dollar and chips whether they agree</h2>
+    <p class="goal">NQ rarely moves alone. When the markets that feed it agree, a move tends to last. When they disagree, be suspicious.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>NQ's relationship map</h3></div>
+    <div class="panel tablebox"><table>
+      <thead><tr><th>Market</th><th>Usual link to NQ</th><th>What it tells you</th></tr></thead>
+      <tbody>
+        <tr><td><b>10Y yield / real yield</b></td><td class="neg">Opposite</td><td>The valuation pressure from step 3.</td></tr>
+        <tr><td><b>Semiconductors (SOX, SMH)</b></td><td class="pos">Same, and often first</td><td>Chips lead the AI trade. NQ rallying while chips fall is a warning.</td></tr>
+        <tr><td><b>US dollar (DXY)</b></td><td class="neg">Opposite</td><td>A strong dollar tightens global money and cuts the value of overseas sales.</td></tr>
+        <tr><td><b>VIX</b></td><td class="neg">Opposite</td><td>Fear gauge. A rising VIX while NQ rises often means the rally is fragile.</td></tr>
+        <tr><td><b>Equal-weight Nasdaq (QQEW)</b></td><td class="pos">Same</td><td>Breadth. If only the mega-caps are rising, the move is narrow.</td></tr>
+        <tr><td><b>High-yield credit (HYG)</b></td><td class="pos">Same</td><td>Credit usually cracks before stocks in real risk-off moves.</td></tr>
+        <tr><td><b>USD/JPY</b></td><td class="pos">Same, in stress</td><td>A sharp yen rally can force hedge funds to unwind leveraged tech trades.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Divergence reader: set today's moves</h3></div>
+    <div class="panel">
+      <div class="sc" id="dvRows"></div>
+      <div class="readout" id="dvBox" style="margin-top:14px"><h4 id="dvHead"></h4><p id="dvBody"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Intermarket tickers</h3></div>
+    <div class="panel" data-tv="inter"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">NQ makes a new weekly high, but SOX is down on the day and the 10-year yield is up 8bp. What's the best read?</p>
+      <div class="opts"><button class="opt" data-k="a">Unconfirmed: two key inputs disagree, so don't chase the breakout</button><button class="opt" data-k="b">Strong: NQ is breaking out regardless</button><button class="opt" data-k="c">Bearish: short immediately</button></div>
+      <p class="explain" hidden>Divergence is a reason to wait, not a reason to reverse. Without chips and rates confirming, breakouts fail more often. Wait for them to line up, or trade smaller.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Only take a full-size trade in your bias direction when at least two of yields, chips and the dollar agree with it.</p><b>WHY</b><p class="whyt">A fundamental bias says which way the wind blows. Intermarket confirmation tells you whether it's blowing today.</p></div>
+  <div class="stepnav"><button class="btn" data-go="5">← Back</button><button class="btn primary" data-go="7">Next: Sentiment →</button></div>
+</section>
+
+<!-- ============ STEP 7: SENTIMENT & POSITIONING ============ -->
+<section class="step" data-title="Sentiment & positioning" data-num="7" hidden>
+  <header>
+    <div class="eyebrow">Step 7 of 9 · The crowd</div>
+    <h2>Fundamentals set direction; crowding sets the speed</h2>
+    <p class="goal">When everyone already owns NQ, good news has less fuel. When everyone is scared, bad news has less effect. Use sentiment as a contrarian filter, not a signal by itself.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>Four gauges</h3></div>
+    <div class="panel"><dl class="kv">
+      <dt>VIX level</dt><dd>Under about 15: calm, complacent. 20–30: stressed. Over 30: panic, and often near a short-term low.</dd>
+      <dt>VIX term structure</dt><dd>Compare VIX with VIX3M (3-month). Normally VIX is lower. When VIX rises above VIX3M, fear is acute right now, which often happens near lows.</dd>
+      <dt>COT (Nasdaq-100)</dt><dd>The CFTC's Friday report. Watch asset managers (slow, long-term money) and leveraged funds (fast money). Extreme leveraged-fund positioning, either way, often reverses.</dd>
+      <dt>Surveys &amp; put/call</dt><dd>AAII bull/bear survey and the equity put/call ratio. Extremes are contrarian: very bullish readings warn of a pullback, very bearish ones of a bounce.</dd>
+    </dl></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Sentiment gauge</h3></div>
+    <div class="panel">
+      <div class="grid2">
+        <div class="field"><label for="sVix">VIX: <output id="sVixO"></output></label><input id="sVix" type="range" min="10" max="50" step="0.5" value="19"></div>
+        <div class="field"><label for="sTerm">VIX ÷ VIX3M: <output id="sTermO"></output></label><input id="sTerm" type="range" min="0.75" max="1.25" step="0.01" value="0.92"></div>
+        <div class="field"><label for="sBull">AAII bulls minus bears (pts): <output id="sBullO"></output></label><input id="sBull" type="range" min="-40" max="40" step="1" value="5"></div>
+        <div class="field"><label for="sLev">Leveraged-fund positioning</label><select id="sLev"><option value="-1">Very short (crowded)</option><option value="0" selected>Normal</option><option value="1">Very long (crowded)</option></select></div>
+      </div>
+      <div style="margin-top:16px"><div class="meter"><div class="pin" id="sPin"></div></div><div class="meter-scale"><span>Fearful (contrarian bullish)</span><span>Neutral</span><span>Greedy (contrarian bearish)</span></div></div>
+      <div class="readout" id="sBox" style="margin-top:14px"><h4 id="sHead"></h4><p id="sBody"></p></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="c">
+      <p class="q">Your fundamentals are bearish (real yields surging), but VIX is 34 and above VIX3M, and the AAII survey is deeply bearish. What do you do?</p>
+      <div class="opts"><button class="opt" data-k="a">Short aggressively: everything is bearish</button><button class="opt" data-k="b">Buy big: sentiment says bottom</button><button class="opt" data-k="c">Keep the bearish bias but don't press new shorts here; wait for a bounce to sell, or stand aside</button></div>
+      <p class="explain" hidden>Panic readings mean much of the bad news is already in price, and bounces get violent. The fundamental bias stays, but the timing says sell rallies rather than chase lows.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Sentiment can reduce your size or delay your entry. It should never flip your fundamental bias on its own.</p><b>WHY</b><p class="whyt">Extremes can last for weeks. Using sentiment as a timing filter keeps you from shorting the hole or buying the top without fighting the bigger drivers.</p></div>
+  <div class="stepnav"><button class="btn" data-go="6">← Back</button><button class="btn primary" data-go="8">Next: Weekly scorecard →</button></div>
+</section>
+
+<!-- ============ STEP 8: SCORECARD ============ -->
+<section class="step" data-title="Weekly bias scorecard" data-num="8" hidden>
+  <header>
+    <div class="eyebrow">Step 8 of 9 · Put it together</div>
+    <h2>Score the drivers, get your weekly bias</h2>
+    <p class="goal">Every Sunday, score each driver from −2 (strong headwind for NQ) to +2 (strong tailwind). The weights reflect how much each one has tended to matter for the Nasdaq.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>This week's scorecard</h3><button class="btn small" id="scLoad" style="margin-left:auto">Load this week's read</button><button class="btn small" id="scReset">Clear</button></div>
+    <div class="panel">
+      <div class="sc" id="scRows"></div>
+      <div style="margin-top:18px"><div class="meter"><div class="pin" id="scPin"></div></div><div class="meter-scale"><span>−100 Bearish</span><span>0</span><span>Bullish +100</span></div></div>
+      <div class="readout" id="scBox" style="margin-top:14px"><h4 id="scHead"></h4><p id="scBody"></p></div>
+      <p class="caption" id="scWk"></p>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag wk">Updated weekly</span><h3>Calendar for the week ahead</h3></div>
+    <div class="panel"><div class="cal" id="calRows"></div><p class="caption">Confirm times on the companies' investor-relations pages and an economic calendar; dates can move.</p></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag tv">On TradingView</span><h3>Your full Nasdaq fundamentals watchlist</h3></div>
+    <div class="panel" data-tv="watch"></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="b">
+      <p class="q">Your score is −35: rates and the Fed are strongly negative, earnings are mildly positive. What does that mean for the week?</p>
+      <div class="opts"><button class="opt" data-k="a">Short every rally all week, full size</button><button class="opt" data-k="b">Lean short: favour selling rallies into resistance, take longs only as quick scalps, and size normally rather than large</button><button class="opt" data-k="c">Ignore it, the score is just a number</button></div>
+      <p class="explain" hidden>A moderate score is a lean, not a conviction. It tells you which side to favour and how hard to press. Strong scores (beyond ±60) justify fuller size; scores near zero mean trade both ways small, or wait.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Write down your score and its main reason every Sunday. Only change it mid-week if a Tier 1 event changes a driver.</p><b>WHY</b><p class="whyt">A written bias stops you from flipping direction on every candle. Reviewing old scorecards against what NQ did is how you learn which drivers you read well.</p></div>
+  <div class="stepnav"><button class="btn" data-go="7">← Back</button><button class="btn primary" data-go="9">Next: Risk &amp; routine →</button></div>
+</section>
+
+<!-- ============ STEP 9: RISK & ROUTINE ============ -->
+<section class="step" data-title="Risk & weekly routine" data-num="9" hidden>
+  <header>
+    <div class="eyebrow">Step 9 of 9 · Survive</div>
+    <h2>Size for NQ's speed, and plan around the calendar</h2>
+    <p class="goal">A good fundamental read only pays if you're still in the game when it plays out. NQ's daily range is wide, so size from volatility, not from conviction.</p>
+  </header>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Position-size calculator</h3></div>
+    <div class="panel">
+      <div class="grid3">
+        <div class="field"><label for="rDd">Drawdown buffer left ($)</label><input id="rDd" type="number" min="100" step="100" value="2000"></div>
+        <div class="field"><label for="rPct">Risk per trade (% of buffer)</label><input id="rPct" type="number" min="1" max="50" step="1" value="10"></div>
+        <div class="field"><label for="rType">Contract</label><select id="rType"><option value="2">MNQ ($2/pt)</option><option value="20">NQ ($20/pt)</option></select></div>
+        <div class="field"><label for="rAtr">ATR of your chart (points)</label><input id="rAtr" type="number" min="1" step="1" value="40"></div>
+        <div class="field"><label for="rMult">Stop = ATR ×</label><input id="rMult" type="number" min="0.5" step="0.25" value="1.5"></div>
+        <div class="field"><label for="rEv">Event risk today?</label><select id="rEv"><option value="1">None</option><option value="0.5">CPI / FOMC / top-10 earnings: halve size</option></select></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div class="readout"><span class="lbl">Stop distance</span><span class="big" id="rStop">0</span><span class="muted" id="rRisk"></span></div>
+        <div class="readout" id="rBox"><span class="lbl">Max contracts</span><span class="big" id="rN">0</span><span id="rNote"></span></div>
+      </div>
+      <div class="units" id="rUnits"></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag learn">Learn</span><h3>The weekly rhythm</h3></div>
+    <div class="panel"><div class="tablebox"><table>
+      <thead><tr><th>When</th><th>What to do</th><th>Step</th></tr></thead>
+      <tbody>
+        <tr><td><b>Sunday</b></td><td>Fill in the scorecard. List the week's Tier 1 data and which top-10 companies report. Mark the times you won't hold a position.</td><td class="mono">5, 8</td></tr>
+        <tr><td><b>Each morning</b></td><td>Check overnight moves in yields, dollar and chips. Note any earnings from the previous evening.</td><td class="mono">3, 6</td></tr>
+        <tr><td><b>Before 08:30 data</b></td><td>Write the hot/cold plan. Be flat or small into the release.</td><td class="mono">5</td></tr>
+        <tr><td><b>09:30–11:30</b></td><td>Trade in your bias direction when intermarket confirms. Peak volume and cleanest moves.</td><td class="mono">6, 8</td></tr>
+        <tr><td><b>After 16:00</b></td><td>On earnings days, watch the after-hours reaction and the call before deciding anything for tomorrow.</td><td class="mono">4</td></tr>
+        <tr><td><b>Friday</b></td><td>Read the COT and the week's yield change. Did the scorecard call the week? Note why or why not in your journal.</td><td class="mono">7, 8</td></tr>
+      </tbody>
+    </table></div></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag try">Try it</span><h3>Your routine checklist</h3><button class="btn small" id="clReset" style="margin-left:auto">Uncheck all</button></div>
+    <div class="panel"><div class="checklist" id="checklist"></div></div>
+  </div>
+  <div class="block">
+    <div class="bhead"><span class="tag check">Check yourself</span></div>
+    <div class="panel quiz" data-answer="a">
+      <p class="q">Buffer $2,000, risk 10% ($200), MNQ, ATR 40 points, stop 1.5× ATR. How many MNQ can you trade?</p>
+      <div class="opts"><button class="opt" data-k="a">1 (stop is 60 pts × $2 = $120 per contract)</button><button class="opt" data-k="b">3</button><button class="opt" data-k="c">10</button></div>
+      <p class="explain" hidden>60 points × $2 = $120 risk per MNQ. $200 ÷ $120 = 1.67, rounded down to 1. On an event day, halve it, which means 0: sit out or wait for volatility to settle.</p>
+    </div>
+  </div>
+  <div class="rule"><b>RULE</b><p>Size from your stop in points × dollars per point. Round down. Halve it on CPI, FOMC and top-10 earnings days.</p><b>WHY</b><p class="whyt">NQ's daily range is often 300+ points. Without volatility-based sizing, one normal swing against you can take your whole daily limit.</p></div>
+  <div class="stepnav"><button class="btn" data-go="8">← Back</button><button class="btn primary" data-go="0">Back to the map</button></div>
+</section>
+
+<footer>
+  <p><b>Education only, not financial advice.</b> The relationships here are historical tendencies and can break down. Futures trading carries substantial risk. Always follow your prop firm's rules.</p>
+  <p>On a free TradingView plan, CME futures (symbols ending in 1!) are delayed about 10 minutes. TVC: symbols are real-time. FRED: series update once a day.</p>
+  <p>Free data: <a href="https://fred.stlouisfed.org/series/DFII10" target="_blank" rel="noopener">FRED real yields</a> · <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener">CME FedWatch</a> · <a href="https://www.cmegroup.com/markets/equities/nasdaq/e-mini-nasdaq-100.volume.html" target="_blank" rel="noopener">CME NQ volume &amp; OI</a> · <a href="https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm" target="_blank" rel="noopener">CFTC COT</a> · <a href="https://www.invesco.com/qqq-etf/en/about.html" target="_blank" rel="noopener">QQQ holdings</a> · <a href="https://www.factset.com/earningsinsight" target="_blank" rel="noopener">FactSet Earnings Insight</a></p>
+</footer>
+  </main>
+</div>
+</div>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem('nfl:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nfl:'+k,JSON.stringify(v))}catch(e){}}};
+const money=n=>(n<0?'−':'')+'$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const num=n=>Math.round(n).toLocaleString('en-US');
+const sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function seg(container,opts,value,onChange){container.innerHTML='';opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o.label;if(o.cls)b.className=o.cls;b.setAttribute('aria-pressed',String(o.value===value));b.addEventListener('click',()=>{$$('button',container).forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');onChange(o.value)});container.appendChild(b)});}
+
+/*WEEK-DATA*/
+const WEEK={asOf:'Nov 9–13, 2026',
+ tiles:[
+  ['Nasdaq-100','27,944','+3.5% on the week, first weekly gain in five. Fell 1.2% Friday and closed just under its 200-day average (about 28,030).'],
+  ['10Y yield','5.15%','+29bp on the week, back above 5% after hot October CPI.'],
+  ['10Y real yield','2.91%','+28bp. A sharp valuation headwind.'],
+  ['Fed','3.75–4.00%','December 9 hike now priced as near-certain; a small chance of 50bp.'],
+  ['Dollar (DXY)','19-month high','Highest since April 2025 on Fed-hike bets.'],
+  ['Chips','Split','AMD and Broadcom up about 18%, SMH +4.9%; Nvidia, Microsoft and Alphabet had a hard week.']],
+ note:'Stocks bounced hard on Monday after the Nov 5–6 washout and held most of it, even as a hot October CPI (+0.4%) and hawkish Fed speakers sent yields up about 30bp. That is a tug-of-war: AI earnings optimism against a rising discount rate. Next week, Nvidia\'s report on Tuesday evening is the biggest single event for NQ.',
+ src:'Sources: CNBC, FRED, Investomine and FatTail weekly reviews, Nov 13, 2026. Valuation figures differ by source; forward P/E estimates for the Nasdaq-100 range from about 19× to 22×.',
+ score:{rates:-2,fed:-2,earn:0,growth:0,liq:-1,sent:1},
+ why:{rates:'Real yield +28bp to 2.91% in one week.',fed:'Dec 9 hike priced as near-certain; Fed speakers hawkish.',earn:'Mixed: AMD and Broadcom strong, Nvidia/Microsoft/Alphabet weak. Nvidia reports Tue.',growth:'Data is about inflation, not growth. Neutral.',liq:'Dollar at a 19-month high tightens conditions.',sent:'Just came out of a four-week losing streak; VIX dipped back under 20. Not crowded long.'},
+ cal:[
+  ['Tue Nov 17','08:30','US retail sales (Oct). Strong = more hike fears.','m'],
+  ['Tue Nov 17','After close (~16:20)','Nvidia Q3 FY27 earnings. Biggest NQ event of the week; the company is also going through a CEO transition.','h'],
+  ['Wed Nov 18','14:00','FOMC minutes (October meeting). Look for support for more hikes.','m'],
+  ['Thu Nov 19','Before open','Walmart earnings: a read on the US consumer.','m']]
+};
+/*/WEEK-DATA*/
+
+/* ---------- TradingView ticker panels ---------- */
+const TV={
+ core:[['Core charts',[['CME_MINI:NQ1!','E-mini Nasdaq-100, continuous front month'],['CME_MINI:MNQ1!','Micro E-mini, same chart, smaller size'],['NASDAQ:NDX','The cash index. Use it for the 200-day average and long history'],['CME_MINI:ES1!','S&P 500 futures, to compare tech with the broad market']]]],
+ rates:[['Rates',[['TVC:US10Y','10-year Treasury yield'],['FRED:DFII10','10-year real yield (TIPS), daily'],['TVC:US02Y','2-year yield: follows the Fed most closely'],['CBOT:ZN1!','10-year note futures, real-time-ish proxy for yields (inverted)']]]],
+ inter:[['Intermarket',[['NASDAQ:SOX','Philadelphia Semiconductor index'],['NASDAQ:SMH','Semiconductor ETF'],['TVC:DXY','US Dollar index'],['TVC:VIX','Volatility index'],['NASDAQ:QQEW','Equal-weight Nasdaq-100 ETF: breadth'],['AMEX:HYG','High-yield credit ETF'],['FX:USDJPY','Yen carry: watch for sharp drops']]]],
+ watch:[['Price',[['CME_MINI:NQ1!','NQ futures'],['NASDAQ:NDX','Cash index']]],['Rates & dollar',[['TVC:US10Y','10Y yield'],['FRED:DFII10','10Y real yield'],['TVC:US02Y','2Y yield'],['TVC:DXY','Dollar']]],['Leadership & breadth',[['NASDAQ:SOX','Chips'],['NASDAQ:QQEW','Equal weight'],['NASDAQ:NVDA','Biggest AI bellwether'],['NASDAQ:MSFT','Cloud bellwether']]],['Risk',[['TVC:VIX','VIX'],['AMEX:HYG','Credit'],['FX:USDJPY','Yen']]]]
+};
+$$('[data-tv]').forEach(p=>{const groups=TV[p.dataset.tv];if(!groups)return;
+  p.innerHTML=groups.map(g=>`<div class="tvg"><h4>${g[0]}</h4>${g[1].map(t=>`<div class="tvrow"><button class="tk" type="button" data-sym="${t[0]}">${t[0]}</button><a class="btn small" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(t[0])}" target="_blank" rel="noopener">Open ↗</a><span class="note">${t[1]}</span></div>`).join('')}</div>`).join('')+'<p class="tvhint">Tap a symbol to copy it, then paste it into TradingView\'s symbol search.</p><textarea class="fallback" hidden aria-label="Copy this symbol"></textarea>';
+  const fb=p.querySelector('.fallback');
+  p.querySelectorAll('.tk').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.sym);b.classList.add('copied');const t=b.textContent;b.textContent='Copied';setTimeout(()=>{b.textContent=t;b.classList.remove('copied')},1400)}catch(e){fb.hidden=false;fb.value=b.dataset.sym;fb.focus();fb.select()}}));
+});
+
+/* ---------- navigation & progress ---------- */
+const steps=$$('.step'); const rail=$('#railList');
+let done=store.get('done',{});
+steps.forEach((s,i)=>{const li=document.createElement('li');const b=document.createElement('button');b.className='navbtn';b.type='button';
+  b.innerHTML=`<span class="n">${i===0?'◆':i}</span><span>${s.dataset.title}</span><span class="ok">✓</span>`;
+  b.addEventListener('click',()=>show(i));li.appendChild(b);rail.appendChild(li)});
+function show(i,noScroll){steps.forEach((s,j)=>s.hidden=j!==i);$$('.navbtn').forEach((b,j)=>{if(j===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});store.set('step',i);
+  try{history.replaceState(null,'','#s'+i)}catch(e){}
+  const cur=$$('.navbtn')[i];if(cur&&cur.scrollIntoView&&window.innerWidth<880)cur.scrollIntoView({block:'nearest',inline:'center'});
+  if(!noScroll)window.scrollTo({top:0})}
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>show(+b.dataset.go)));
+function refreshProgress(){let n=0;$$('.navbtn').forEach((b,i)=>{const d=i>0&&done[i];b.classList.toggle('done',!!d);if(d)n++});const T=steps.length-1;$('#progText').textContent=`${n} of ${T} steps done`;$('#progFill').style.width=(n/T*100)+'%'}
+refreshProgress();
+let start=store.get('step',0);const hm=location.hash.match(/^#s(\d+)$/);if(hm&&+hm[1]<steps.length)start=+hm[1];
+show(Math.min(start,steps.length-1),true);
+
+/* ---------- quizzes ---------- */
+$$('.quiz').forEach(q=>{const ex=q.querySelector('.explain');ex.dataset.base=ex.innerHTML;
+  q.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+  const right=o.dataset.k===q.dataset.answer;q.querySelectorAll('.opt').forEach(x=>x.classList.remove('right','wrong'));
+  o.classList.add(right?'right':'wrong');ex.hidden=false;
+  ex.innerHTML=(right?'<b class="pos">Correct. </b>':'<b class="neg">Not quite. </b>')+ex.dataset.base;
+  q.dataset.ok=right?'1':'';
+  const step=q.closest('.step');const i=steps.indexOf(step);
+  if($$('.quiz',step).every(x=>x.dataset.ok==='1')&&i>0){done[i]=true;store.set('done',done);refreshProgress()}}))});
+
+/* ---------- step 0 ---------- */
+const layers=[['Valuation & rates','What multiple will the market pay?','weeks',3],['Fed & macro data','Is the Fed a headwind or a tailwind?','weeks',5],['Earnings & guidance','Are the giants earning more?','quarterly',4],['Intermarket','Do bonds, chips and the dollar agree?','days',6],['Sentiment & positioning','Is the crowd already in?','days',7],['Bias scorecard','So which direction, and how hard?','weekly',8],['Risk & routine','How much can I lose, and when do I sit out?','every trade',9]];
+const fn=$('#funnel');layers.forEach((l,i)=>{const d=document.createElement('div');d.className='fbar';d.style.paddingRight=(i*4)+'%';
+  d.innerHTML=`<span class="num">${i+1}</span><button class="body" type="button"><span><b>${l[0]}</b> <span>— ${l[1]}</span></span><em>${l[2]}</em></button>`;
+  d.querySelector('button').addEventListener('click',()=>show(l[3]));fn.appendChild(d)});
+$('#wkTitle').textContent='This week\'s fundamental backdrop · '+WEEK.asOf;
+$('#wkGrid').innerHTML=WEEK.tiles.map(t=>`<div class="wk"><span class="lbl">${t[0]}</span><b>${t[1]}</b><small>${t[2]}</small></div>`).join('');
+$('#wkNote').textContent=WEEK.note;$('#wkSrc').textContent=WEEK.src;
+
+/* ---------- step 1 session clock ---------- */
+(function(){const svg=$('#sessionSvg');const X=h=>20+h/24*780;
+  const bands=[[0,9,'Asia · thin','var(--surface-2)'],[9,15.5,'London + pre-market','var(--info-soft)'],[15.5,22,'US cash · peak volume','var(--gold-soft)'],[22,23,'AH','var(--surface-2)'],[23,24,'','var(--line)']];
+  bands.forEach(b=>{el('rect',{x:X(b[0]),y:44,width:X(b[1])-X(b[0])-1,height:40,rx:4,style:`fill:${b[3]}`},svg);if(b[2])el('text',{x:(X(b[0])+X(b[1]))/2,y:68,'text-anchor':'middle',class:'t-ink',style:'font-size:12px'},svg,b[2])});
+  const ev=[[0,'18:00 Globex opens','top','start'],[9,'03:00 London','top'],[14.5,'08:30 US data','top'],[15.5,'09:30 cash open','bot','start'],[20,'14:00 FOMC days','top'],[22,'16:00 earnings','bot','end']];
+  ev.forEach(e=>{const x=X(e[0]);el('line',{x1:x,x2:x,y1:e[2]==='top'?34:44,y2:e[2]==='top'?84:94,style:'stroke:var(--muted);stroke-width:1'},svg);el('text',{x:x,y:e[2]==='top'?28:108,'text-anchor':e[3]||'middle',class:'t-ink'},svg,e[1])});
+  for(let h=0;h<24;h+=3){el('text',{x:X(h),y:132,'text-anchor':h===0?'start':'middle'},svg,String((h+18)%24).padStart(2,'0')+':00')}
+  let parts;try{parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).map(p=>[p.type,p.value]))}catch(e){parts=null}
+  const nt=$('#nowText');if(!parts)return;
+  const hr=+parts.hour%24,mn=+parts.minute,wd=parts.weekday;const hs=((hr-18+24)%24)+mn/60;
+  const closed=wd==='Sat'||(wd==='Sun'&&hr<18)||(wd==='Fri'&&hr>=17)||hr===17;
+  const tstr=String(hr).padStart(2,'0')+':'+String(mn).padStart(2,'0');
+  if(!closed){const x=X(hs);el('line',{x1:x,x2:x,y1:38,y2:90,style:'stroke:var(--bear);stroke-width:2.5'},svg);el('circle',{cx:x,cy:38,r:4,style:'fill:var(--bear)'},svg)}
+  const sess=hs<9?'the Asia session (thin; reacts to US earnings from the evening before)':hs<15.5?'London and US pre-market (data at 08:30 can set the day)':hs<22?'the US cash session (peak volume)':'after hours (earnings reactions)';
+  nt.innerHTML=closed?`<b>${tstr} ET, ${wd}</b>: Nasdaq futures are closed right now.`:`<b style="color:var(--bear)">Now ${tstr} ET</b>: it's ${sess}.`;
+})();
+
+/* ---------- step 1 calc ---------- */
+function calc1(){const m=+$('#c1Type').value,q=Math.max(1,+$('#c1Qty').value||1),lim=Math.max(1,+$('#c1Limit').value||1),mv=+$('#c1Move').value;
+  $('#c1MoveOut').textContent=mv+' pts';const loss=m*q*mv;$('#c1Loss').textContent=money(-loss);
+  $('#c1Pct').textContent=`${Math.round(loss/lim*100)}% of your daily limit`;
+  const br=lim/(m*q);$('#c1Break').textContent=num(br)+' pts';
+  let t,c;if(br<60){t='NQ can move this far in a few minutes after CPI or earnings. Far too big.';c='bear'}
+  else if(br<150){t='About one busy hour after the cash open. Still aggressive.';c='warn'}
+  else if(br<350){t='Roughly a normal day\'s range. Workable with tight stops.';c='bull'}
+  else{t='More than a typical day. Plenty of room.';c='bull'}
+  $('#c1Box').className='readout '+c;$('#c1Feel').textContent=t}
+['c1Type','c1Qty','c1Limit','c1Move'].forEach(id=>$('#'+id).addEventListener('input',calc1));calc1();
+
+/* ---------- step 2 ---------- */
+function calc2(){const L=+$('#c2Lvl').value||0,w=(+$('#c2W').value||0)/100,mv=+$('#c2Mv').value/100;
+  $('#c2MvO').textContent=(mv>0?'+':'')+(mv*100).toFixed(1)+'%';const pts=L*w*mv;
+  $('#c2Pts').textContent=(pts>0?'+':pts<0?'−':'')+num(Math.abs(pts));$('#c2Pts').className='big '+(pts>0?'pos':pts<0?'neg':'');
+  $('#c2Usd').textContent=`${money(Math.abs(pts)*20)} per NQ · ${money(Math.abs(pts)*2)} per MNQ`;
+  const off=w<1?-(w*mv)/(1-w)*100:0;$('#c2Off').textContent=(off>0?'+':'')+off.toFixed(2)+'%'}
+['c2Lvl','c2W','c2Mv'].forEach(id=>$('#'+id).addEventListener('input',calc2));calc2();
+
+/* ---------- step 3 valuation ---------- */
+function calc3(){const L=+$('#vLvl').value||0,pe=+$('#vPe').value,ry=+$('#vRy').value||0,s=+$('#vSens').value||0,dy=+$('#vDy').value/100,eg=+$('#vEg').value/100;
+  $('#vPeO').textContent=pe.toFixed(1)+'×';$('#vDyO').textContent=(dy>0?'+':'')+Math.round(dy*100)+'bp';$('#vEgO').textContent=(eg>0?'+':'')+(eg*100).toFixed(1)+'%';
+  const eps=L/pe;$('#vEps').textContent=num(eps);
+  const pe2=Math.max(5,pe+s*dy),eps2=eps*(1+eg),L2=eps2*pe2,ch=(L2/L-1)*100;
+  $('#vNew').textContent=num(L2);$('#vChg').innerHTML=`<b class="${ch>=0?'pos':'neg'}">${ch>=0?'+':'−'}${Math.abs(ch).toFixed(1)}%</b> · ${ch>=0?'+':'−'}${num(Math.abs(L2-L))} pts · new P/E ${pe2.toFixed(1)}×`;
+  $('#vBox').className='readout '+(ch>1?'bull':ch<-1?'bear':'');
+  const erp=100/pe2-(ry+dy);$('#vErp').textContent=erp.toFixed(2)+'%';
+  $('#vErpT').textContent=`Earnings yield ${(100/pe2).toFixed(2)}% − real yield ${(ry+dy).toFixed(2)}%. `+(erp<1?'Thin cushion: stocks look expensive against bonds.':erp<2.5?'Moderate cushion.':'Wide cushion: stocks look cheap against bonds.');
+  $('#vErpBox').className='readout '+(erp<1?'bear':erp<2.5?'warn':'bull')}
+['vLvl','vPe','vRy','vSens','vDy','vEg'].forEach(id=>$('#'+id).addEventListener('input',calc3));calc3();
+
+/* ---------- step 4 earnings decoder ---------- */
+let eB='beat',eG='inline',eR='up',eT='ai';
+seg($('#eBeat'),[{label:'Miss',value:'miss',cls:'down'},{label:'In line',value:'inline'},{label:'Beat',value:'beat',cls:'up'}],eB,v=>{eB=v;calc4()});
+seg($('#eGuide'),[{label:'Cut',value:'cut',cls:'down'},{label:'In line',value:'inline'},{label:'Raised',value:'raise',cls:'up'}],eG,v=>{eG=v;calc4()});
+seg($('#eRun'),[{label:'Fell',value:'down'},{label:'Flat',value:'flat'},{label:'Ran up',value:'up'}],eR,v=>{eR=v;calc4()});
+seg($('#eType'),[{label:'AI chip',value:'ai'},{label:'Cloud / platform',value:'cloud'},{label:'Consumer',value:'cons'}],eT,v=>{eT=v;calc4()});
+function calc4(){let s=({miss:-1,inline:0,beat:0.5})[eB]+({cut:-2,inline:0,raise:1.5})[eG];
+  if(eR==='up')s-=1;if(eR==='down')s+=0.75;
+  let h,c;if(s>=1.5){h='Likely up, and it can lift the group';c='bull'}else if(s>=0.5){h='Modestly up';c='bull'}else if(s>-0.5){h='Flat to choppy: priced in';c='warn'}else if(s>-1.5){h='Likely down: sell the news';c='bear'}else{h='Likely sharply down';c='bear'}
+  $('#eBox').className='readout '+c;$('#eHead').textContent=h;
+  const gtxt={cut:'A guidance cut almost always dominates, whatever happened last quarter.',inline:'In-line guidance gives the market nothing new to pay for.',raise:'Raised guidance is the main thing that justifies a higher price.'}[eG];
+  const rtxt={up:' After a run-up, the bar is higher than the published estimates.',flat:'',down:' After a selloff, expectations are low, so "less bad" can rally.'}[eR];
+  $('#eBody').textContent=gtxt+rtxt;
+  $('#eSpill').textContent={ai:'Spillover: an AI chip report moves the whole semiconductor group and the cloud names that buy from it. Expect NQ to follow, often more than ES.',cloud:'Spillover: watch the capex number. Higher AI spending plans help the chipmakers even if this stock falls.',cons:'Spillover: smaller. Mostly a read on the consumer, unless it\'s a top-10 weight.'}[eT]}
+calc4();
+
+/* ---------- step 5 regime & surprise ---------- */
+const RG=[['Goldilocks: growth up, inflation down','The Fed can ease or hold, earnings grow and multiples expand. Strong data is simply good news. Buy pullbacks.','bull'],
+ ['Overheating: growth up, inflation up','The Fed tightens. Strong data raises yields and hurts the multiple: good news is bad news. Rallies on hot data tend to fail.','bear'],
+ ['Slowdown with Fed easing','Falling yields help the multiple, but earnings estimates start getting cut. Weak data can rally NQ at first, then hurt if recession fears take over.','warn'],
+ ['Stagflation: growth down, inflation up','The Fed can\'t rescue growth because inflation is still high. Both the multiple and earnings fall. The hardest regime for NQ.','bear']];
+$$('#regime .cell').forEach(c=>c.addEventListener('click',()=>{$$('#regime .cell').forEach(x=>x.classList.remove('on'));c.classList.add('on');const r=RG[+c.dataset.r];$('#rgHead').textContent=r[0];$('#rgBody').textContent=r[1];$('#rgBox').className='readout '+r[2]}));
+let nF='hike';
+seg($('#nFed'),[{label:'Hiking',value:'hike'},{label:'On hold',value:'hold'},{label:'Cutting',value:'cut'}],nF,v=>{nF=v;calc5()});
+const NDEF={cpi:[0.3,0.4,0.1],nfp:[100,180,50],rs:[0.3,0.8,0.3]};
+$('#nRel').addEventListener('change',()=>{const d=NDEF[$('#nRel').value];$('#nCons').value=d[0];$('#nAct').value=d[1];calc5()});
+['nCons','nAct'].forEach(id=>$('#'+id).addEventListener('input',calc5));
+function calc5(){const r=$('#nRel').value,c=+$('#nCons').value,a=+$('#nAct').value,th=NDEF[r][2];const d=a-c;
+  const sz=Math.abs(d)<th*0.5?0:Math.abs(d)<th*1.5?1:2;const dir=d>0?1:-1;
+  let h,b,cl;
+  if(sz===0){h='In line: little lasting reaction';b='The surprise is too small to change Fed expectations. Expect a spike both ways, then the prior trend.';cl=''}
+  else if(r==='cpi'){if(dir>0){h=sz===2?'Hot inflation: NQ likely down hard':'Warm inflation: NQ leans down';b='Higher inflation raises the odds of more tightening. Yields up, multiple down. '+(nF==='cut'?'With the Fed cutting, it threatens the cuts, which can hit NQ especially hard.':'');cl='bear'}
+    else{h=sz===2?'Cool inflation: NQ likely up strongly':'Soft inflation: NQ leans up';b='Lower inflation lets the Fed ease off. Yields fall and growth stocks benefit most.';cl='bull'}}
+  else{if(dir>0){if(nF==='hike'){h='Strong growth: good news is bad news';b='With the Fed hiking, strong data adds to hike odds. Yields rise, and NQ usually falls after a brief pop.';cl='bear'}
+      else if(nF==='hold'){h='Strong growth: mixed';b='Earnings optimism vs fewer cuts. Watch the 2-year yield: if it jumps, the rates effect is winning.';cl='warn'}
+      else{h='Strong growth: mildly positive';b='With the Fed cutting, strong data eases recession fears. Earnings outlook improves.';cl='bull'}}
+    else{if(nF==='hike'){h='Weak growth: may help NQ at first';b='Weak data could slow the Fed\'s hikes. Yields fall and NQ can rally, unless the miss is big enough to spark recession fears.';cl='warn'}
+      else{h='Weak growth: recession worry';b='When the Fed is already easing, weak data mostly means lower earnings. NQ tends to fall.';cl='bear'}}}
+  $('#nHead').textContent=h;$('#nBody').textContent=b+` Surprise: ${d>0?'+':''}${+d.toFixed(2)} vs consensus.`;$('#nBox').className='readout '+cl}
+calc5();
+
+/* ---------- step 6 divergence ---------- */
+const DV=[['nq','NQ','Price',1],['y','10Y yield','Opposite',-1],['sox','Chips (SOX)','Same',1],['dxy','Dollar (DXY)','Opposite',-1],['vix','VIX','Opposite',-1]];
+const dv={nq:1,y:1,sox:-1,dxy:0,vix:1};
+$('#dvRows').innerHTML=DV.map(r=>`<div class="scrow"><div class="nm"><b>${r[1]}</b><small>${r[0]==='nq'?'Today\'s direction':'Usual link: '+r[2]}</small></div><div class="seg" id="dv_${r[0]}"></div><div class="wn" id="dvn_${r[0]}"></div></div>`).join('');
+DV.forEach(r=>seg($('#dv_'+r[0]),[{label:'↓ Down',value:-1,cls:'down'},{label:'Flat',value:0},{label:'↑ Up',value:1,cls:'up'}],dv[r[0]],v=>{dv[r[0]]=v;calc6()}));
+function calc6(){let agree=0,dis=0;
+  DV.slice(1).forEach(r=>{const v=dv[r[0]];let t='';if(v===0||dv.nq===0)t='Neutral';else if(v*r[3]===dv.nq){agree++;t='<span class="pos">Agrees</span>'}else{dis++;t='<span class="neg">Disagrees</span>'}$('#dvn_'+r[0]).innerHTML=t});
+  let h,b,c;if(dv.nq===0){h='NQ is flat';b='Set NQ\'s direction to check confirmation.';c=''}
+  else if(agree>=3&&dis===0){h='Confirmed';b='The feeding markets agree. Moves like this tend to follow through. Trade in this direction on pullbacks.';c='bull'}
+  else if(dis>=2){h='Divergence: be suspicious';b=`${dis} inputs disagree with NQ's ${dv.nq>0?'rise':'fall'}. The move may fade. Wait, or trade small with tight stops.`;c='bear'}
+  else{h='Partly confirmed';b='Some agreement, some noise. Normal size only if your weekly bias points the same way.';c='warn'}
+  $('#dvHead').textContent=h;$('#dvBody').textContent=b;$('#dvBox').className='readout '+c}
+calc6();
+
+/* ---------- step 7 sentiment ---------- */
+function calc7(){const v=+$('#sVix').value,t=+$('#sTerm').value,a=+$('#sBull').value,l=+$('#sLev').value;
+  $('#sVixO').textContent=v.toFixed(1);$('#sTermO').textContent=t.toFixed(2);$('#sBullO').textContent=(a>0?'+':'')+a;
+  // greed score: -1 fearful .. +1 greedy
+  const sv=Math.max(-1,Math.min(1,(18-v)/10)),st=Math.max(-1,Math.min(1,(0.92-t)/0.12)),sa=Math.max(-1,Math.min(1,a/30));
+  const g=(sv*0.35+st*0.25+sa*0.2+l*0.2);
+  $('#sPin').style.left=((g+1)/2*100)+'%';
+  let h,b,c;if(g<-0.45){h='Fear is high';b='Much bad news is priced in. Bear trades get squeezed easily. Don\'t start new shorts here; look for longs only if your scorecard allows it.';c='bull'}
+  else if(g<-0.15){h='Cautious';b='Some fear. Pullbacks are being bought by some, sold by others. No strong filter.';c=''}
+  else if(g<0.15){h='Neutral';b='Sentiment isn\'t telling you much. Let the fundamentals lead.';c=''}
+  else if(g<0.45){h='Optimistic';b='The crowd leans long. Good news has less fuel. Take profits faster on longs.';c='warn'}
+  else{h='Complacent / crowded long';b='Everyone is in. Don\'t chase new longs; a disappointment can cause a fast drop.';c='bear'}
+  $('#sHead').textContent=h;$('#sBody').textContent=b;$('#sBox').className='readout '+c}
+['sVix','sTerm','sBull','sLev'].forEach(id=>$('#'+id).addEventListener('input',calc7));calc7();
+
+/* ---------- step 8 scorecard ---------- */
+const SC=[['rates','Real yields & rates',25,'Falling real yields = +, rising = −'],['fed','Fed path',20,'Cuts priced in = +, hikes priced in = −'],['earn','Earnings & guidance',25,'Estimates rising, guidance raised = +'],['growth','Macro growth',10,'Goldilocks = +, stagflation or recession = −'],['liq','Dollar & liquidity',10,'Weaker dollar, tight credit spreads = +'],['sent','Sentiment (contrarian)',10,'Fearful crowd = +, crowded long = −']];
+let sc=store.get('score',{});
+function drawSc(){$('#scRows').innerHTML=SC.map(r=>`<div class="scrow"><div class="nm"><b>${r[1]}</b><small>Weight ${r[2]}% · ${r[3]}</small></div><div class="seg" id="sc_${r[0]}"></div><div class="wn" id="scw_${r[0]}">${sc._why&&sc._why[r[0]]?sc._why[r[0]]:''}</div></div>`).join('');
+  SC.forEach(r=>seg($('#sc_'+r[0]),[-2,-1,0,1,2].map(v=>({label:sgn(v)||'0',value:v,cls:v>0?'up':v<0?'down':''})),sc[r[0]]??0,v=>{sc[r[0]]=v;if(sc._why)delete sc._why[r[0]];$('#scw_'+r[0]).textContent='';store.set('score',sc);calc8()}));calc8()}
+function calc8(){let t=0;SC.forEach(r=>t+=(sc[r[0]]??0)/2*r[2]);t=Math.round(t);
+  $('#scPin').style.left=((t+100)/2)+'%';
+  let h,b,c;if(t>=60){h=`+${t}: Strong bullish bias`;b='Buy pullbacks to support or VWAP. Full normal size is justified when intermarket confirms.';c='bull'}
+  else if(t>=20){h=`+${t}: Lean bullish`;b='Favour longs, take shorts only as quick scalps. Normal size.';c='bull'}
+  else if(t>-20){h=`${t>0?'+':''}${t}: Neutral`;b='No edge from fundamentals this week. Trade both ways small, or wait for a Tier 1 event to break the tie.';c='warn'}
+  else if(t>-60){h=`${t}: Lean bearish`;b='Favour selling rallies into resistance. Longs only as quick scalps. Normal size, not large.';c='bear'}
+  else{h=`${t}: Strong bearish bias`;b='Sell rallies; avoid longs. Full normal size is justified when intermarket confirms.';c='bear'}
+  $('#scHead').textContent=h;$('#scBody').textContent=b;$('#scBox').className='readout '+c;
+  $('#scWk').textContent=sc._as?`Loaded from the ${sc._as} read; change any row to make it yours.`:'Your scores are saved in this browser.'}
+$('#scLoad').addEventListener('click',()=>{sc=Object.assign({},WEEK.score,{_why:Object.assign({},WEEK.why),_as:WEEK.asOf});store.set('score',sc);drawSc()});
+$('#scReset').addEventListener('click',()=>{sc={};store.set('score',sc);drawSc()});
+drawSc();
+$('#calRows').innerHTML=WEEK.cal.map(c=>`<div class="calrow"><span class="d">${c[0]} · ${c[1]}</span><span>${c[2]}</span><span class="imp ${c[3]}">${c[3]==='h'?'HIGH':'MEDIUM'}</span></div>`).join('');
+
+/* ---------- step 9 risk ---------- */
+function calc9(){const dd=+$('#rDd').value||0,p=(+$('#rPct').value||0)/100,m=+$('#rType').value,atr=+$('#rAtr').value||0,k=+$('#rMult').value||0,ev=+$('#rEv').value;
+  const stop=atr*k,risk=dd*p,per=stop*m,n=per>0?Math.floor(risk/per*ev):0;
+  $('#rStop').textContent=num(stop)+' pts';$('#rRisk').textContent=`${money(per)} per contract · budget ${money(risk*ev)}`;
+  $('#rN').textContent=n;let t,c;if(n===0){t='Even one contract risks more than your budget. Use MNQ, widen the timeframe, or sit out.';c='bear'}else if(m===20&&n<=1){t='One NQ is a lot here. MNQ gives you finer control.';c='warn'}else{t='Within budget. Round down, never up.';c='bull'}
+  $('#rBox').className='readout '+c;$('#rNote').textContent=t;
+  $('#rUnits').innerHTML=Array.from({length:Math.min(Math.max(n,0),30)},()=>'<span></span>').join('')}
+['rDd','rPct','rType','rAtr','rMult','rEv'].forEach(id=>$('#'+id).addEventListener('input',calc9));calc9();
+const CL=[['Sunday',['Score all six drivers','List Tier 1 data and times','List top-10 companies reporting','Write the week\'s bias and main reason']],['Each morning',['Check 10Y yield and real yield','Check chips and the dollar','Note overnight earnings reactions','Is there a release before the open?']],['Before each trade',['Is it in my bias direction?','Do two of yields, chips, dollar agree?','Size from stop × $/point','Any report or release in the next hour?']]];
+let cl=store.get('check',{});
+$('#checklist').innerHTML=CL.map((g,gi)=>`<div><h4>${g[0]}</h4>${g[1].map((t,ti)=>`<label><input type="checkbox" data-k="${gi}-${ti}" ${cl[gi+'-'+ti]?'checked':''}> ${t}</label>`).join('')}</div>`).join('');
+$$('#checklist input').forEach(i=>i.addEventListener('change',()=>{cl[i.dataset.k]=i.checked;store.set('check',cl)}));
+$('#clReset').addEventListener('click',()=>{cl={};store.set('check',cl);$$('#checklist input').forEach(i=>i.checked=false)});
+})();
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap"><style>:root{--display:"Archivo","Arial Narrow",system-ui,sans-serif;--bodyf:"Source Sans 3",system-ui,sans-serif;--monof:"JetBrains Mono",ui-monospace,Menlo,monospace;--ground:#f3f4f6;--surface:#ffffff;--surface-2:#eceef2;--ink:#1c2230;--muted:#5d6577;--line:#dde0e7;--gold:#9a6a12;--gold-strong:#9a6a12;--gold-soft:#f4ead4;--on-gold:#ffffff;--bull:#18794e;--bull-soft:#e3f3ea;--bear:#b4232c;--bear-soft:#fbe7e8;--info:#2f5f9e;--info-soft:#e2eaf6;--bar:#dde0e7;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:light;}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#12151c;--surface:#1a1f29;--surface-2:#212734;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--gold:#d9a441;--gold-strong:#d9a441;--gold-soft:#2e2615;--on-gold:#1a1f29;--bull:#4cc38a;--bull-soft:#15301f;--bear:#f0727a;--bear-soft:#3a1a1d;--info:#7fa9e0;--info-soft:#1a2638;--bar:#2b3240;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:dark;}}:root[data-theme="dark"]{--ground:#12151c;--surface:#1a1f29;--surface-2:#212734;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--gold:#d9a441;--gold-strong:#d9a441;--gold-soft:#2e2615;--on-gold:#1a1f29;--bull:#4cc38a;--bull-soft:#15301f;--bear:#f0727a;--bear-soft:#3a1a1d;--info:#7fa9e0;--info-soft:#1a2638;--bar:#2b3240;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:dark;}:root[data-theme="light"]{--ground:#f3f4f6;--surface:#ffffff;--surface-2:#eceef2;--ink:#1c2230;--muted:#5d6577;--line:#dde0e7;--gold:#9a6a12;--gold-strong:#9a6a12;--gold-soft:#f4ead4;--on-gold:#ffffff;--bull:#18794e;--bull-soft:#e3f3ea;--bear:#b4232c;--bear-soft:#fbe7e8;--info:#2f5f9e;--info-soft:#e2eaf6;--bar:#dde0e7;--serif:var(--display);--sans:var(--bodyf);--mono:var(--monof);color-scheme:light;}body{font-family:var(--bodyf)}h1,h2,h3,h4{font-family:var(--display);font-stretch:85%}
+.brand h1{font-stretch:80%;font-weight:800}</style><script>(function(){function a(){var t;try{t=parent.document.documentElement.getAttribute("data-theme")}catch(e){}
+var r=document.documentElement;if(t)r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+if(window.__deskTheme)window.__deskTheme();}window.__deskApply=a;a();
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",a)}catch(e){}})();</script></body></html>
