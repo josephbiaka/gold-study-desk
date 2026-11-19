@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Price Action Setups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--display:"Archivo","Arial Narrow",system-ui,sans-serif;--bodyf:"Source Sans 3",system-ui,sans-serif;--monof:"JetBrains Mono",ui-monospace,Menlo,monospace;
+--bg:#f3f4f6;--card:#ffffff;--text:#1c2230;--muted:#5d6577;--border:#dde0e7;--accent:#9a6a12;--accentbg:#f4ead4;--good:#18794e;--goodbg:#e3f3ea;--bad:#b4232c;--badbg:#fbe7e8;--up:#18794e;--down:#b4232c;--grid:rgba(28,34,48,.06);--zone:rgba(154,106,18,.16);--zonestroke:#9a6a12;--line:#1c2230;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--zone:rgba(217,164,65,.16);--zonestroke:#d9a441;--line:#e7e9ee;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--zone:rgba(217,164,65,.16);--zonestroke:#d9a441;--line:#e7e9ee;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 var(--bodyf)}
+main{max-width:680px;margin:0 auto;padding:20px 16px 56px}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.7rem;letter-spacing:-.01em;line-height:1.05;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+details{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:14px}
+summary{cursor:pointer;font-weight:600}
+.sheet{margin:10px 0 0;font-size:14px}
+.sheet div{padding:7px 0;border-top:1px solid var(--border)}
+.sheet b{font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.03em}
+.sheet small{font-family:var(--monof);color:var(--muted);font-size:11px}
+.lbl{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:flex;flex-direction:column;align-items:flex-start;gap:3px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:4px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer;text-align:left;min-width:120px;flex:1 1 140px}
+.chip small{font-family:var(--monof);font-size:11px;color:var(--muted)}
+.chip i{display:block;height:3px;width:100%;background:var(--border);border-radius:2px;overflow:hidden}
+.chip i span{display:block;height:100%;background:var(--good)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accentbg);color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;color:var(--muted);font-family:var(--monof);font-size:12px;padding:7px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-family:var(--monof);font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:8px}
+.tag{display:inline-block;font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;padding:2px 10px;border-radius:4px;background:var(--accentbg);color:var(--accent)}
+.ref{font-family:var(--monof);font-size:11px;color:var(--muted)}
+.prompt{font-size:17px;font-weight:600;margin:0 0 10px;line-height:1.45}
+svg{display:block;width:100%;height:auto;margin:4px 0 6px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 14px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text);font:inherit;font-size:15px;cursor:pointer;line-height:1.45}
+.opt kbd{font-family:var(--monof);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:3px;padding:0 5px;margin-top:2px;flex:none}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:var(--accentbg);color:var(--accent)}
+.opt.right{border-color:var(--good);background:var(--goodbg);color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{padding:10px 18px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--card);font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:14px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--border)}
+.btn:disabled{opacity:.45;cursor:default}
+.err{color:var(--bad);font-size:13px;margin:8px 0 0;min-height:1em}
+.fb{margin-top:12px;padding:12px 14px;border-radius:4px;font-size:14px}
+.fb.good{background:var(--goodbg);color:var(--good)}
+.fb.bad{background:var(--badbg);color:var(--bad)}
+.fb b{font-weight:600}
+.big{font-family:var(--monof);font-weight:600;font-size:40px;margin:4px 0}
+.rows div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:15px}
+.rows span:last-child{font-family:var(--monof);font-size:13px}
+.hint{font-size:12px;color:var(--muted);margin-top:10px;font-family:var(--monof)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<h1>Price action setups</h1>
+<p class="sub" id="subline"></p>
+<details>
+<summary>Setup cheat sheet</summary>
+<div class="sheet" id="sheet"></div>
+</details>
+<div id="app"></div>
+</main>
+<script>
+/* ---------- Setups ---------- */
+const SETUPS=[
+ {id:"acc",name:"Sideways → Trend",rule:"Tight rotation = institutions building size. The trend that follows shows which side they built. Flexible VP on the rotation → POC = level for the return.",src:"VP p.17–20, 63–65 · Investing p.149–153"},
+ {id:"flip",name:"S/R Flip",rule:"Broken support becomes resistance (short the return from below). Broken resistance becomes support (long the return from above).",src:"VP p.24–25, 71–72 · VWAP p.19"},
+ {id:"od",name:"Open-Drive",rule:"Sudden one-sided aggressive move. The open of the first big candle becomes S/R. Wait for a few candles of acceptance beyond it, then trade the pullback to that open.",src:"VP p.26–28"},
+ {id:"sess",name:"Session Opens",rule:"Asian (Tokyo), European (London) and US (New York) opens. Strong S/R tends to form at each session's opening price.",src:"VP p.33"},
+ {id:"hl",name:"Strong vs Weak Highs/Lows",rule:"Strong = fast, aggressive turn, defended again. Weak = slow, reluctant turn that price tends to shoot through. Don't short under a weak high or buy above a weak low.",src:"VP p.39–44"},
+ {id:"fa",name:"Failed Auction",rule:"An imperfect high/low (unfinished auction) acts like a magnet. Use it to extend profit targets and to skip trades that have one behind the level.",src:"VP p.45–49 · Order Flow p.30–32, 63–64"},
+ {id:"abcd",name:"AB=CD",rule:"The C→D leg equals the A→B leg. Measure AB from C to find D, then trade the reaction at D. 30-min to weekly.",src:"VP p.30–32"},
+ {id:"dwhl",name:"Daily/Weekly High–Low",rule:"Never trade the break itself. Wait for the old high/low to be breached, for price action to confirm it as S/R on the other side, then enter on the return.",src:"VP p.35–37"},
+ {id:"rej",name:"Strong Rejection",rule:"An aggressive turn from one side to the other. Flexible VP over it → POC = the fight zone. Rejection of highs → short the return; of lows → long.",src:"VP p.74–77 · Investing p.154–155"},
+ {id:"rev",name:"Reversal Trade",rule:"When a level is blown through with zero reaction, flip bias and trade with the move. A turn 1–2 pips early means the level worked.",src:"VP p.78–79"},
+ {id:"entry",name:"Entry & Pullback Rules",rule:"Direction comes from the side price approaches from. Trade the first test only. First-touch entries need confluence; a reaction candle close is the conservative trigger.",src:"Order Flow p.40–41, 52–53 · VWAP p.77–79"},
+ {id:"swing",name:"Swing & Investing",rule:"Same setups on 4H and Daily with structure-based stops. Investors wait for a discount at volume support instead of buying highs.",src:"VP p.82–83 · Investing p.165, 207"}
+];
+const SN=Object.fromEntries(SETUPS.map(s=>[s.id,s.name]));
+
+/* ---------- Diagrams (schematic, coordinates 0–100, y up) ---------- */
+const D={
+ acc:{box:[2,29,46,39],pts:[[2,34],[6,38],[10,30],[14,37],[18,31],[22,38],[26,30],[30,37],[34,31],[38,36],[42,32],[46,35],[52,50],[56,47],[62,66],[66,62],[72,84],[76,80],[80,90],[86,74],[92,58],[96,46]],lv:[{y:34,t:"Level",x:55}],mk:[[97,40,"?"]]},
+ flip:{pts:[[2,70],[8,56],[14,47],[18,58],[24,53],[30,46],[34,60],[40,54],[46,47],[50,40],[56,25],[62,18],[68,28],[74,38],[80,45],[86,34],[92,24],[97,16]],lv:[{y:45,t:"Level"}],mk:[[80,52,"?"]]},
+ od:{c:[[50,51.5,48.5,49.5],[49.5,52,48,51],[51,52.5,49,50],[50,51.5,48.5,51],[51,52,49.5,50],[50,69,49.6,68],[68,73,66,72],[72,74,69,70],[70,76,69,75],[75,75.5,64,65],[65,66,50.4,56],[56,64,55,63],[63,72,62,71]],lv:[{y:50,t:"Level"}]},
+ hl:{split:true,pts:[[2,80],[10,62],[18,42],[24,12],[30,44],[38,66],[46,82]],pts2:[[54,80],[60,62],[66,44],[71,28],[75,20],[79,17],[83,17],[87,21],[91,32],[97,48]],mk:[[24,4,"A"],[81,8,"B"]]},
+ fa:{pts:[[2,30],[8,22],[16,38],[24,34],[32,50],[40,46],[48,60],[56,56],[64,68],[70,66],[76,70]],lv:[{y:34,t:"Entry",x:70},{y:72,t:"Profit target",x:70},{y:88,t:"Failed auction",x:70,dash:1}],mk:[[10,12,"Long"]]},
+ abcd:{pts:[[2,26],[8,20],[16,32],[22,28],[30,46],[36,42],[40,60],[46,52],[52,48],[58,42],[66,54],[72,50],[80,66],[86,62],[90,80]],mk:[[8,12,"A"],[40,68,"B"],[58,34,"C"],[90,88,"D"]]},
+ dwhl:{pts:[[2,30],[8,40],[14,35],[22,50],[28,44],[34,53],[40,48],[46,62],[52,70],[58,66],[64,73],[70,68],[76,61],[82,56],[88,66],[96,78]],lv:[{y:55,t:"Previous day high"}],mk:[[82,48,"?"]]},
+ rej:{pts:[[2,20],[10,30],[16,26],[24,44],[30,40],[38,62],[42,74],[45,84],[48,72],[51,80],[54,62],[58,40],[62,30],[68,35],[74,28],[80,40],[86,52],[92,66]],lv:[{y:74,t:"Level"}],mk:[[92,58,"?"]]},
+ rev:{pts:[[2,86],[10,78],[16,82],[22,70],[28,74],[34,62],[40,56],[44,47],[48,38],[52,31],[58,35],[64,26],[72,20],[80,24],[90,13]],lv:[{y:50,t:"Your long level"}]}
+};
+function diagram(id){
+  const d=D[id];if(!d)return"";
+  const W=360,H=190,P=12,X=x=>P+x/100*(W-2*P);let Y=y=>H-P-y/100*(H-2*P);
+  if(d.c){const v=d.c.flat(),lo=Math.min(...v)-3,hi=Math.max(...v)+3;Y=y=>H-P-(y-lo)/(hi-lo)*(H-2*P);}
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematic price chart">`;
+  for(let g=1;g<4;g++)s+=`<line x1="0" x2="${W}" y1="${H*g/4}" y2="${H*g/4}" stroke="var(--grid)"/>`;
+  if(d.box){const[a,b,c,e]=d.box;s+=`<rect x="${X(a)}" y="${Y(e)}" width="${X(c)-X(a)}" height="${Y(b)-Y(e)}" fill="var(--zone)" stroke="var(--zonestroke)" stroke-width=".8" stroke-dasharray="4 3"/>`;}
+  (d.lv||[]).forEach(l=>{s+=`<line x1="${X(0)}" x2="${X(100)}" y1="${Y(l.y)}" y2="${Y(l.y)}" stroke="var(--accent)" stroke-width="1.3" ${l.dash?'stroke-dasharray="5 4"':''}/><text x="${X(l.x||1)}" y="${Y(l.y)-5}" font-size="11" font-family="JetBrains Mono,monospace" fill="var(--accent)">${l.t}</text>`;});
+  if(d.split)s+=`<line x1="${W/2}" x2="${W/2}" y1="6" y2="${H-6}" stroke="var(--border)"/>`;
+  const poly=p=>`<polyline points="${p.map(([x,y])=>X(x)+','+Y(y)).join(' ')}" fill="none" stroke="var(--line)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if(d.pts)s+=poly(d.pts);if(d.pts2)s+=poly(d.pts2);
+  if(d.c){const n=d.c.length,step=(W-2*P)/n,bw=step*.55;
+    d.c.forEach(([o,h,l,c],i)=>{const cx=P+step*i+step/2,col=c>=o?'var(--up)':'var(--down)',top=Y(Math.max(o,c)),bh=Math.max(1.5,Y(Math.min(o,c))-top);
+      s+=`<line x1="${cx}" x2="${cx}" y1="${Y(h)}" y2="${Y(l)}" stroke="${col}" stroke-width="1.5"/><rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"/>`;});}
+  (d.mk||[]).forEach(([x,y,t])=>{s+=`<text x="${X(x)}" y="${Y(y)}" text-anchor="middle" font-size="13" font-weight="600" font-family="Archivo,sans-serif" fill="var(--accent)">${t}</text>`;});
+  return s+"</svg>";
+}
+
+/* ---------- Question bank ----------
+   s: setup · b: book · p: page reference · q · o: options · a: index of correct option · e: explanation · d: diagram
+   "Scenario" questions apply the rule from the cited pages to a gold example. */
+const VP="Volume Profile",OF="Order Flow",VW="VWAP",IV="Investing with VP";
+const Q=[
+/* Sideways → Trend */
+{s:"acc",b:VP,p:"p.17–18",q:"In Dale's reading, what is sideways price action really showing you?",o:["A dead market with no institutional interest","Big institutions quietly building large positions inside a tight rotation before they start a trend","Retail traders taking profits before the next leg","A pattern that only matters on daily charts"],a:1,e:"Rotations are where institutions <b>accumulate size unnoticed</b>. Once they have enough, they initiate the trend. Dale treats it as significant on every time frame."},
+{s:"acc",b:VP,p:"p.17–19",q:"Why can't institutions build their positions during a fast trend?",o:["Regulators restrict large orders in trends","Brokers widen spreads too much","There is no time to fill quietly; buying aggressively would push price against them","Trends happen only in thin overnight markets"],a:2,e:"A fast trend gives <b>no time to fill huge size</b>. Aggressive buying would move price away from them, so they need the sideways phase."},
+{s:"acc",b:VP,p:"p.20",q:"A tight rotation is followed by a strong DOWNtrend. What were institutions doing in the rotation?",o:["Building long positions","Building short positions","Nothing; the downtrend was caused by retail stops","Hedging both sides equally"],a:1,e:"The <b>trend direction reveals the hidden intention</b>: a downtrend after the rotation exposes that institutions were building shorts there."},
+{s:"acc",b:VP,p:"p.17–20, 63–65",q:"Which price action setup does this chart show?",d:"acc",o:["Strong rejection of lower prices","Sideways accumulation followed by a trend, with price returning to the rotation","AB=CD measured move","Open-Drive from the session open"],a:1,e:"A tight rotation, then a strong one-way trend, then a <b>return to the rotation</b>. That is the accumulation picture behind VP Setup #1."},
+{s:"acc",b:VP,p:"p.63–65",q:"You've found rotation → strong trend. How does Dale get the exact entry level?",o:["Use the 50% retracement of the trend","Apply a Flexible Volume Profile to the rotation and mark its POC","Use the high of the rotation","Wait for a pin bar at the bottom of the rotation"],a:1,e:"Flexible VP over the rotation; the <b>POC</b> (heaviest volume) is the level. When price comes back, he enters there <b>without extra confirmation</b>."},
+{s:"acc",b:IV,p:"p.170",q:"For a long-term buy, which two levels inside the accumulation zone are valid entries?",o:["The rotation's open and close","The beginning of the heavy volume zone, or the POC","The 52-week low and the all-time low","Any price inside the rotation"],a:1,e:"Either where volume <b>starts to rise significantly</b> (catches more of the reaction) or the <b>POC</b> (the most precise level)."},
+{s:"acc",b:IV,p:"p.169–181",q:"Price already pulled back to the accumulation zone once and bounced. Is the setup still valid?",o:["Yes; every retest makes it stronger","Yes, but only with a smaller position","No; only untested zones have full strength","Only if it's tested a third time"],a:2,e:"The zone must <b>not have been tested yet</b>. Once price has pulled back to it, it's 'used up'."},
+{s:"acc",b:VP,p:"p.66–68",q:"When price returns to an accumulation level, which two forces push it away again?",o:["Round-number psychology and Fibonacci","Institutions defending their positions, and opposing traders closing to avoid a fight","Central bank flows and option expiry","Stop hunts and spread widening"],a:1,e:"(1) Institutions <b>defend</b> what they built. (2) Traders on the other side <b>close and get out</b>, which adds fuel in the same direction."},
+{s:"acc",b:VP,p:"applies p.63–68",q:"Scenario: Gold rotates 4,100–4,112 through Asia and London, then New York drives it to 4,160. Later it sinks back toward the rotation. What's the plan?",o:["Short the break back into the rotation","Long at the rotation's POC, in the direction of the trend it launched","Stay flat; rotations don't matter intraday","Buy only after a new high above 4,160"],a:1,e:"The rally shows institutions built <b>longs</b> in that rotation. They're likely to defend it, so the plan is a <b>long at the POC</b> on the first return."},
+
+/* S/R Flip */
+{s:"flip",b:VP,p:"p.24–25",q:"What is the 'Support becoming Resistance' setup?",o:["Buying support and selling resistance at the same time","A support is broken, then acts as resistance; you short when price returns to it from below","Any level seen on several time frames","Placing buy limits at old resistance"],a:1,e:"Once support breaks it <b>flips to resistance</b>. When price comes back up to it from below, Dale looks for a short. It also works in reverse."},
+{s:"flip",b:VP,p:"p.24–25",q:"Which price action setup does this chart show, and what's the trade at '?'",d:"flip",o:["Failed auction; long","S/R flip; short as price returns to the broken support from below","AB=CD; long at D","Reversal trade; long"],a:1,e:"The level held as <b>support</b> twice, broke, and price is now retesting it <b>from below</b>. Old support → new resistance → <b>short</b>."},
+{s:"flip",b:VP,p:"applies p.24–25",q:"Scenario: Gold held 4,050 as support all week, breaks below and falls to 4,020, then rallies back to 4,050. Bias at 4,050?",o:["Long; support always holds","Short; broken support has flipped to resistance","Flat; the level is now meaningless","Long only if Delta is positive"],a:1,e:"The broken support at 4,050 should now act as <b>resistance</b> when price returns from below."},
+{s:"flip",b:VP,p:"p.24–25",q:"Price breaks ABOVE a resistance level, runs higher, then pulls back down to it. What's the play?",o:["Short; resistance stays resistance","Long; broken resistance becomes support","Wait for a second break","Close all positions"],a:1,e:"The flip works both ways: <b>broken resistance becomes support</b>. Look for a long on the return from above."},
+{s:"flip",b:VP,p:"p.71–72",q:"Which confluence does Dale describe as his most powerful?",o:["Two moving averages crossing at a round number","A Volume Cluster inside a trend at the same price as a Support-becoming-Resistance level","A pin bar at the daily open","RSI divergence at a weekly high"],a:1,e:"<b>Volume Cluster + S/R flip at one level</b>: volume and price action point to the same spot, which gives his highest-probability setups."},
+{s:"flip",b:VW,p:"p.19",q:"Price breaks below a VWAP that was acting as support. What changes?",o:["Ignore VWAP and draw a new one","VWAP flips to resistance; look for shorts on pullbacks to it from below","Add to longs at a better price","VWAP resets automatically"],a:1,e:"The same flip logic applies to VWAP: <b>broken support becomes resistance</b>, so shorts on the pullback from below."},
+
+/* Open-Drive */
+{s:"od",b:VP,p:"p.26–28",q:"What is the Open-Drive strategy?",o:["Trading the first candle of the Asian session","A breakout of the daily high","A sudden one-sided aggressive move; the open of its first big candle becomes S/R and you trade the pullback to it","Trading the gap between sessions"],a:2,e:"A strong, one-sided drive. The <b>open of the first large candle</b> becomes the S/R level for the pullback."},
+{s:"od",b:VP,p:"p.27",q:"After the big Open-Drive candle, what must happen before you enter?",o:["A pin bar at the high","Three closes beyond the candle's high","A few candles forming beyond the open to show acceptance, then a pullback to that open","Wait for the daily close"],a:2,e:"First <b>acceptance</b> (a few candles hold beyond the open), then <b>wait for the pullback</b> to the open of the first big candle."},
+{s:"od",b:VP,p:"p.26–28",q:"Which setup is this, and where is the level?",d:"od",o:["Strong rejection; the high of the spike","Open-Drive; the open of the first big candle","Failed auction; the low of the range","S/R flip; the close of the big candle"],a:1,e:"Quiet sideways candles, then one <b>aggressive drive candle</b>. Its <b>open</b> is the level, and price has pulled back to it."},
+{s:"od",b:VP,p:"applies p.26–28",q:"Scenario: Gold prints a huge bearish drive candle out of a tight range. You sell at that candle's close. What went wrong?",o:["Nothing; that is the textbook entry","You chased it; wait for acceptance below, then short the pullback to the drive candle's open","You should have bought the dip instead","Open-Drive only works for longs"],a:1,e:"Dale doesn't chase the drive. He waits for <b>acceptance</b>, then trades the <b>pullback to the open</b> of the first big candle."},
+{s:"od",b:VP,p:"p.26–28",q:"An Open-Drive often launches from which kind of price action?",o:["A steady, mature trend","Sideways price action","A gap at the weekly open","A failed auction"],a:1,e:"The drive frequently bursts out of <b>sideways</b> price action: the build-up phase ends and one side suddenly takes control."},
+
+/* Session opens */
+{s:"sess",b:VP,p:"p.33",q:"How does Dale define the three trading sessions?",o:["Morning, afternoon and evening in New York time","Asian (Tokyo open), European (London open) and US (New York open), each starting when its largest exchange opens","Bull, bear and neutral, by volume","Open, midday and close, by volatility"],a:1,e:"Each session begins when the <b>biggest exchange in that region opens</b>: Tokyo, London, New York."},
+{s:"sess",b:VP,p:"p.33",q:"Why do session opening prices matter for price action trading?",o:["Spreads are tightest there","Strong S/R levels tend to form at each session's open price","They're where all stop losses are placed","They mark the day's high and low"],a:1,e:"Dale notes that <b>strong S/R levels form at session open prices</b>, so they're levels worth marking."},
+{s:"sess",b:VP,p:"applies p.33",q:"Gold trades almost 24 hours. Which open marks the start of the European session?",o:["Frankfurt close","London open","Tokyo open","New York open"],a:1,e:"The European session starts with the <b>London open</b>, the region's largest financial centre."},
+
+/* Strong vs weak highs/lows */
+{s:"hl",b:VP,p:"p.39–41",q:"What makes a high or low 'strong'?",o:["It is at a round number","A fast, aggressive change of direction","It has been tested at least three times","It's a pin bar"],a:1,e:"Strong = <b>fast, aggressive turn</b>. Powerful participants rejected those prices and are likely to defend them again."},
+{s:"hl",b:VP,p:"p.39–43",q:"Which low on this chart is the strong one?",d:"hl",o:["A: the sharp V-shaped turn","B: the slow, rounded turn","Both are equally strong","Neither; lows can't be strong"],a:0,e:"<b>A</b> turns fast and aggressively: a strong low. <b>B</b> grinds and turns reluctantly: a weak low that price tends to shoot through later."},
+{s:"hl",b:VP,p:"p.39–43",q:"What usually happens when price comes back to a weak high or low?",o:["It reverses sharply","It tends to shoot straight through","It always forms a double top","It stalls for exactly one session"],a:1,e:"There was no real aggression behind a weak turn, so nobody defends it; price <b>typically passes through</b>."},
+{s:"hl",b:VP,p:"p.44",q:"Why avoid a short level that has a weak high just above it?",o:["Weak highs are strong resistance, so price never reaches your level","The weak high attracts price to test above it, so your level risks being run through","Weak highs only form on 1-minute charts","It's fine; weak highs don't matter"],a:1,e:"A weak high above a short level <b>pulls price up to test it</b>, likely straight through your entry."},
+{s:"hl",b:VP,p:"applies p.44",q:"Scenario: Your gold long level is 4,080. Just below it, at 4,072, sits a low that formed slowly over several hours. What do you do?",o:["Take the long; more support below helps","Skip or rethink the long; the weak low below tends to draw price down through your level","Move the stop to 4,079","Double the size"],a:1,e:"The mirror of the weak-high rule: a <b>weak low below a long level</b> attracts price to test under it, so the long is risky."},
+
+/* Failed auction */
+{s:"fa",b:VP,p:"p.45–46",q:"What is a Failed Auction?",o:["An order that never filled","A breakout that reverses immediately","An imperfect swing high or low where the auction wasn't completed, which tends to draw price back","A session that closed without volume"],a:2,e:"The auction ended without a clear winner. That <b>imperfection acts like a magnet</b>, drawing price back to finish it."},
+{s:"fa",b:VP,p:"p.47–49",q:"What is Dale's main use of Failed Auctions?",o:["A standalone entry signal","Extending profit targets when one sits near the normal target","A trend-strength gauge","Choosing the position size"],a:1,e:"Mainly as a <b>profit-target extension</b>: if one sits near his usual target, he stays in to catch the pull toward it."},
+{s:"fa",b:VP,p:"p.47–49",q:"You're long. Where does this chart suggest taking profit?",d:"fa",o:["At the entry level","At the normal profit target, ignoring the failed auction","Extend the target up to the failed auction just above","Exit now before the target"],a:2,e:"A failed auction just beyond your target is likely to <b>pull price to it</b>, so Dale extends the target there."},
+{s:"fa",b:VP,p:"p.48–49",q:"There's a Failed Auction below your planned long level. What does Dale do?",o:["Go long with a bigger size","Avoid the long; price is likely to be drawn down to the failed auction","Go long but with no stop","Wait for a second failed auction"],a:1,e:"The second use is <b>avoiding bad trades</b>: a failed auction below a long (or above a short) will pull price through your level."},
+{s:"fa",b:VP,p:"p.49",q:"Which time frames does Dale use to spot Failed Auctions?",o:["1-minute and 5-minute","30-minute for intraday, daily for swings","Weekly only","Tick charts"],a:1,e:"<b>30-minute</b> charts for intraday trades and <b>daily</b> charts for swing trades."},
+{s:"fa",b:OF,p:"p.30–31",q:"On the footprint, how does an unfinished high or low (Unfinished Business) show up?",o:["Volume is zero on both sides","Both Bid and Ask show volume at the extreme price instead of one side being zero","A stacked imbalance at the extreme","Delta is exactly zero"],a:1,e:"A properly finished extreme has <b>zero on one side</b>. Volume on <b>both</b> sides marks it unfinished, a level price tends to revisit."},
+{s:"fa",b:OF,p:"p.63–64",q:"How should Unfinished Business affect where you put your stop?",o:["Put the stop exactly on it","Avoid placing the stop between your entry and the Unfinished Business","Ignore it for stops","Always use twice the normal stop"],a:1,e:"Price tends to be pulled to it, so a stop <b>between entry and the Unfinished Business</b> is likely to be hit."},
+
+/* AB=CD */
+{s:"abcd",b:VP,p:"p.30–32",q:"What defines the AB=CD pattern?",o:["Four candles of the same colour","The C→D leg equals the A→B leg in size","Three Elliott waves","Equal time between A, B, C and D"],a:1,e:"A price-based measured move: <b>CD = AB</b>."},
+{s:"abcd",b:VP,p:"p.30–32",q:"Once A, B and C are in place, how do you find D?",o:["The midpoint of A and B","Measure the A→B distance and project it from C","The Fibonacci 61.8% of BC","The next round number"],a:1,e:"Take the size of <b>A→B</b> and project it <b>from C</b>; that gives D."},
+{s:"abcd",b:VP,p:"p.30–32",q:"Price has rallied A→B, pulled back to C and rallied again. What's the trade at D?",d:"abcd",o:["Long at D, continuation","Short at D, where the measured move completes","No trade; the pattern failed","Long at C after D"],a:1,e:"This is a bearish AB=CD (up legs). At <b>D</b> the measured move is complete, so the trade is <b>short</b>."},
+{s:"abcd",b:VP,p:"applies p.30–32",q:"Scenario: A = 4,000, B = 4,060, C = 4,030 on gold. Where is D?",o:["4,060","4,075","4,090","4,120"],a:2,e:"AB = 60. Projected from C: 4,030 + 60 = <b>4,090</b>. Look for a short there."},
+{s:"abcd",b:VP,p:"p.30–32",q:"Which time frame is NOT among those Dale lists for AB=CD?",o:["30-minute","4-hour","Weekly","1-minute"],a:3,e:"He lists 30-min, 1H, 4H, daily and weekly. <b>1-minute</b> isn't among them."},
+
+/* Daily / Weekly high-low */
+{s:"dwhl",b:VP,p:"p.35–37",q:"How does Dale trade previous daily/weekly highs and lows?",o:["Buy or sell the breakout the moment it happens","Wait for the high/low to be breached, wait for price action to confirm it as S/R on the other side, then enter on the return","Fade every touch of the level","Use them only as profit targets"],a:1,e:"Breach → price action confirms new S/R → <b>enter on the return</b>."},
+{s:"dwhl",b:VP,p:"p.35–37",q:"Does Dale trade the breakout of a daily high directly?",o:["Yes, with a market order","Yes, with a stop order just above","No; he waits for the return to the broken level","Only on Mondays"],a:2,e:"He <b>doesn't trade breakouts directly</b>; he waits for the retest."},
+{s:"dwhl",b:VP,p:"p.35–37",q:"The previous day's high was broken and price held above it. What's the play at '?'",d:"dwhl",o:["Short; the high will hold as resistance","Long on the return to the broken high from above","Wait for a new daily high","Close everything; the trend is over"],a:1,e:"The old high was breached and price action accepted above it, so it's now <b>support</b>: long on the return."},
+{s:"dwhl",b:VP,p:"applies p.35–37",q:"Scenario: Gold breaks yesterday's low at 4,040, drops to 4,015, ranges below for hours, then rallies back to 4,040. Plan?",o:["Long; the low was a fake-out","Short on the return to 4,040 from below","Buy the range low at 4,015","Stand aside; previous lows don't matter"],a:1,e:"The low was breached and price accepted below. The return to 4,040 from below is the <b>short</b> entry."},
+
+/* Strong rejection */
+{s:"rej",b:IV,p:"p.154–155",q:"What is a 'strong rejection'?",o:["A broker rejecting your order","A sudden, aggressive reversal where one side pushes hard and the other side counters fast","A failure to reach a 52-week high","A slow rounding top"],a:1,e:"One side pushes, the other <b>aggressively counters</b>: a fast turnaround marking where strong participants defended price."},
+{s:"rej",b:VP,p:"p.74–75",q:"In VP Setup #3, what must you identify first?",o:["A sideways channel","A strong, aggressive rejection of higher or lower prices","A gap at the open","Three equal highs"],a:1,e:"Everything starts with a <b>strong aggressive rejection</b>, then Flexible VP over it to find the POC, the zone of the biggest fight."},
+{s:"rej",b:VP,p:"p.75–76",q:"After a rejection of HIGHER prices, what trade do you look for when price returns to the POC?",o:["Long","Short","Either; let Delta decide","None"],a:1,e:"Sellers won that fight and will defend it, so <b>short</b> at the POC of the rejection. A rejection of lows → long."},
+{s:"rej",b:VP,p:"p.74–76",q:"Which setup is this, and what's the trade at '?'",d:"rej",o:["Open-Drive; long","Strong rejection of higher prices; short at the heavy-volume level as price returns from below","AB=CD; long at D","S/R flip; long"],a:1,e:"A spike up met by an <b>aggressive sell-off</b>: a rejection of higher prices. The return to its POC is a <b>short</b>."},
+{s:"rej",b:VP,p:"p.76–77",q:"Why does Dale call the rejection setup the hardest of the three?",o:["Rejections only form at night","You must judge whether the rejection was truly aggressive, and the POC can be ambiguous","It needs Order Flow data","It never works on gold"],a:1,e:"It takes <b>subjective judgement</b> about the strength of the rejection, and several heavy volume areas can make the POC unclear."},
+
+/* Reversal trade */
+{s:"rev",b:VP,p:"p.78–79",q:"What is a Reversal Trade?",o:["Fading every new high","When your level is blown through with no reaction, you flip your bias and trade in the direction price is now moving","Reversing a position after a small loss","Trading the reverse of the daily trend"],a:1,e:"If price <b>shoots past the level with zero reaction</b>, the level failed and Dale trades with the new direction."},
+{s:"rev",b:VP,p:"p.78–79",q:"Price turns 1–2 pips before your level and runs away. Is that a failed level for a reversal trade?",o:["Yes; it never touched","No; the level worked (slightly early), so there's no reversal trade","Yes, if it happens twice","Only on the 30-minute chart"],a:1,e:"A turn just before the level means it <b>worked, just early</b>. Reversal trades need a clean violation."},
+{s:"rev",b:VP,p:"p.78–79",q:"Price fell straight through your long level with no reaction at all. What does this setup suggest?",d:"rev",o:["Buy more lower down","Hold and hope","Flip bias: the level failed completely, so look to trade short with the move","Wait for the level to be re-tested from below to buy"],a:2,e:"A clean violation with <b>no reaction</b> is the trigger for a <b>reversal trade</b> in the direction of the break."},
+
+/* Entry & pullback rules */
+{s:"entry",b:OF,p:"p.52–53",q:"In Dale's pullback setups, what decides trade direction?",o:["The colour of the signal","The side price approaches the level from: from above → long, from below → short","The daily candle colour","Whichever side has more volume"],a:1,e:"Direction comes from <b>where price is coming from</b>. Green doesn't mean long and red doesn't mean short."},
+{s:"entry",b:OF,p:"p.53",q:"How many times should you trade the same level?",o:["As long as it holds","Up to three times a session","Only the first test","Twice if both are confirmed"],a:2,e:"<b>First test only</b>. The odds of a second clean reaction are noticeably lower."},
+{s:"entry",b:OF,p:"p.40–41",q:"In trend setups, which direction do you trade on the pullback?",o:["Against the trend for a reversal","With the trend: longs in uptrends, shorts in downtrends","Whichever way Delta points","Only longs"],a:1,e:"The pullback level is where institutions <b>added to their trend positions</b>, so you trade <b>with the trend</b>."},
+{s:"entry",b:VW,p:"p.77",q:"What's the main risk of a 'first touch' entry with no confluence?",o:["Slippage","You have no evidence the market is reacting at the level, so price may ignore it and continue","It always gives a worse price","Your broker may reject it"],a:1,e:"First touch alone is the <b>riskiest entry</b>: no proof that anyone is defending the level."},
+{s:"entry",b:VW,p:"p.78",q:"When is a first-touch entry justified?",o:["Never","When several independent strategies point to the same level","Only in the first trading hour","Whenever the spread is tight"],a:1,e:"When <b>multiple strategies align</b>, the combined signal is strong enough that waiting risks missing the trade."},
+{s:"entry",b:VW,p:"p.79",q:"What's the 'successful reaction' entry for a long at support?",o:["Buy as price approaches support","Wait for a bullish candle to close above the support, then enter","Wait for three bullish closes","Buy on a break below support"],a:1,e:"The conservative trigger: a <b>bullish candle closing above support</b> (bearish close below resistance for shorts)."},
+
+/* Swing & investing */
+{s:"swing",b:VP,p:"p.82",q:"Which time frames does Dale use to plan swing trades?",o:["5-minute and 15-minute","4-hour (240-min) and daily","Weekly and monthly only","1-hour only"],a:1,e:"<b>240-minute and daily</b>, using the same setups, just with wider stops and targets."},
+{s:"swing",b:VP,p:"p.83",q:"How are swing-trade stops sized compared with intraday?",o:["The same fixed stop as intraday","Based on the trade's volume and price-action structure, roughly 50–400% of the average daily range","Always 1% of price","No stop on swings"],a:1,e:"Swing stops follow <b>structure</b>, roughly 50–400% of the average daily ATR, tailored per trade."},
+{s:"swing",b:IV,p:"p.165, 207",q:"Why does Dale never buy at an all-time high?",o:["Brokers block it","It has never been more expensive, so risk/reward is poor; wait for a discount at volume support","All-time highs always reverse","Dividends stop at highs"],a:1,e:"Smart money buys at a <b>discount</b>, at strong Volume Profile support, not at the most expensive price ever."},
+{s:"swing",b:IV,p:"p.149–153",q:"For an investor, which area on a long-term chart deserves the most attention?",o:["The latest all-time high","Rotation (sideways) zones where institutions accumulated","The most recent daily candle","Analyst price targets"],a:1,e:"Rotations are where institutions build positions slowly, the <b>most important zones</b> to identify on any chart."}
+];
+Q.forEach((q,i)=>q.id="pa"+i);
+
+/* ---------- Persistence (one viewer's browser) ---------- */
+const KEY="pa_setups_v1";
+let M={};try{M=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){M={}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}};
+let PREF={setups:[],len:20};try{Object.assign(PREF,JSON.parse(localStorage.getItem(KEY+"_pref")||"{}"))}catch(e){}
+const savePref=()=>{try{localStorage.setItem(KEY+"_pref",JSON.stringify(PREF))}catch(e){}};
+
+/* ---------- Helpers ---------- */
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const pool=()=>Q.filter(q=>!PREF.setups.length||PREF.setups.includes(q.s));
+const mastered=s=>Q.filter(q=>q.s===s&&M[q.id]&&M[q.id].last).length;
+const missed=()=>pool().filter(q=>M[q.id]&&M[q.id].last===false);
+
+document.getElementById("subline").textContent=`${Q.length} questions on every price action setup across Trader Dale's four books (Volume Profile, Order Flow, VWAP, Investing with Volume Profile). Page references point to the books.`;
+document.getElementById("sheet").innerHTML=SETUPS.map(s=>`<div><b>${s.name}</b><br>${s.rule}<br><small>${s.src}</small></div>`).join("");
+
+let S=null;
+const app=document.getElementById("app");
+
+function home(){
+  S=null;
+  const n=pool().length,miss=missed().length,tot=Q.filter(q=>M[q.id]&&M[q.id].last).length;
+  const chip=(id,name,cnt,got)=>{const on=id==="all"?!PREF.setups.length:PREF.setups.includes(id);
+    return`<button class="chip" data-s="${id}" aria-pressed="${on}">${name}<small>${got}/${cnt} mastered</small><i><span style="width:${cnt?got/cnt*100:0}%"></span></i></button>`};
+  app.innerHTML=`<div class="lbl">Setups (pick one or more)</div>
+  <div class="chips">${chip("all","All setups",Q.length,tot)}${SETUPS.map(s=>chip(s.id,s.name,Q.filter(q=>q.s===s.id).length,mastered(s.id))).join("")}</div>
+  <div class="lbl">Set length</div>
+  <div class="row"><div class="seg" role="group" aria-label="Set length">${[10,20,0].map(v=>`<button data-len="${v}" aria-pressed="${PREF.len===v}">${v||"All"}</button>`).join("")}</div>
+  <span class="ref">${n} question${n===1?"":"s"} in selection</span></div>
+  <div class="actions"><button class="btn" id="start" ${n?"":"disabled"}>Start set</button>
+  <button class="btn ghost" id="missed" ${miss?"":"disabled"}>Review missed (${miss})</button>
+  <button class="btn ghost" id="reset">Reset progress</button></div>
+  <p class="hint">Keys: 1–4 pick · Enter check / next</p>`;
+  app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{const id=b.dataset.s;
+    if(id==="all")PREF.setups=[];else{const i=PREF.setups.indexOf(id);i<0?PREF.setups.push(id):PREF.setups.splice(i,1);}
+    savePref();home();});
+  app.querySelectorAll("[data-len]").forEach(b=>b.onclick=()=>{PREF.len=+b.dataset.len;savePref();home();});
+  document.getElementById("start").onclick=()=>start(shuffle(pool()));
+  document.getElementById("missed").onclick=()=>start(shuffle(missed()),true);
+  const r=document.getElementById("reset");r.onclick=()=>{
+    if(r.dataset.armed){M={};save();home();}else{r.dataset.armed=1;r.textContent="Tap again to reset";}};
+}
+
+function start(list,all){
+  if(!all&&PREF.len)list=list.slice(0,PREF.len);
+  S={qs:list.map(q=>{const ord=shuffle(q.o.map((t,i)=>i));return{...q,ord}}),i:0,score:0,sel:null,done:false,by:{},wrong:[]};
+  render();
+}
+
+function render(){
+  if(S.i>=S.qs.length)return results();
+  const q=S.qs[S.i],N=S.qs.length;
+  let h=`<div class="meta"><span>Question ${S.i+1} of ${N}</span><span>Score ${S.score}</span></div><div class="bar"><i style="width:${S.i/N*100}%"></i></div>
+  <div class="card"><div class="tagrow"><span class="tag">${SN[q.s]}</span><span class="ref">${q.b} · ${q.p}</span></div>
+  <p class="prompt">${esc(q.q)}</p>${q.d?diagram(q.d):""}<div class="opts">`;
+  q.ord.forEach((oi,k)=>{let c="opt";if(S.done){if(oi===q.a)c+=" right";else if(oi===S.sel)c+=" wrong";}else if(oi===S.sel)c+=" sel";
+    h+=`<button class="${c}" data-o="${oi}" ${S.done?"disabled":""}><kbd>${k+1}</kbd><span>${esc(q.o[oi])}</span></button>`;});
+  h+=`</div><p class="err" id="err"></p>`;
+  if(S.done){const ok=S.sel===q.a;h+=`<div class="fb ${ok?"good":"bad"}"><b>${ok?"Right.":"Not quite."}</b> ${q.e}</div>
+    <div class="actions"><button class="btn" id="next">${S.i===N-1?"See results":"Next"}</button><button class="btn ghost" id="quit">End set</button></div>`;}
+  else h+=`<div class="actions"><button class="btn" id="check">Check</button><button class="btn ghost" id="quit">End set</button></div>`;
+  app.innerHTML=h+"</div>";
+  app.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{S.sel=+b.dataset.o;render();});
+  document.getElementById("quit").onclick=()=>{S.qs=S.qs.slice(0,S.i+(S.done?1:0));S.i=S.qs.length;render();};
+  if(S.done)document.getElementById("next").onclick=next;else document.getElementById("check").onclick=check;
+}
+function check(){
+  if(S.sel==null){document.getElementById("err").textContent="Pick an answer first.";return;}
+  const q=S.qs[S.i],ok=S.sel===q.a;S.done=true;if(ok)S.score++;else S.wrong.push(q);
+  S.by[q.s]=S.by[q.s]||[0,0];S.by[q.s][1]++;if(ok)S.by[q.s][0]++;
+  const m=M[q.id]||{c:0,w:0};ok?m.c++:m.w++;m.last=ok;M[q.id]=m;save();render();
+}
+function next(){S.i++;S.sel=null;S.done=false;render();window.scrollTo({top:0,behavior:"smooth"});}
+
+function results(){
+  const N=S.qs.length;
+  if(!N)return home();
+  const pct=Math.round(S.score/N*100);
+  const rows=SETUPS.filter(s=>S.by[s.id]).map(s=>`<div><span>${s.name}</span><span>${S.by[s.id][0]} / ${S.by[s.id][1]}</span></div>`).join("");
+  app.innerHTML=`<div class="card"><span class="tag">Results</span><p class="big">${S.score} / ${N}</p>
+  <p class="sub">${pct>=85?"Sharp. You know these setups.":pct>=60?"Solid. Re-read the cheat sheet for the setups below where you dropped points.":"Keep drilling. Open the cheat sheet, then retry your misses."}</p>
+  <div class="rows">${rows}</div>
+  <div class="actions"><button class="btn" id="retry" ${S.wrong.length?"":"disabled"}>Retry misses (${S.wrong.length})</button><button class="btn ghost" id="home">Back to setups</button></div></div>`;
+  const w=S.wrong.map(q=>Q.find(x=>x.id===q.id));
+  document.getElementById("retry").onclick=()=>start(shuffle(w),true);
+  document.getElementById("home").onclick=home;
+}
+
+document.addEventListener("keydown",e=>{
+  if(!S||S.i>=S.qs.length||e.metaKey||e.ctrlKey||e.altKey)return;
+  const q=S.qs[S.i];
+  if(!S.done&&/^[1-9]$/.test(e.key)){const k=+e.key-1;if(k<q.ord.length){S.sel=q.ord[k];render();}}
+  else if(e.key==="Enter"){e.preventDefault();S.done?next():check();}
+});
+home();
+</script>
+<script>(function(){function a(){var t;try{t=parent.document.documentElement.getAttribute("data-theme")}catch(e){}
+var r=document.documentElement;if(t)r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");}
+window.__deskApply=a;a();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",a)}catch(e){}})();</script>
+</body>
+</html>
