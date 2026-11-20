@@ -1,4 +1,4 @@
-# Gold Study Desk
+# Jay's Trading Study Desk
 
 Study tools for COMEX micro gold (MGC) futures and Nasdaq-100 (NQ/MNQ) futures, plus a trade journal.
 
