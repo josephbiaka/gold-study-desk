@@ -57,6 +57,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(
 <script>
 (function(){
 const S=[
+  {id:"mindset",src:"mindset.html",name:"Morning Mindset",meta:"5 truths · 7 principles"},
   {id:"lab",src:"lab.html",name:"Futures Lab",meta:"12-step gold course"},
   {id:"nasdaq",src:"nasdaq.html",name:"Nasdaq Lab",meta:"9-step NQ fundamentals"},
   {id:"orderflow",src:"dale.html",name:"Order Flow Q&A",meta:"207 questions · 4 books"},
@@ -95,7 +96,7 @@ tabs.addEventListener("keydown",e=>{
 });
 new MutationObserver(()=>Object.values(frames).forEach(sync)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 let start=(location.hash||"").slice(1);
-if(!start){try{start=localStorage.getItem("desk_tab")||""}catch(e){}}
+if(!start){try{start=localStorage.getItem("mindset_read")===new Date().toDateString()?(localStorage.getItem("desk_tab")||""):"mindset"}catch(e){start="mindset"}}
 show(start);
 })();
 </script>
