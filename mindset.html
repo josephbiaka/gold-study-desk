@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morning Mindset</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* VOICE: calm, personal, a card read aloud before the open.
+   IDEA: a trader's pre-session creed card, pinned above the desk.
+   PICTURE: the "I am a consistent winner because…" creed set large as the centrepiece.
+   COLOUR and TYPE: the desk's own ink, panel and brass; Archivo headings, Source Sans body.
+   LAYOUT: one reading column; truths first, then the creed, then a daily check-off. */
+:root{--bg:#f3f4f6;--panel:#fff;--ink:#1c2230;--muted:#5d6577;--line:#dde0e7;--brass:#9a6a12;--brass-soft:#f4ead4;
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;--body:"Source Sans 3",system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--panel:#1a1f29;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--brass:#d9a441;--brass-soft:#2e2615;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--panel:#1a1f29;--ink:#e7e9ee;--muted:#9aa2b3;--line:#2b3240;--brass:#d9a441;--brass-soft:#2e2615;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--body)}
+main{max-width:720px;margin:0 auto;padding:clamp(20px,4vw,40px) 16px 56px}
+h1,h2{font-family:var(--display);font-stretch:82%;font-weight:800;line-height:1.05;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,5vw,42px)}
+h2{font-size:24px;margin-bottom:4px}
+.sub{color:var(--muted);margin:8px 0 28px;font-size:16px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:clamp(18px,3vw,28px);margin-bottom:20px}
+.lead{color:var(--muted);font-size:15px;margin:0 0 14px}
+ol{margin:0;padding:0;list-style:none;counter-reset:n}
+li{counter-increment:n;display:grid;grid-template-columns:2.2em 1fr;gap:4px 10px;padding:12px 0;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li::before{content:counter(n);font-family:var(--display);font-weight:800;font-size:22px;color:var(--brass);line-height:1.2}
+li b{display:block;font-weight:600;font-size:18px;line-height:1.35}
+li span{color:var(--muted);font-size:15px;grid-column:2}
+.creed{border:2px solid var(--brass);background:linear-gradient(var(--brass-soft),var(--panel) 140px)}
+.creed .open{font-family:var(--display);font-stretch:85%;font-weight:800;font-size:clamp(26px,4.4vw,36px);line-height:1.1;color:var(--brass);margin:6px 0 10px}
+.creed li b{font-size:19px}
+.how{font-size:15px;color:var(--muted);margin:16px 0 0}
+.check{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.check p{margin:0;font-size:15px;color:var(--muted)}
+button{font:600 16px var(--body);min-height:44px;padding:0 20px;border-radius:8px;border:1px solid var(--brass);background:var(--brass);color:var(--panel);cursor:pointer}
+button.done{background:transparent;color:var(--brass)}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.note{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>Morning mindset</h1>
+<p class="sub">Read this before the open, every trading day. From Mark Douglas, <i>Trading in the Zone</i>.</p>
+
+<section>
+<h2>The five fundamental truths</h2>
+<p class="lead">If you truly believe these, losing trades stop feeling like threats, and objectivity, accepting risk and staying in the moment come naturally.</p>
+<ol>
+<li><b>Anything can happen.</b><span>Some trader, somewhere, can always move price against my analysis.</span></li>
+<li><b>I don't need to know what happens next to make money.</b><span>My profit comes from my edge playing out over many trades, not from predicting one.</span></li>
+<li><b>Wins and losses are randomly distributed for any edge.</b><span>My edge gives me the odds over a series of trades, not the result of the next one.</span></li>
+<li><b>An edge is only a higher probability of one thing over another.</b><span>It is never a certainty.</span></li>
+<li><b>Every moment in the market is unique.</b><span>A setup that looks like yesterday's doesn't have to end the same way.</span></li>
+</ol>
+</section>
+
+<section class="creed">
+<h2>Creating a belief in consistency</h2>
+<p class="open">I am a consistent winner because…</p>
+<ol>
+<li><b>I objectively identify my edges.</b><span>Clear, rule-based setups, not feelings or hopes.</span></li>
+<li><b>I predefine the risk of every trade.</b><span>I know where I'm wrong and what I'll lose before I enter.</span></li>
+<li><b>I completely accept the risk, or I am willing to let go of the trade.</b><span>If I can't accept the loss, I don't take the trade.</span></li>
+<li><b>I act on my edges without reservation or hesitation.</b><span>When my setup appears, I take it.</span></li>
+<li><b>I pay myself as the market makes money available to me.</b><span>I follow my plan for taking profits.</span></li>
+<li><b>I continually monitor my susceptibility to making errors.</b><span>I watch for the mistakes that creep in after wins, losses or strong emotions.</span></li>
+<li><b>I understand the absolute necessity of these principles, so I never violate them.</b><span>They are non-negotiable.</span></li>
+</ol>
+<p class="how">Douglas says you make this a working belief by repetition: take a series of 20 trades on one edge, exactly as defined, with no exceptions.</p>
+</section>
+
+<section class="check">
+<p id="status">Not read yet today.</p>
+<button type="button" id="read">I've read it. Ready to trade</button>
+</section>
+<p class="note">Wording paraphrased from the book.</p>
+</main>
+<script>
+{
+  const root=document.documentElement;
+  window.__deskApply=()=>{try{const t=parent.document.documentElement.getAttribute("data-theme");if(t)root.setAttribute("data-theme",t);else root.removeAttribute("data-theme")}catch(e){}};
+  window.__deskApply();
+  const btn=document.getElementById("read"),st=document.getElementById("status");
+  const today=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  const key=new Date().toDateString();
+  function render(done){
+    btn.classList.toggle("done",done);
+    btn.textContent=done?"Read ✓":"I've read it. Ready to trade";
+    st.textContent=done?"Read for "+today+".":"Not read yet today ("+today+").";
+  }
+  let done=false;try{done=localStorage.getItem("mindset_read")===key}catch(e){}
+  render(done);
+  btn.addEventListener("click",()=>{done=!done;try{done?localStorage.setItem("mindset_read",key):localStorage.removeItem("mindset_read")}catch(e){}render(done)});
+}
+</script>
+</body>
+</html>
