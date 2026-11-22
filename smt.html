@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMT Divergence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--display:"Archivo","Arial Narrow",system-ui,sans-serif;--bodyf:"Source Sans 3",system-ui,sans-serif;--monof:"JetBrains Mono",ui-monospace,Menlo,monospace;
+--bg:#f3f4f6;--card:#ffffff;--text:#1c2230;--muted:#5d6577;--border:#dde0e7;--accent:#9a6a12;--accentbg:#f4ead4;--good:#18794e;--goodbg:#e3f3ea;--bad:#b4232c;--badbg:#fbe7e8;--up:#18794e;--down:#b4232c;--grid:rgba(28,34,48,.06);--lvl:#5d6577;--blue:#2b5fb8;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--lvl:#9aa2b3;--blue:#7fa8ec;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1a1f29;--text:#e7e9ee;--muted:#9aa2b3;--border:#2b3240;--accent:#d9a441;--accentbg:#2e2615;--good:#4cc38a;--goodbg:#15301f;--bad:#f0727a;--badbg:#3a1a1d;--up:#4cc38a;--down:#f0727a;--grid:rgba(231,233,238,.06);--lvl:#9aa2b3;--blue:#7fa8ec;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 var(--bodyf)}
+main{max-width:720px;margin:0 auto;padding:20px 16px 56px}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.7rem;letter-spacing:-.01em;line-height:1.05;margin:0 0 4px}
+h2{font-family:var(--display);font-stretch:82%;font-weight:800;font-size:1.2rem;margin:26px 0 8px}
+h3{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:1rem;letter-spacing:.02em;margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--card);margin-bottom:14px}
+.seg button{border:0;background:none;color:var(--muted);font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.78rem;padding:8px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px}
+.card p{margin:6px 0}
+.card ul,.card ol{margin:6px 0;padding-left:20px}
+.card li{margin:3px 0}
+.tag{display:inline-block;font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;padding:2px 10px;border-radius:4px;background:var(--accentbg);color:var(--accent);margin-bottom:8px}
+.tag.bull{background:var(--goodbg);color:var(--good)}.tag.bear{background:var(--badbg);color:var(--bad)}
+.mono{font-family:var(--monof);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-top:1px solid var(--border);vertical-align:top}
+th{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.steps{counter-reset:s;list-style:none;padding:0!important}
+.steps li{counter-increment:s;position:relative;padding:8px 0 8px 36px;border-top:1px solid var(--border)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:8px;width:24px;height:24px;border-radius:4px;background:var(--accentbg);color:var(--accent);font-family:var(--monof);font-size:12px;display:grid;place-items:center}
+.note{font-size:13px;color:var(--muted)}
+.warn{border-left:3px solid var(--accent);padding:8px 12px;background:var(--accentbg);border-radius:0 4px 4px 0;font-size:14px;margin:8px 0}
+svg{display:block;width:100%;height:auto}
+.pair{display:grid;gap:4px}
+.bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-family:var(--monof);font-size:12px;color:var(--muted)}
+.prompt{font-size:17px;font-weight:600;margin:0 0 10px;line-height:1.45}
+.ctx{font-family:var(--monof);font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{text-align:left;padding:11px 14px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text);font:inherit;font-size:15px;cursor:pointer;line-height:1.45}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:var(--accentbg);color:var(--accent)}
+.opt.right{border-color:var(--good);background:var(--goodbg);color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{padding:10px 18px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text);font:inherit;font-size:15px;cursor:pointer}
+.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn:disabled{opacity:.45;cursor:default}
+.fb{margin-top:12px;padding:12px 14px;border-radius:4px;font-size:14px}
+.fb.good{background:var(--goodbg);color:var(--good)}
+.fb.bad{background:var(--badbg);color:var(--bad)}
+.fb .why{color:var(--text);margin-top:4px}
+.big{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:44px;margin:4px 0}
+.mix{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.mix label{display:flex;gap:6px;align-items:center;border:1px solid var(--border);background:var(--card);border-radius:4px;padding:6px 10px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<h1>SMT divergence</h1>
+<p class="sub">Smart Money Technique: when two correlated markets disagree at a key level, one of them is being used to grab liquidity. Gold vs Silver (GC/SI · MGC/SIL) and Nasdaq vs S&amp;P (NQ/ES · MNQ/MES).</p>
+<div class="seg" role="group" aria-label="Section">
+  <button type="button" data-v="learn" aria-pressed="true">Learn</button>
+  <button type="button" data-v="setups">Setups</button>
+  <button type="button" data-v="pairs">Pairs &amp; times</button>
+  <button type="button" data-v="drill">Drill</button>
+</div>
+<div id="view"></div>
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+const r=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(r(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* Build candles that trace pivots: start → swing1 → retrace → swing2 → bounce.
+   Lows version; highs are made by mirroring. Only the two pivot candles touch the swing prices. */
+function series(L1,L2,opt={}){
+  const S=opt.S??r(62,70),H=opt.H??r(54,60),E=opt.E??(Math.min(L1,L2)+r(9,14));
+  const legs=[[S,L1,opt.n1??ri(4,6)],[L1,H,opt.n2??ri(3,5)],[H,L2,opt.n3??ri(3,5)],[L2,E,opt.n4??ri(3,4)]];
+  const floor=Math.max(L1,L2)+.7;
+  const vals=[];
+  legs.forEach(([a,b,n],li)=>{for(let k=(li?1:0);k<=n;k++){const t=k/n;vals.push({v:a+(b-a)*t+(k&&k<n?r(-1.6,1.6):0),pivot:(k===n&&(li===0||li===2))?b:null});}});
+  const cs=[];let prev=vals[0].v+r(-1,1);
+  for(let i=1;i<vals.length;i++){
+    const p=vals[i];let c;
+    if(p.pivot!=null){const cl=Math.max(floor+.3,p.pivot+r(1.2,2.6));c={o:prev,c:cl,l:p.pivot,h:Math.max(prev,cl)+r(.2,.8)};}
+    else{const cl=Math.max(floor,p.v);const o=Math.max(floor,prev);c={o,c:cl,h:Math.max(o,cl)+r(.2,1.1),l:Math.max(floor-.2,Math.min(o,cl)-r(.2,1.1))};}
+    cs.push(c);prev=c.c;
+  }
+  const idx=[];cs.forEach((c,i)=>{if(c.l===L1||c.l===L2)idx.push(i)});
+  return{cs,i1:idx[0],i2:idx[1],L1,L2};
+}
+const mirror=s=>({cs:s.cs.map(c=>({o:100-c.o,c:100-c.c,h:100-c.l,l:100-c.h})),i1:s.i1,i2:s.i2,L1:100-s.L1,L2:100-s.L2});
+
+function chart(sr,o){
+  const w=o.w||380,h=o.h||150,cs=sr.cs;
+  let hi=-1e9,lo=1e9;cs.forEach(c=>{hi=Math.max(hi,c.h);lo=Math.min(lo,c.l)});const p=(hi-lo)*.1;hi+=p;lo-=p;
+  const y=v=>8+(hi-v)/(hi-lo)*(h-16);
+  const n=cs.length,step=(w-92)/n,x0=6,bw=Math.max(3,step*.55);
+  const X=i=>x0+step*i+step/2;
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(o.name)} chart">`;
+  for(let g=1;g<4;g++)s+=`<line x1="0" x2="${w}" y1="${h*g/4}" y2="${h*g/4}" stroke="var(--grid)"/>`;
+  const lvl=sr.L1;
+  s+=`<line x1="${X(sr.i1)}" x2="${w-80}" y1="${y(lvl)}" y2="${y(lvl)}" stroke="var(--lvl)" stroke-dasharray="4 3" stroke-width="1"/>`;
+  s+=`<text x="${w-76}" y="${y(lvl)+4}" font-size="10" font-family="JetBrains Mono,monospace" fill="var(--muted)">${esc(o.level||"")}</text>`;
+  cs.forEach((c,i)=>{const cx=X(i),col=c.c>=c.o?'var(--up)':'var(--down)';const top=y(Math.max(c.o,c.c)),bh=Math.max(1.4,y(Math.min(c.o,c.c))-top);
+    s+=`<line x1="${cx}" x2="${cx}" y1="${y(c.h)}" y2="${y(c.l)}" stroke="${col}" stroke-width="1.4"/><rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"/>`;});
+  if(o.reveal){
+    const ext=o.high?(i=>cs[i].h):(i=>cs[i].l);
+    const a=ext(sr.i1),b=ext(sr.i2),broke=o.high?b>a:b<a;
+    const col=o.color||(broke?'var(--accent)':'var(--blue)');
+    s+=`<line x1="${X(sr.i1)}" y1="${y(a)}" x2="${X(sr.i2)}" y2="${y(b)}" stroke="${col}" stroke-width="2"/>`;
+    const lab=o.high?(broke?'HH':'LH'):(broke?'LL':'HL');
+    s+=`<text x="${X(sr.i2)}" y="${o.high?y(b)-6:y(b)+14}" text-anchor="middle" font-size="11" font-weight="700" font-family="JetBrains Mono,monospace" fill="${col}">${lab}</text>`;
+  }
+  s+=`<text x="8" y="18" font-size="12" font-weight="700" font-family="Archivo,Arial Narrow,sans-serif" fill="var(--text)">${esc(o.name)}</text>`;
+  return s+'</svg>';
+}
+
+/* kind: bull | bear | none-low | none-high ; swept: index of instrument (0/1) that broke the level */
+function makePair(kind,swept){
+  const high=kind==='bear'||kind==='none-high';
+  const L1a=r(40,45),L1b=r(40,45);
+  const brk=()=>-r(2.2,4.5),hold=()=>r(1.6,4);
+  let d=[0,0];
+  if(kind==='bull'||kind==='bear'){d[swept]=brk();d[1-swept]=hold();}
+  else if(Math.random()<.65){d=[brk(),brk()];}else{d=[hold(),hold()];}
+  const shared={S:r(62,70),H:r(54,60),n1:ri(4,6),n2:ri(3,5),n3:ri(3,5),n4:ri(3,4)};
+  let A=series(L1a,L1a+d[0],shared),B=series(L1b,L1b+d[1],{...shared,S:shared.S+r(-2,2),H:shared.H+r(-2,2)});
+  if(high){A=mirror(A);B=mirror(B);}
+  return{A,B,high,d};
+}
+
+const PAIRS=[
+  {a:"MNQ",b:"MES",fam:"idx"},{a:"NQ",b:"ES",fam:"idx"},
+  {a:"MGC",b:"SIL",fam:"metal"},{a:"GC",b:"SI",fam:"metal"}];
+const CTX={idx:["NY AM 9:30–10:30 ET · 5m","NY open 9:30–10:00 ET · 1m","NY PM 13:30–15:00 ET · 5m","London 2:00–5:00 ET · 15m","Daily · swing points"],
+  metal:["COMEX open 8:20–9:30 ET · 5m","London 2:00–5:00 ET · 15m","NY AM 8:30–11:00 ET · 5m","4H · swing points","Daily · swing points"]};
+const LOWS=["Asia low","London low","PDL","PWL","Swing low"],HIGHS=["Asia high","London high","PDH","PWH","Swing high"];
+
+/* ---------- views ---------- */
+const V=document.getElementById("view");
+function exPair(kind,names,level,seedSwept){
+  const p=makePair(kind,seedSwept);
+  return `<div class="pair">${chart(p.A,{name:names[0],level,reveal:true,high:p.high})}${chart(p.B,{name:names[1],level,reveal:true,high:p.high})}</div>`;
+}
+
+function learn(){
+  V.innerHTML=`
+  <div class="card"><span class="tag">The idea</span>
+  <p>Gold and silver, and Nasdaq and the S&amp;P, normally move together. When one of them runs a key high or low and its partner <b>refuses</b> to follow, the correlation has "cracked". The market that ran the level just collected stops; the one that held is showing the real direction. That crack is an SMT divergence.</p>
+  <p class="note">SMT is a confirmation tool, not an entry by itself. It tells you a sweep is probably a fake-out. You still need a level, a shift in structure and an entry array.</p></div>
+
+  <div class="grid2">
+    <div class="card"><span class="tag bull">Bullish SMT</span>
+      <p>At a <b>low</b>: one market makes a <b>lower low</b> (sweeps sell-side), the other makes a <b>higher low</b>.</p>
+      ${exPair('bull',['NQ','ES'],'London low',0)}
+      <p class="note">NQ ran the London low, ES didn't. Look for longs.</p></div>
+    <div class="card"><span class="tag bear">Bearish SMT</span>
+      <p>At a <b>high</b>: one market makes a <b>higher high</b> (sweeps buy-side), the other makes a <b>lower high</b>.</p>
+      ${exPair('bear',['GC','SI'],'PDH',1)}
+      <p class="note">SI ran PDH, GC didn't. Look for shorts.</p></div>
+  </div>
+
+  <div class="card"><span class="tag">Valid SMT: the 6 checks</span>
+  <ol class="steps">
+    <li><b>Same timeframe, same candles.</b> Compare the same swing on both charts over the same time window. 5m NQ vs 15m ES is not SMT.</li>
+    <li><b>At a key level.</b> The sweep must be of real liquidity: Asia/London high or low, PDH/PDL, PWH/PWL, an old swing, or into a HTF FVG / order block. Mid-range divergence is noise.</li>
+    <li><b>One breaks, one fails.</b> Both breaking = correlation confirmed, no SMT. Both holding = no sweep, no SMT.</li>
+    <li><b>Confirmation.</b> After the divergence, wait for displacement (a strong candle away from the sweep) and a market structure shift: price closes through the last short-term high (longs) or low (shorts).</li>
+    <li><b>Entry array.</b> Enter on the FVG / IFVG or order block left by that displacement. (See your Fair Value Gaps tab.)</li>
+    <li><b>Invalidation.</b> If the lagging market later also breaks its swing, the divergence is resolved. Get out or stand aside.</li>
+  </ol></div>
+
+  <div class="card"><span class="tag">Which one do I trade?</span>
+  <p>Two schools; pick one and journal it so the stats mean something.</p>
+  <table><tr><th>Approach</th><th>Longs (bullish SMT)</th><th>Why</th></tr>
+  <tr><td><b>Trade the strong one</b> (default)</td><td>Buy the market that made the <b>higher low</b></td><td>It's showing relative strength; it usually leads the move and its low is still intact.</td></tr>
+  <tr><td><b>Trade the swept one</b></td><td>Buy the market that made the <b>lower low</b></td><td>Its stops are already taken, the sweep low is a clean stop reference, and it often snaps back fastest.</td></tr></table>
+  <p class="note">For shorts flip it: the default sells the market that made the <b>lower high</b> (the weak one). If you only trade MGC and MNQ, use SIL and MES purely as the "read" chart and take the entry on your own instrument once it shows the structure shift.</p></div>
+
+  <div class="card"><span class="tag">Stops &amp; targets</span>
+  <ul><li><b>Stop:</b> beyond the swing extreme of the instrument you're trading (below the SMT low for longs, above the SMT high for shorts). Never inside the sweep wick.</li>
+  <li><b>Target 1:</b> the nearest opposing internal liquidity (the short-term high/low that formed the MSS, or the retrace swing).</li>
+  <li><b>Target 2:</b> the opposite session/daily liquidity (e.g. bullish SMT at London low → target Asia high, NY high or PDH).</li>
+  <li>Require at least <b>2R</b> to the first realistic draw on liquidity, or skip.</li></ul></div>`;
+}
+
+function setups(){
+  const S=[
+   ["1 · Session-liquidity SMT","Bread and butter. One market sweeps the Asia or London high/low during London or the NY open, the partner doesn't.",
+    ["Mark Asia (20:00–00:00 ET) and London (2:00–5:00 ET) highs/lows on both charts.","Into NY open (NQ/ES 9:30, gold 8:20), wait for one to run a level while the other fails.","Displacement + MSS on 1–5m → enter the FVG.","Stop beyond the sweep; target the opposite session extreme."],
+    "Best default for both pairs."],
+   ["2 · Previous-day / week high-low SMT","Same logic, bigger liquidity. One market takes PDH/PDL or PWH/PWL, the other doesn't.",
+    ["Mark PDH/PDL and PWH/PWL.","Divergence on 5–15m at the level.","Confirm with MSS, enter the FVG / order block.","Targets are often the other side of the daily range."],
+    "Higher quality, fewer signals. Great for gold on CPI/FOMC weeks once the news candle is done."],
+   ["3 · HTF swing SMT (bias)","Daily or 4H swing highs/lows diverge. Don't trade it directly; it sets the direction for the week.",
+    ["Spot divergence on Daily/4H (e.g. GC new daily high, SI lower high).","That gives a bearish bias for the coming sessions.","Only take LTF setups (1 or 2) in that direction.","Bias is void if the lagging market breaks its HTF swing."],
+    "Use it to filter, not to enter."],
+   ["4 · SMT into a HTF PD array","The sweep happens into a 1H/4H FVG, order block or premium/discount extreme, and SMT appears right there.",
+    ["Mark the HTF FVG / OB.","Price taps it while one market makes the new extreme and the other fails.","Stack: HTF array + SMT + LTF MSS + LTF FVG entry.","Highest-confluence version; size normally, not up."],
+    "Your A+ setup."],
+   ["5 · Open-candle / killzone SMT","Inside the first 30–60 min of the NY open the opening range high or low gets run by one index only.",
+    ["Mark the 9:30 opening range (NQ/ES) or the 8:20 COMEX open range (GC/SI).","One market runs the opening range extreme; the other doesn't.","Enter on the 1m MSS + FVG.","Target the other side of the opening range, then session liquidity."],
+    "Fast, so define risk before the open."],
+   ["6 · Hidden (close-based) SMT","Compare candle <b>closes</b> or bodies instead of wicks. NQ closes above the prior candle's close; ES closes below its prior close.",
+    ["Use on the candle that tags the key level.","Divergent closes show one market accepting the level and the other rejecting it.","Treat as extra confluence on top of a wick SMT, or as an early warning.","Still needs MSS before entry."],
+    "Useful when wicks are nearly equal."],
+   ["7 · Triad SMT (NQ / ES / YM)","Add Dow futures (YM/MYM). If two of three make the new extreme and one fails, the failing one is the weakest/strongest.",
+    ["Same levels on all three charts.","Two confirm, one diverges.","Default: short the weakest on bearish SMT, buy the strongest on bullish SMT.","If all three break, no trade."],
+    "Index-only. For metals, use DXY as the third leg (inverse)."],
+   ["8 · Inverse SMT: Gold vs DXY","Gold and the dollar move opposite. Flip one chart (or read it in reverse).",
+    ["Bullish for gold: DXY makes a <b>higher high</b> but gold makes a <b>higher low</b> (doesn't make the matching lower low).","Bearish for gold: DXY makes a <b>lower low</b> but gold makes a <b>lower high</b>.","Confirm with gold MSS + FVG.","Works best around London and the 8:30 ET data."],
+    "Second opinion when GC vs SI is unclear."],
+  ];
+  V.innerHTML=S.map(([t,d,steps,n])=>`<div class="card"><h3>${t}</h3><p>${d}</p><ol class="steps">${steps.map(s=>`<li>${s}</li>`).join("")}</ol><p class="note">${n}</p></div>`).join("")+
+  `<div class="card"><h3>Full SMT entry model (any setup)</h3>
+  <ol class="steps"><li>HTF bias (Daily/4H direction or HTF SMT).</li><li>Mark the liquidity: Asia, London, PDH/PDL, PWH/PWL, opening range.</li><li>Wait for the killzone.</li><li>Sweep on one market, failure on the partner = SMT.</li><li>Displacement + MSS on your instrument (1–5m).</li><li>Enter at the FVG / IFVG / OB from the displacement.</li><li>Stop beyond the sweep extreme; target opposing liquidity, minimum 2R.</li><li>Exit/stand aside if the lagging market also breaks.</li></ol></div>
+  <div class="warn">No-trade conditions: SMT inside the first minute of high-impact news (CPI, NFP, FOMC), SMT in the middle of a range, SMT against a strong HTF trend with no HTF level behind it, or charts on different timeframes / different contract months during roll week.</div>`;
+}
+
+function pairs(){
+  V.innerHTML=`
+  <div class="card"><span class="tag">Gold vs Silver · GC / SI</span>
+  <table>
+   <tr><th>Item</th><th>Detail</th></tr>
+   <tr><td>Contracts</td><td class="mono">GC 100oz · MGC 10oz · SI 5,000oz · SIL 1,000oz (micro silver)</td></tr>
+   <tr><td>Personality</td><td>Silver has higher beta (often 1.5–2× gold's % move) and thinner liquidity, so it is the one that most often overshoots a level. Gold holding while silver sweeps is a classic bullish/bearish SMT.</td></tr>
+   <tr><td>Key times (ET)</td><td class="mono">Asia 20:00–00:00 · London 2:00–5:00 · COMEX open 8:20 · US data 8:30 · NY AM to 11:00 · London fix ~10:00</td></tr>
+   <tr><td>Watch for</td><td>8:30 data spikes create fake SMTs inside the news candle. Wait for it to close and use the 8:20–8:35 range as your reference. Gold/silver ratio trends can make silver lag for days; judge SMT only at clear levels.</td></tr>
+   <tr><td>Third leg</td><td>DXY (inverse). Also check the US 10Y yield on macro days.</td></tr>
+  </table></div>
+
+  <div class="card"><span class="tag">Nasdaq vs S&amp;P · NQ / ES</span>
+  <table>
+   <tr><th>Item</th><th>Detail</th></tr>
+   <tr><td>Contracts</td><td class="mono">NQ $20/pt · MNQ $2/pt · ES $50/pt · MES $5/pt</td></tr>
+   <tr><td>Personality</td><td>Very tightly correlated; NQ has higher beta (tech-heavy). NQ running a high while ES fails is the most common bearish SMT; ES running a low while NQ holds is a common bullish one. Mega-cap earnings can decouple them, so be careful on those days.</td></tr>
+   <tr><td>Key times (ET)</td><td class="mono">Asia 20:00–00:00 · London 2:00–5:00 · 8:30 data · 9:30 cash open · 9:50–10:10 macro · 10:00 data · PM 13:30–15:00 · 14:00 FOMC</td></tr>
+   <tr><td>Watch for</td><td>Opening-range SMT 9:30–10:00 is the cleanest window. Lunch (12:00–13:30) produces low-quality divergences.</td></tr>
+   <tr><td>Third leg</td><td>YM / MYM (Dow) for triad SMT.</td></tr>
+  </table></div>
+
+  <div class="card"><span class="tag">Chart setup</span>
+  <ul>
+   <li>Put the pair side by side (or stacked) with <b>synced crosshair and time</b>, same timeframe, same session template.</li>
+   <li>Use the <b>same contract month</b> family (front month or continuous) on both. In roll week, check both rolled.</li>
+   <li>Mark the same levels on both charts: Asia H/L, London H/L, PDH/PDL, PWH/PWL, 9:30 or 8:20 open.</li>
+   <li>Your checklist trades MGC and MNQ: read SIL/SI against MGC and MES/ES against MNQ.</li>
+   <li>Journal every SMT: pair, setup #, level, which instrument you traded (strong vs swept), result in R.</li>
+  </ul></div>`;
+}
+
+/* ---------- drill ---------- */
+const STATIC=[
+ {q:"At 8:35 ET gold runs above the previous day high. Silver pushes up but stays below its own PDH. What is this?",o:["Bearish SMT","Bullish SMT","No SMT, both are rising"],a:0,e:"One market made a higher high through liquidity (PDH) and its partner made a lower high. That failure at a high is bearish SMT."},
+ {q:"During London, both NQ and ES trade through the Asia low. Neither bounces yet. SMT?",o:["No SMT, both confirmed the low","Bullish SMT","Bearish SMT"],a:0,e:"SMT needs one to break and one to fail. Both breaking means the correlation is intact; there's no divergence to read."},
+ {q:"You see bullish SMT at the London low on NQ/ES. What do you need before entering long?",o:["Displacement up and a close through the last short-term high, then an FVG entry","Nothing, buy at the low immediately","A second SMT on the daily chart"],a:0,e:"SMT flags the likely reversal. Displacement plus a market structure shift confirms it, and the FVG gives you a defined entry."},
+ {q:"Where does the stop go on a bullish SMT long?",o:["Beyond the swing low of the instrument you're trading","Halfway up the displacement candle","At the Asia high"],a:0,e:"If price trades back beyond the SMT low, the idea is wrong. Put the stop past that extreme on your own instrument."},
+ {q:"NQ makes a higher high and ES makes a lower high, but it happens in the middle of the overnight range with no level nearby. Grade it.",o:["Low quality, skip it","A+ setup","Valid only on Fridays"],a:0,e:"SMT has to happen at liquidity: session highs/lows, PDH/PDL, PWH/PWL, or a HTF array. Mid-range divergence is noise."},
+ {q:"You're long from a bullish SMT. Later, the market that held its low (the higher low) also breaks that low. What does that mean?",o:["The SMT is invalidated","The SMT got stronger","Add to the position"],a:0,e:"Once the lagging market also breaks, the divergence is resolved and both markets agree on lower prices. Exit or stand aside."},
+ {q:"You compare a 5-minute NQ chart to a 15-minute ES chart and see a divergence. Valid?",o:["No, use the same timeframe and same candles","Yes, timeframes don't matter","Yes, if ES is on the higher timeframe"],a:0,e:"Swings look different on different timeframes, so you'd be comparing apples to oranges. Same timeframe, same time window, same level."},
+ {q:"Why is silver more often the one that sweeps a level while gold holds?",o:["Higher beta and thinner liquidity make it overshoot","Silver is always bearish","Gold trades fewer hours"],a:0,e:"Silver moves a larger % than gold and has less depth, so it tends to spike through levels. That's why gold-holds / silver-sweeps is so common."},
+ {q:"DXY makes a higher high while gold makes a higher low instead of a lower low. For gold this is…",o:["Bullish SMT (inverse correlation)","Bearish SMT","No signal, they aren't related"],a:0,e:"Gold normally falls when the dollar rises. Dollar strength that gold refuses to follow shows gold strength: bullish SMT."},
+ {q:"Best window to look for NQ/ES SMT on most days?",o:["NY AM, about 9:30–11:00 ET","12:00–13:30 ET lunch","After 16:00 ET"],a:0,e:"The NY open killzone has the most volume and the cleanest liquidity raids. Lunch tends to produce choppy, false divergences."},
+ {q:"Bearish SMT forms at PDH. What's a logical first target?",o:["The nearest internal low / the low that formed the MSS","A new all-time high","The same PDH"],a:0,e:"Target opposing liquidity: first the short-term low that broke for the MSS, then session or previous-day lows."},
+ {q:"CPI drops at 8:30 and in the first 1-minute candle gold spikes above the Asia high while silver doesn't. Best approach?",o:["Wait for the news candles to settle, then reassess at the level","Short instantly on the 8:30 candle","Ignore gold for the rest of the week"],a:0,e:"News spikes create divergences that are just speed and spread differences. Let the first few minutes print, then look for structure."},
+ {q:"In a triad (NQ, ES, YM), NQ and ES make higher highs at PDH and YM makes a lower high. Using the default rule, what do you short?",o:["YM (the weakest)","NQ (the strongest)","Nothing, two of three confirmed"],a:0,e:"Two confirming and one failing is still SMT. The default rule sells the weakest market on bearish SMT; many traders still take the trade on their own instrument after MSS."},
+ {q:"A daily SMT forms: GC new daily high, SI lower high. How do you use it?",o:["As a bearish bias; take LTF short setups only","Short at market and hold for a month","Go long because gold is stronger"],a:0,e:"HTF SMT is a bias filter. Use LTF setups (session or PDH/PDL SMT with MSS) in that direction."},
+ {q:"\"Hidden\" SMT compares…",o:["Candle closes or bodies instead of wicks","Two different timeframes","Volume instead of price"],a:0,e:"Hidden/close-based SMT looks at whether each market closes beyond the previous close. It's extra confluence when the wicks look similar."},
+ {q:"Is SMT alone enough to take a trade?",o:["No, it needs a level, confirmation and an entry array","Yes, it's a complete system","Only on gold"],a:0,e:"SMT is a confluence that the sweep is likely false. You still need a key level, MSS and an entry like an FVG, plus a stop and a target."},
+];
+
+function qChart(){
+  const kind=pick(['bull','bull','bear','bear','none-low','none-high']);
+  const swept=ri(0,1),pr=pick(PAIRS),high=kind==='bear'||kind==='none-high';
+  const level=pick(high?HIGHS:LOWS),ctx=pick(CTX[pr.fam]);
+  const p=makePair(kind,swept);
+  const names=[pr.a,pr.b];
+  const type=(kind==='bull'||kind==='bear')&&Math.random()<.35?'who':'spot';
+  const draw=rev=>`<div class="ctx">${esc(ctx)}</div><div class="pair">${chart(p.A,{name:names[0],level,reveal:rev,high})}${chart(p.B,{name:names[1],level,reveal:rev,high})}</div>`;
+  const sideW=high?"high":"low";
+  if(type==='spot'){
+    let a,e;
+    if(kind==='bull'){a=0;e=`${names[swept]} made a lower low through the ${level}; ${names[1-swept]} held a higher low. One swept, one failed at a low: bullish SMT. Next, wait for displacement and an MSS, then enter the FVG.`;}
+    else if(kind==='bear'){a=1;e=`${names[swept]} made a higher high through the ${level}; ${names[1-swept]} made a lower high. One swept, one failed at a high: bearish SMT.`;}
+    else{a=2;const both=p.d[0]<0;e=both?`Both ${names[0]} and ${names[1]} traded through the ${level}. They agree, so there's no divergence.`:`Neither market took the ${level}. No sweep on either chart, so there's no SMT.`;}
+    return{tag:'Spot the SMT',prompt:`Compare the two ${sideW}s at the ${level}. What do you see?`,draw,o:['Bullish SMT','Bearish SMT','No SMT'],a,e,fixed:true};
+  }
+  const isBull=kind==='bull';
+  const strong=1-swept;
+  const ans=isBull?strong:swept===0?1:0; // default: buy the strong (held) one / sell the weak (failed) one
+  const weak=1-swept;
+  return{tag:'Pick the market',prompt:isBull?`Bullish SMT at the ${level}. Using the default rule (trade the strong one), which market do you look to buy?`:`Bearish SMT at the ${level}. Using the default rule (trade the weak one), which market do you look to sell?`,
+    draw,o:[names[0],names[1],'Neither, it isn\'t SMT'],a:isBull?strong:weak,fixed:true,
+    e:isBull?`${names[strong]} held a higher low while ${names[swept]} swept, so ${names[strong]} is the stronger market. (Trading the swept one, ${names[swept]}, is the alternative school.)`
+            :`${names[weak]} made the lower high while ${names[swept]} swept the ${level}, so ${names[weak]} is the weaker market to sell. (Selling the swept one is the alternative school.)`};
+}
+function qStatic(s){const ord=shuffle(s.o.map((_,i)=>i));return{tag:'Scenario',prompt:s.q,draw:null,o:ord.map(i=>s.o[i]),a:ord.indexOf(s.a),e:s.e};}
+
+let D=null;
+function drillHome(){
+  let best="";try{best=localStorage.getItem("smt_best")||""}catch(e){}
+  V.innerHTML=`<div class="card"><span class="tag">Drill</span>
+  <p>Paired charts are freshly generated each set, mixed with real-session scenarios.</p>
+  <div class="mix"><label><input type="checkbox" id="mC" checked> Chart reads</label><label><input type="checkbox" id="mS" checked> Scenarios</label></div>
+  <div class="actions"><button class="btn primary" id="go10">10 questions</button><button class="btn" id="go20">20 questions</button></div>
+  ${best?`<p class="note" style="margin-top:10px">Best score: ${esc(best)}</p>`:""}</div>`;
+  const go=n=>{const c=document.getElementById("mC").checked,s=document.getElementById("mS").checked;if(!c&&!s)return;start(n,c,s)};
+  document.getElementById("go10").onclick=()=>go(10);document.getElementById("go20").onclick=()=>go(20);
+}
+function start(n,c,s){
+  const pool=shuffle(STATIC);let qs=[],k=0;
+  for(let i=0;i<n;i++){const useC=c&&(!s||i%5<3);qs.push(useC?qChart():qStatic(pool[k++%pool.length]));}
+  D={qs:shuffle(qs),i:0,score:0,sel:null,done:false};renderQ();
+}
+function renderQ(){
+  const q=D.qs[D.i];
+  V.innerHTML=`<div class="meta"><span>Question ${D.i+1} / ${D.qs.length}</span><span>Score ${D.score}</span></div>
+  <div class="bar"><i style="width:${D.i/D.qs.length*100}%"></i></div>
+  <div class="card"><span class="tag">${q.tag}</span><p class="prompt">${esc(q.prompt)}</p>
+  ${q.draw?q.draw(D.done):""}
+  <div class="opts">${q.o.map((t,i)=>`<button class="opt${D.done?(i===q.a?' right':(i===D.sel?' wrong':'')):(i===D.sel?' sel':'')}" data-i="${i}" ${D.done?'disabled':''}>${esc(t)}</button>`).join("")}</div>
+  ${D.done?`<div class="fb ${D.sel===q.a?'good':'bad'}"><b>${D.sel===q.a?'Correct.':'Not quite.'}</b><div class="why">${esc(q.e)}</div></div>`:""}
+  <div class="actions">${D.done?`<button class="btn primary" id="nx">${D.i+1<D.qs.length?'Next':'See results'}</button>`:`<button class="btn primary" id="ck" ${D.sel==null?'disabled':''}>Check</button>`}<button class="btn" id="qt">Quit</button></div></div>`;
+  V.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(D.done)return;D.sel=+b.dataset.i;renderQ();});
+  const ck=document.getElementById("ck");if(ck)ck.onclick=check;
+  const nx=document.getElementById("nx");if(nx)nx.onclick=next;
+  document.getElementById("qt").onclick=drillHome;
+}
+function check(){if(D.sel==null||D.done)return;D.done=true;if(D.sel===D.qs[D.i].a)D.score++;renderQ();}
+function next(){if(D.i+1<D.qs.length){D.i++;D.sel=null;D.done=false;renderQ();}else results();}
+function results(){
+  const pct=Math.round(D.score/D.qs.length*100);
+  try{const prev=parseInt(localStorage.getItem("smt_best")||"0");if(pct>=prev)localStorage.setItem("smt_best",pct+"%")}catch(e){}
+  V.innerHTML=`<div class="card"><span class="tag">Results</span><div class="big">${D.score} / ${D.qs.length}</div>
+  <p>${pct>=85?"Sharp. Now go mark the levels on tomorrow's charts.":pct>=60?"Solid. Review the explanations you missed, then run another set.":"Re-read the 6 checks in Learn, then try again."}</p>
+  <div class="actions"><button class="btn primary" id="again">New set</button></div></div>`;
+  document.getElementById("again").onclick=drillHome;
+}
+document.addEventListener("keydown",e=>{
+  if(!D||!document.querySelector(".opts")||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(!D.done&&/^[1-3]$/.test(e.key)){D.sel=+e.key-1;renderQ();}
+  else if(e.key==="Enter"){e.preventDefault();D.done?next():check();}
+});
+
+/* ---------- nav ---------- */
+const VIEWS={learn,setups,pairs,drill:drillHome};
+const segb=[...document.querySelectorAll(".seg button")];
+function go(v){segb.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));D=null;VIEWS[v]();try{localStorage.setItem("smt_view",v)}catch(e){}window.scrollTo(0,0);}
+segb.forEach(b=>b.onclick=()=>go(b.dataset.v));
+let sv="learn";try{sv=localStorage.getItem("smt_view")||"learn"}catch(e){}
+go(VIEWS[sv]?sv:"learn");
+</script>
+<script>(function(){function a(){var t;try{t=parent.document.documentElement.getAttribute("data-theme")}catch(e){}
+var r=document.documentElement;if(t)r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");}
+window.__deskApply=a;a();try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",a)}catch(e){}})();</script>
+</body>
+</html>
