@@ -17,7 +17,7 @@ h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:1.7rem;
 h2{font-family:var(--display);font-stretch:82%;font-weight:800;font-size:1.2rem;margin:26px 0 8px}
 h3{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:1rem;letter-spacing:.02em;margin:0 0 4px}
 .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
-.seg{display:inline-flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--card);margin-bottom:14px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--card);margin-bottom:14px}
 .seg button{border:0;background:none;color:var(--muted);font-family:var(--display);font-stretch:85%;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.78rem;padding:8px 14px;cursor:pointer}
 .seg button+button{border-left:1px solid var(--border)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--card)}
@@ -73,6 +73,7 @@ svg{display:block;width:100%;height:auto}
   <button type="button" data-v="setups">Setups</button>
   <button type="button" data-v="pairs">Pairs &amp; times</button>
   <button type="button" data-v="drill">Drill</button>
+  <button type="button" data-v="terms">Glossary</button>
 </div>
 <div id="view"></div>
 </main>
@@ -162,6 +163,7 @@ function learn(){
   V.innerHTML=`
   <div class="card"><span class="tag">The idea</span>
   <p>Gold and silver, and Nasdaq and the S&amp;P, normally move together. When one of them runs a key high or low and its partner <b>refuses</b> to follow, the correlation has "cracked". The market that ran the level just collected stops; the one that held is showing the real direction. That crack is an SMT divergence.</p>
+  <p class="note">New to an abbreviation (MSS, FVG, PDH…)? Every term is explained in the <b>Glossary</b> section.</p>
   <p class="note">SMT is a confirmation tool, not an entry by itself. It tells you a sweep is probably a fake-out. You still need a level, a shift in structure and an entry array.</p></div>
 
   <div class="grid2">
@@ -357,8 +359,84 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="Enter"){e.preventDefault();D.done?next():check();}
 });
 
+/* ---------- glossary ---------- */
+const GLOSS=[
+ ["The technique",[
+  ["SMT","Smart Money Technique (also called SMT divergence)","Two correlated markets disagree at a key level: one makes a new high/low, the other fails to. Signals the new extreme was likely a liquidity grab."],
+  ["Divergence","—","When two markets that normally move together stop confirming each other's highs or lows."],
+  ["Correlation","—","How closely two markets move together. GC/SI and NQ/ES are positively correlated; Gold and DXY are inversely (negatively) correlated."]]],
+ ["Markets & contracts",[
+  ["GC","Gold futures (COMEX)","100 troy oz per contract."],
+  ["MGC","Micro Gold futures","10 oz, 1/10 the size of GC."],
+  ["SI","Silver futures (COMEX)","5,000 troy oz per contract."],
+  ["SIL","Micro Silver futures","1,000 oz, 1/5 the size of SI."],
+  ["NQ","E-mini Nasdaq-100 futures","$20 per index point."],
+  ["MNQ","Micro E-mini Nasdaq-100","$2 per point, 1/10 of NQ."],
+  ["ES","E-mini S&amp;P 500 futures","$50 per index point."],
+  ["MES","Micro E-mini S&amp;P 500","$5 per point, 1/10 of ES."],
+  ["YM","E-mini Dow Jones futures","$5 per point. Third leg for triad SMT with NQ/ES."],
+  ["MYM","Micro E-mini Dow","$0.50 per point."],
+  ["DXY","US Dollar Index","Dollar vs a basket of major currencies. Usually moves opposite to gold."],
+  ["10Y","US 10-year Treasury yield","Rising yields often pressure gold and Nasdaq."],
+  ["COMEX","Commodity Exchange (part of CME Group)","Where gold and silver futures trade. The metals open referenced here is 8:20 ET."]]],
+ ["Levels & liquidity",[
+  ["Liquidity","—","Clusters of stop and pending orders, usually just beyond obvious highs and lows. Smart money targets it to fill large orders."],
+  ["Buy-side / sell-side liquidity","BSL / SSL","Buy stops resting above highs (BSL) / sell stops resting below lows (SSL)."],
+  ["Sweep / raid","—","Price trades through a high or low to trigger the stops there, often then reversing."],
+  ["PDH / PDL","Previous Day High / Previous Day Low","Yesterday's high and low: key liquidity levels."],
+  ["PWH / PWL","Previous Week High / Previous Week Low","Last week's high and low: bigger liquidity levels."],
+  ["Asia H/L","Asian session high / low","Range made 20:00–00:00 ET."],
+  ["London H/L","London session high / low","Range made 2:00–5:00 ET."],
+  ["Opening range","—","The high/low of the first minutes after an open (9:30 ET for NQ/ES, 8:20 ET for gold/silver)."],
+  ["Killzone","—","The high-volume time windows when the best setups usually form (London, NY AM, NY PM)."]]],
+ ["Structure & swings",[
+  ["HH","Higher High","A swing high above the previous swing high."],
+  ["HL","Higher Low","A swing low above the previous swing low. The partner holding a HL is what makes bullish SMT."],
+  ["LH","Lower High","A swing high below the previous swing high. The partner making a LH is what makes bearish SMT."],
+  ["LL","Lower Low","A swing low below the previous swing low."],
+  ["H/L","High / Low","Shorthand for a high and a low (e.g. Asia H/L)."],
+  ["MSS","Market Structure Shift","Price closes through the last short-term swing in the new direction (above the last swing high for longs, below the last swing low for shorts), confirming the reversal after SMT."],
+  ["CHoCH","Change of Character","Often used the same as MSS: the first break of structure against the prior trend."],
+  ["BOS","Break of Structure","A break of a swing in the same direction as the trend (continuation)."],
+  ["Displacement","—","A strong, fast candle or series of candles moving away from the sweep. Usually leaves an FVG behind."]]],
+ ["Entry arrays (PD arrays)",[
+  ["PD array","Premium / Discount array","Any reference zone price may react from: FVGs, order blocks, highs/lows, etc."],
+  ["Premium / Discount","—","Above the 50% of a range = premium (look to sell); below 50% = discount (look to buy)."],
+  ["FVG","Fair Value Gap","A three-candle imbalance: the wicks of candles 1 and 3 don't overlap, leaving a gap. Common entry zone after displacement."],
+  ["IFVG","Inverse Fair Value Gap","An FVG that price has closed through, which then flips and acts as support/resistance in the other direction."],
+  ["OB","Order Block","The last opposite-coloured candle before a displacement move: the zone where large orders likely sit."]]],
+ ["Timeframes",[
+  ["HTF","Higher Time Frame","Daily, 4H, 1H: used for bias and key levels."],
+  ["LTF","Lower Time Frame","15m, 5m, 1m: used for SMT confirmation and entries."],
+  ["1m / 5m / 15m","1-, 5-, 15-minute charts","Candle timeframes."],
+  ["1H / 4H","1-hour / 4-hour charts","Candle timeframes."]]],
+ ["Risk & trade management",[
+  ["SL","Stop Loss","Where the trade is closed if wrong. For SMT: beyond the sweep extreme."],
+  ["TP / PT","Take Profit / Profit Target","Where profit is taken: usually opposing liquidity."],
+  ["R","Risk unit","1R = the amount you risk on a trade. A 2R winner makes twice what was risked."],
+  ["RR / RRR","Risk-to-Reward (Ratio)","Potential reward divided by risk. SMT setups here require at least 2R."],
+  ["Bias","—","Your expected direction (bullish/bearish) for the day or week, from the HTF."]]],
+ ["Time & news",[
+  ["ET","Eastern Time (New York)","All session times on this page are in ET."],
+  ["NY AM / PM","New York morning / afternoon session","AM about 8:30–11:00 ET; PM about 13:30–16:00 ET."],
+  ["CPI","Consumer Price Index","US inflation report, usually 8:30 ET. High impact."],
+  ["NFP","Non-Farm Payrolls","US jobs report, first Friday of the month at 8:30 ET. High impact."],
+  ["FOMC","Federal Open Market Committee","The Fed's rate decision, usually 14:00 ET. High impact."],
+  ["Roll week","—","When futures move from the expiring contract to the next month. Make sure both charts in a pair are on the same contract."]]],
+];
+function terms(){
+  V.innerHTML=`<div class="card"><input id="gq" type="search" placeholder="Search a term, e.g. MSS" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text);font:inherit"></div><div id="gl"></div>`;
+  const draw=f=>{f=f.trim().toLowerCase();
+    document.getElementById("gl").innerHTML=GLOSS.map(([sec,rows])=>{
+      const rs=rows.filter(r=>!f||r.join(" ").toLowerCase().includes(f));
+      if(!rs.length)return"";
+      return `<div class="card"><span class="tag">${sec}</span><table><tr><th style="width:24%">Term</th><th>Meaning</th></tr>${rs.map(([t,full,def])=>`<tr><td><b class="mono" style="font-size:13px">${t}</b></td><td>${full!=="—"?`<b>${full}</b><br>`:""}${def}</td></tr>`).join("")}</table></div>`;
+    }).join("")||`<div class="card"><p class="note">No match.</p></div>`;};
+  draw("");document.getElementById("gq").oninput=e=>draw(e.target.value);
+}
+
 /* ---------- nav ---------- */
-const VIEWS={learn,setups,pairs,drill:drillHome};
+const VIEWS={learn,setups,pairs,drill:drillHome,terms};
 const segb=[...document.querySelectorAll(".seg button")];
 function go(v){segb.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));D=null;VIEWS[v]();try{localStorage.setItem("smt_view",v)}catch(e){}window.scrollTo(0,0);}
 segb.forEach(b=>b.onclick=()=>go(b.dataset.v));
